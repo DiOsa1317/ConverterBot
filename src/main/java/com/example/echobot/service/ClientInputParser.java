@@ -30,8 +30,8 @@ public class ClientInputParser {
             throw new IllegalArgumentException("Сообщение должно выглядеть как «[число] [единица 1] to [единица 2]»");
         }
 
-        T first = Enum.valueOf(enumClass, parts[0].toUpperCase());
-        T second = Enum.valueOf(enumClass, parts[1].toUpperCase());
+        T first = Enum.valueOf(enumClass, parts[1].toUpperCase());
+        T second = Enum.valueOf(enumClass, parts[3].toUpperCase());
 
         return new AbstractMap.SimpleImmutableEntry<>(first, second);
     }
