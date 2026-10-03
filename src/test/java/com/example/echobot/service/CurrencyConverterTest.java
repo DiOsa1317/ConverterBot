@@ -1,6 +1,5 @@
 package com.example.echobot.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -11,12 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class CurrencyConverterTest {
 
-    private CurrencyConverter converter;
-
-    @BeforeEach
-    void setUp() {
-        converter = new CurrencyConverter();
-    }
+    private final ConverterService converterService = new ConverterService();
 
     /**
      * Проверяет конвертацию из иностранной валюты в рубли (умножение).
@@ -25,7 +19,7 @@ public class CurrencyConverterTest {
     @Test
     @DisplayName("Конвертация USD в RUB")
     void shouldConvertUsdToRub() {
-        String result = converter.processBotResponse("10 USD to RUB");
+        String result = converterService.processBotResponse("10 USD to RUB");
         assertTrue(result.contains("843.4140 RUB"));
     }
 
@@ -36,7 +30,7 @@ public class CurrencyConverterTest {
     @Test
     @DisplayName("Конвертация RUB в USD")
     void shouldConvertRubToUsd() {
-        String result = converter.processBotResponse("84.3414 RUB to USD");
+        String result = converterService.processBotResponse("84.3414 RUB to USD");
         assertTrue(result.contains("1.0000 USD"));
     }
 
@@ -47,7 +41,7 @@ public class CurrencyConverterTest {
     @Test
     @DisplayName("Кросс-курс USD в KZT")
     void shouldConvertUsdToKzt() {
-        String result = converter.processBotResponse("100 USD to KZT");
+        String result = converterService.processBotResponse("100 USD to KZT");
         assertTrue(result.startsWith("100.0000 USD = "));
         assertTrue(result.contains("KZT"));
     }
@@ -58,7 +52,7 @@ public class CurrencyConverterTest {
     @Test
     @DisplayName("Конвертация EUR в EUR (без изменений)")
     void shouldHandleSameCurrency() {
-        String result = converter.processBotResponse("50 EUR to EUR");
+        String result = converterService.processBotResponse("50 EUR to EUR");
         assertTrue(result.contains("50.0000 EUR = 50.0000 EUR"));
     }
 
@@ -68,21 +62,8 @@ public class CurrencyConverterTest {
     @Test
     @DisplayName("Проверка формата вывода (4 знака после запятой)")
     void shouldFormatOutputCorrectly() {
-        String result = converter.processBotResponse("1 CNY to RUB");
+        String result = converterService.processBotResponse("1 CNY to RUB");
         // 1 * 12.5355 = 12.5355
         assertEquals("1.0000 CNY = 12.5355 RUB", result.trim());
-    }
-
-    /**
-     * Проверяет вывод списка курсов.
-     */
-    @Test
-    @DisplayName("Получение актуальных курсов")
-    void shouldReturnActualRates() {
-        String rates = converter.getActualCurrency();
-        assertNotNull(rates);
-        assertTrue(rates.contains("84.3414")); // USD
-        assertTrue(rates.contains("95.8709")); // EUR
-        assertTrue(rates.contains("Рубли к долларам"));
     }
 }

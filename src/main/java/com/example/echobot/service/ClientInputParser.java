@@ -1,8 +1,10 @@
 package com.example.echobot.service;
 
+import com.example.echobot.service.models.CurrencyType;
+import com.example.echobot.service.models.PhysicalQuantities;
 
-import java.util.AbstractMap;
-import java.util.Map;
+import com.example.echobot.service.models.QuantityModel;
+import com.example.echobot.service.models.QuantityType;
 
 
 /**
@@ -23,18 +25,42 @@ public class ClientInputParser {
      *                                  или единицы не найдены в enum
      * @throws NullPointerException     если параметры null
      */
-    public <T extends Enum<T>> Map.Entry<T, T> parse(String message, Class<T> enumClass) {
-        String[] parts = message.split(" ");
+    public QuantityModel parse(String message) {
+        var parts = message.split(" ");
 
-        if (parts.length != 4) {
+        if (parts.length != 4 || !parts[2].equalsIgnoreCase("to")) {
             throw new IllegalArgumentException("Сообщение должно выглядеть как «[число] [единица 1] to [единица 2]»");
         }
 
-        T first = Enum.valueOf(enumClass, parts[1].toUpperCase());
-        T second = Enum.valueOf(enumClass, parts[3].toUpperCase());
+        var value = Double.parseDouble(parts[0]);
+        var fromStr = parts[1].toUpperCase();
+        var toStr = parts[3].toUpperCase();
 
-        return new AbstractMap.SimpleImmutableEntry<>(first, second);
+        QuantityType from = parseUnit(fromStr);
+        QuantityType to = parseUnit(toStr);
+
+        return new QuantityModel(value, from, to);
     }
 
+    /**
+     * Распознаёт строковое имя единицы измерения, пробуя оба известных enum-типа.
+     *
+     * @param name строковое имя единицы измерения
+     * @return распознанное значение
+     * @throws IllegalArgumentException если имя не найдено ни в одном из известных enum
+     */
+    private QuantityType parseUnit(String name) {
+        try {
+            return CurrencyType.valueOf(name);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            return PhysicalQuantities.valueOf(name);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        throw new IllegalArgumentException("Неизвестная единица измерения: " + name);
+    }
 }
 

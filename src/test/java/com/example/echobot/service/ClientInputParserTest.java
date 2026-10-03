@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Map;
+import com.example.echobot.service.models.CurrencyType;
+import com.example.echobot.service.models.QuantityModel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,10 +26,10 @@ public class ClientInputParserTest {
     @Test
     @DisplayName("Корректно извлекает валюты из ввода")
     void shouldParseValidMessagesWithCurrency() {
-        Map.Entry<CurrencyType, CurrencyType> result = clientInputParser
-                .parse("567 USD to CNY", CurrencyType.class);
-        assertEquals(CurrencyType.USD, result.getKey());
-        assertEquals(CurrencyType.CNY, result.getValue());
+        QuantityModel result = clientInputParser
+                .parse("567 USD to CNY");
+        assertEquals(CurrencyType.USD, result.from());
+        assertEquals(CurrencyType.CNY, result.to());
     }
 
     @ParameterizedTest(name = "Вход: '{0}'")
@@ -38,9 +39,9 @@ public class ClientInputParserTest {
     })
     @DisplayName("Корректно обрабатывает большие и маленькие буквы")
     void shouldParseValidMessagesWithLowercase(String input) {
-        Map.Entry<CurrencyType, CurrencyType> result = clientInputParser.parse(input, CurrencyType.class);
-        assertEquals(CurrencyType.EUR, result.getKey());
-        assertEquals(CurrencyType.KZT, result.getValue());
+        QuantityModel result = clientInputParser.parse(input);
+        assertEquals(CurrencyType.EUR, result.from());
+        assertEquals(CurrencyType.KZT, result.to());
     }
 
 
@@ -54,7 +55,7 @@ public class ClientInputParserTest {
     @DisplayName("Выбрасывает исключение при неверном количестве слов")
     void shouldThrowExceptionOnWrongLength(String input) {
         assertThrows(IllegalArgumentException.class, () -> {
-            clientInputParser.parse(input, CurrencyType.class);
+            clientInputParser.parse(input);
         });
     }
 
@@ -64,7 +65,7 @@ public class ClientInputParserTest {
         String input = "10 BTC to USD";
 
         assertThrows(IllegalArgumentException.class, () -> {
-            clientInputParser.parse(input, CurrencyType.class);
+            clientInputParser.parse(input);
         });
     }
 
@@ -74,7 +75,7 @@ public class ClientInputParserTest {
         String input = "10 USDT to EUR";
 
         assertThrows(IllegalArgumentException.class, () -> {
-            clientInputParser.parse(input, CurrencyType.class);
+            clientInputParser.parse(input);
         });
     }
 
@@ -82,7 +83,7 @@ public class ClientInputParserTest {
     @DisplayName("Обработка null входных данных")
     void shouldHandleNullMessage() {
         assertThrows(NullPointerException.class, () -> {
-            clientInputParser.parse(null, CurrencyType.class);
+            clientInputParser.parse(null);
         });
     }
 }

@@ -66,7 +66,20 @@ public class TelegramBot extends TelegramLongPollingBot {
         var messageText = update.getMessage().getText();
         long chatId = update.getMessage().getChatId();
 
-        String responseText = botResponseProcessor.processBotResponse(messageText);
+        if (messageText.equalsIgnoreCase("/help") || messageText.equalsIgnoreCase("/start")) {
+            sendHelpMessage(chatId);
+            return;
+        }
+
+        String responseText;
+        try {
+            responseText = botResponseProcessor.processBotResponse(messageText);
+        } catch (IllegalArgumentException exception) {
+            responseText = exception.getMessage();
+        } catch (Exception exception) {
+            logger.error("Непредвиденная ошибка при обработке сообщения: ", exception);
+            responseText = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
+        }
 
         var message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -76,6 +89,34 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(message);
         } catch (Exception e) {
             logger.error("Ошибка при отправке сообщения: ", e);
+        }
+    }
+
+    /**
+     * Отправляет пользователю справочное сообщение с инструкцией по использованию бота.
+     *
+     * @param chatId идентификатор чата
+     */
+    private void sendHelpMessage(long chatId) {
+        String helpText = """
+                Этот бот конвертирует валюты и физические величины.
+                
+                Формат запроса: {число} {единица1} to {единица2}
+                Например: 100 USD to EUR
+                Или: 10 KM to MI
+                
+                Доступные валюты: USD, EUR, CNY, KZT, RUB
+                Доступные величины: KM, MI, KG, LB, C, F
+                """;
+
+        var message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(helpText);
+
+        try {
+            execute(message);
+        } catch (Exception exception) {
+            logger.error("Ошибка при отправке справки: ", exception);
         }
     }
 

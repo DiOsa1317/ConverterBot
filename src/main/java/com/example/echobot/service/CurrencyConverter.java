@@ -1,17 +1,19 @@
 package com.example.echobot.service;
 
+import static com.example.echobot.service.models.CurrencyType.*;
+
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
-import static com.example.echobot.service.CurrencyType.*;
+import com.example.echobot.service.models.CurrencyType;
+import com.example.echobot.service.models.QuantityModel;
 
 /**
  * Конвертер валют для обработки запросов на конвертацию.
  * Использует фиксированные курсы относительно рубля (RUB) как базовой валюты.
  */
-public class CurrencyConverter implements BotResponseProcessor {
-
-    private final ClientInputParser clientInputParser;
+public class CurrencyConverter {
 
     /** Карта курсов валют относительно рубля (сколько рублей стоит 1 единица валюты) */
     private static final Map<CurrencyType, Double> RATES_TO_RUB = new HashMap<>();
@@ -23,34 +25,13 @@ public class CurrencyConverter implements BotResponseProcessor {
         RATES_TO_RUB.put(KZT, 1.91);
     }
 
-    public CurrencyConverter() {
-        clientInputParser = new ClientInputParser();
-    }
-
-    /**
-     * Обрабатывает сообщение пользователя и выполняет конвертацию валют.
-     *
-     * @param messageText входное сообщение формата "{сумма} {валюта1} to {валюта2}",
-     *                    например "100 USD to EUR"
-     * @return строка с результатом конвертации в формате "{сумма} {валюта1} = {результат} {валюта2}"
-     */
-    @Override
-    public String processBotResponse(String messageText) {
-        var currencyPair = clientInputParser.parse(messageText, CurrencyType.class);
-        var amount = Double.parseDouble(messageText.split(" ")[0]);
-        var from = currencyPair.getKey();
-        var to = currencyPair.getValue();
-        var convertedAmount = convertFirstCurrencyToSecond(from, to, amount);
-        return String.format("%.4f %s = %.4f %s", amount, from, convertedAmount, to);
-    }
-
     /**
      * Возвращает строку с актуальными курсами валют.
      *
      * @return информация о курсах всех доступных валют относительно рубля
      */
     public String getActualCurrency() {
-        return String.format("""
+        return String.format(Locale.US, """
                 Доступны переводы по таким курсам:
                 Рубли к долларам - %.4f;
                 Рубли к евро - %.4f;
@@ -71,11 +52,11 @@ public class CurrencyConverter implements BotResponseProcessor {
      * @param amount сумма для конвертации
      * @return конвертированная сумма
      */
-    private Double convertFirstCurrencyToSecond(CurrencyType from, CurrencyType to, Double amount) {
-        if (from == to)
-            return amount;
-        var amountInRub = from == RUB ? amount : amount * RATES_TO_RUB.get(from);
-        return to == RUB? amountInRub : amountInRub / RATES_TO_RUB.get(to);
+    public Double convertFirstCurrencyToSecond(QuantityModel quantityModel) {
+        if (quantityModel.from() == quantityModel.to())
+            return quantityModel.value();
+        var amountInRub = quantityModel.from() == RUB ? quantityModel.value() 
+        : quantityModel.value() * RATES_TO_RUB.get(quantityModel.from());
+        return quantityModel.to() == RUB? amountInRub : amountInRub / RATES_TO_RUB.get(quantityModel.to());
     }
-
 }

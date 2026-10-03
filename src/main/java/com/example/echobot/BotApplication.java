@@ -1,8 +1,8 @@
 package com.example.echobot;
 
 import com.example.echobot.bots.TelegramBot;
-import com.example.echobot.service.CurrencyConverter;
-import com.example.echobot.service.EchoService;
+import com.example.echobot.service.ConverterService;
+
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
@@ -31,10 +31,10 @@ public class BotApplication {
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var currencyConverter = new CurrencyConverter();
+            var converterService = new ConverterService();
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
-            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, currencyConverter);
+            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, converterService);
             telegramBot.start();
         } catch (Exception e) {
             logger.error("Ошибка при запуске", e);
