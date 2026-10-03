@@ -30,7 +30,7 @@ public class CurrencyConverter {
      *
      * @return информация о курсах всех доступных валют относительно рубля
      */
-    public String getActualCurrency() {
+    public String getActualCourse() {
         return String.format(Locale.US, """
                 Доступны переводы по таким курсам:
                 Рубли к долларам - %.4f;

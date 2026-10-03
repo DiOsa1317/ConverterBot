@@ -22,11 +22,20 @@ public class ConverterService implements BotResponseProcessor {
      * Обрабатывает сообщение пользователя и выполняет конвертацию валют.
      *
      * @param messageText входное сообщение формата "{сумма} {валюта1} to {валюта2}",
-     *                    например "100 USD to EUR"
-     * @return строка с результатом конвертации в формате "{сумма} {валюта1} = {результат} {валюта2}"
+     *                    например "100 USD to EUR", или команды /currency, /physical
+     * @return строка с результатом конвертации в формате "{сумма} {валюта1} = {результат} {валюта2}" 
+     *                      или инфа о доступных переводах
      */
     @Override
     public String processBotResponse(String messageText) {
+        if (messageText.equalsIgnoreCase("/currency")) {
+            return currencyConverter.getActualCourse();
+        }
+
+        if (messageText.equalsIgnoreCase("/physical")) {
+            return physicalQuantitiesConverter.getActualCourse();
+        }
+
         QuantityModel quantityModel = clientInputParser.parse(messageText);
 
         double convertedValue;

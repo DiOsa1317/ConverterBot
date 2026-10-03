@@ -32,7 +32,7 @@ public class PhysicalQuantitiesConverter {
      *
      * @return информация о всех доступных соотношениях физических величин
      */
-    public String getActualCurrency() {
+    public String getActualCourse() {
         return String.format(Locale.US, """
                 Доступны переводы по таким величинам:
                 Километры в мили - %.4f;

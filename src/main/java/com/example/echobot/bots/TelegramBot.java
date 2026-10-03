@@ -12,9 +12,9 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 
 /**
- * Основной класс эхо-бота для Telegram.
- * Наследует TelegramLongPollingBot и реализует логику повторения
- * текстовых сообщений пользователей в режиме Long Polling.
+ * Основной класс бота для Telegram.
+ * Наследует TelegramLongPollingBot и реализует логику конвертера величин из
+ * текстового сообщения пользователя.
  */
 public class TelegramBot extends TelegramLongPollingBot {
 
@@ -39,7 +39,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
 
     /**
-     * Создает новый экземпляр эхо-бота.
+     * Создает новый экземпляр бота.
      *
      * @param token       токен авторизации бота
      * @param name        имя пользователя бота (username)
@@ -53,7 +53,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     /**
      * Обрабатывает входящие обновления от Telegram API.
-     * Реализует логику эхо-бота: повторяет текстовые сообщения пользователя.
+     * Реализует логику бота: конвертирует величины.
      *
      * @param update объект обновления, содержащий данные о событии
      */
@@ -105,8 +105,8 @@ public class TelegramBot extends TelegramLongPollingBot {
                 Например: 100 USD to EUR
                 Или: 10 KM to MI
                 
-                Доступные валюты: USD, EUR, CNY, KZT, RUB
-                Доступные величины: KM, MI, KG, LB, C, F
+                Доступные валюты: /currency
+                Доступные величины: /physical
                 """;
 
         var message = new SendMessage();
