@@ -1,10 +1,12 @@
 package com.example.echobot;
 
 import com.example.echobot.bots.TelegramBot;
-import com.example.echobot.service.ConverterService;
+import com.example.echobot.service.*;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+
+import java.util.List;
 
 /**
  * Точка входа в приложение TelegramBot.
@@ -31,7 +33,14 @@ public class BotApplication {
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var converterService = new ConverterService();
+            var registry = new ConverterRegistry(List.of(
+                    new CurrencyConverter(),
+                    new LengthConverter(),
+                    new WeightConverter(),
+                    new TemperatureConverter()
+            ));
+            var converterService = new ConverterService(registry);
+
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
             var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, converterService);

@@ -1,10 +1,6 @@
 package com.example.echobot.service;
 
-import com.example.echobot.service.models.CurrencyType;
-import com.example.echobot.service.models.PhysicalQuantities;
-
-import com.example.echobot.service.models.QuantityModel;
-import com.example.echobot.service.models.QuantityType;
+import com.example.echobot.service.models.*;
 
 
 /**
@@ -15,52 +11,70 @@ import com.example.echobot.service.models.QuantityType;
  */
 public class ClientInputParser {
 
+    /** Слово-разделитель между единицами измерения. */
+    private static  final  String TO_SEPARATOR = "to";
+
     /**
-     * Разбирает сообщение клиента и извлекает две единицы измерения.
+     * Разбирает сообщение клиента в запрос на перевод.
      *
      * @param message   входное сообщение, например "5 meters to feet"
-     * @param enumClass класс enum с возможными единицами измерения
      * @return пара: ключ — первая единица, значение — вторая единица
-     * @throws IllegalArgumentException если формат сообщения неверный
-     *                                  или единицы не найдены в enum
-     * @throws NullPointerException     если параметры null
+     * @throws ConversionException если формат сообщения неверный
+     *                                  или единица неизвестна
+     * @throws NullPointerException если передан {@code null}
      */
     public QuantityModel parse(String message) {
         var parts = message.split(" ");
 
-        if (parts.length != 4 || !parts[2].equalsIgnoreCase("to")) {
-            throw new IllegalArgumentException("Сообщение должно выглядеть как «[число] [единица 1] to [единица 2]»");
+        if (parts.length != 4 || !parts[2].equalsIgnoreCase(TO_SEPARATOR)) {
+            throw new ConversionException("Сообщение должно выглядеть как «[число] [единица 1] to [единица 2]»");
         }
 
-        var value = Double.parseDouble(parts[0]);
-        var fromStr = parts[1].toUpperCase();
-        var toStr = parts[3].toUpperCase();
-
-        QuantityType from = parseUnit(fromStr);
-        QuantityType to = parseUnit(toStr);
+        var value = parseValue(parts[0]);
+        var from = parseUnit(parts[1]);
+        var to = parseUnit(parts[3]);
 
         return new QuantityModel(value, from, to);
+    }
+
+    private double parseValue(String token) {
+        try {
+            return Double.parseDouble(token);
+        } catch (NumberFormatException exception) {
+            throw new ConversionException("Первое слово должно быть числом. Например: 100 USD to EUR");
+        }
     }
 
     /**
      * Распознаёт строковое имя единицы измерения, пробуя оба известных enum-типа.
      *
-     * @param name строковое имя единицы измерения
+     * @param token строковое имя единицы измерения
      * @return распознанное значение
      * @throws IllegalArgumentException если имя не найдено ни в одном из известных enum
      */
-    private QuantityType parseUnit(String name) {
+    private QuantityType parseUnit(String token) {
+        var unit = token.toUpperCase();
         try {
-            return CurrencyType.valueOf(name);
+            return CurrencyType.valueOf(unit);
         } catch (IllegalArgumentException ignored) {
         }
 
         try {
-            return PhysicalQuantities.valueOf(name);
+            return LengthType.valueOf(unit);
         } catch (IllegalArgumentException ignored) {
         }
 
-        throw new IllegalArgumentException("Неизвестная единица измерения: " + name);
+        try {
+            return WeightType.valueOf(unit);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        try {
+            return TemperatureType.valueOf(unit);
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        throw new ConversionException("Неизвестная единица измерения: " + token);
     }
 }
 

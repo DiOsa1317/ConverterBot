@@ -1,6 +1,7 @@
 package com.example.echobot.bots;
 
 import com.example.echobot.service.BotResponseProcessor;
+import com.example.echobot.service.ConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -74,7 +75,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         String responseText;
         try {
             responseText = botResponseProcessor.processBotResponse(messageText);
-        } catch (IllegalArgumentException exception) {
+        } catch (ConversionException exception) {
             responseText = exception.getMessage();
         } catch (Exception exception) {
             logger.error("Непредвиденная ошибка при обработке сообщения: ", exception);
@@ -106,7 +107,10 @@ public class TelegramBot extends TelegramLongPollingBot {
                 Или: 10 KM to MI
                 
                 Доступные валюты: /currency
-                Доступные величины: /physical
+                Доступные величины:
+                1) /length
+                2) /weight
+                3) /temperature
                 """;
 
         var message = new SendMessage();

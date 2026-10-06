@@ -1,5 +1,6 @@
 package com.example.echobot.service;
 
+import com.example.echobot.service.models.TemperatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,8 +10,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import com.example.echobot.service.models.CurrencyType;
 import com.example.echobot.service.models.QuantityModel;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Тесты для ClientInputParser.
@@ -54,9 +54,7 @@ public class ClientInputParserTest {
     })
     @DisplayName("Выбрасывает исключение при неверном количестве слов")
     void shouldThrowExceptionOnWrongLength(String input) {
-        assertThrows(IllegalArgumentException.class, () -> {
-            clientInputParser.parse(input);
-        });
+        assertThrows(IllegalArgumentException.class, () -> clientInputParser.parse(input));
     }
 
     @Test
@@ -64,9 +62,7 @@ public class ClientInputParserTest {
     void shouldThrowExceptionOnInvalidCurrency() {
         String input = "10 BTC to USD";
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            clientInputParser.parse(input);
-        });
+        assertThrows(IllegalArgumentException.class, () -> clientInputParser.parse(input));
     }
 
     @Test
@@ -74,16 +70,35 @@ public class ClientInputParserTest {
     void shouldThrowExceptionOnTypo() {
         String input = "10 USDT to EUR";
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            clientInputParser.parse(input);
-        });
+        assertThrows(IllegalArgumentException.class, () -> clientInputParser.parse(input));
     }
 
     @Test
     @DisplayName("Обработка null входных данных")
     void shouldHandleNullMessage() {
-        assertThrows(NullPointerException.class, () -> {
-            clientInputParser.parse(null);
-        });
+        assertThrows(NullPointerException.class, () -> clientInputParser.parse(null));
+    }
+
+    @Test
+    @DisplayName("Выбрасывает исключение, если разделитель не равен to")
+    void shouldThrowExceptionOnWrongSeparator() {
+        assertThrows(ConversionException.class,
+                () -> clientInputParser.parse("10 USD XX EUR"));
+    }
+
+    @Test
+    @DisplayName("Выбрасывает исключение, если первое слово не число")
+    void shouldThrowExceptionOnNonNumericValue() {
+        var exception = assertThrows(ConversionException.class,
+                () -> clientInputParser.parse("abc USD to EUR"));
+        assertTrue(exception.getMessage().contains("числом"), exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Разбирает единицы физических величин")
+    void shouldParsePhysicalUnits() {
+        var result = clientInputParser.parse("20 CELSIUS to FAHRENHEIT");
+        assertEquals(TemperatureType.CELSIUS, result.from());
+        assertEquals(TemperatureType.FAHRENHEIT, result.to());
     }
 }
