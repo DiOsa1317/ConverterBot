@@ -11,11 +11,14 @@ import java.util.Map;
  * Конвертер длины. Все переводы идут через метры как базовую единицу,
  * поэтому перевод в обе стороны симметричен и не требует таблицы пар.
  */
-public class LengthConverter implements QuantityConverter{
+public class LengthConverter implements QuantityConverter {
 
     /** Сколько метров содержится в одной единице измерения. */
     private final Map<LengthType, Double> metersInUnit = new EnumMap<>(LengthType.class);
 
+   /**
+    * Создаёт конвертер и заполняет таблицу переводов единиц в метры.
+    */
    public LengthConverter()  {
         metersInUnit.put(LengthType.METER, 1.0);
         metersInUnit.put(LengthType.KILOMETER, 1000.0);
@@ -24,21 +27,43 @@ public class LengthConverter implements QuantityConverter{
         metersInUnit.put(LengthType.INCH, 0.0254);
     }
 
+    /**
+     * Возвращает название группы для меню и текста справки.
+     *
+     * @return название группы — «Длина»
+     */
     @Override
     public String title() {
         return "Длина";
     }
 
+    /**
+     * Возвращает команду, по которой бот показывает справку по группе.
+     *
+     * @return команда {@code /length}
+     */
     @Override
     public String command() {
         return "/length";
     }
 
+    /**
+     * Возвращает enum с единицами группы — по нему реестр определяет владельца запроса.
+     *
+     * @return класс enum с типами длины
+     */
     @Override
     public Class<LengthType> quantityType() {
         return LengthType.class;
     }
 
+    /**
+     * Переводит длину через метры: значение умножается на коэффициент
+     * исходной единицы и делится на коэффициент целевой.
+     *
+     * @param request запрос с исходным значением и обеими единицами группы
+     * @return переведённое значение; при одинаковых единицах — исходное значение
+     */
     @Override
     public double convert(QuantityModel request) {
         var from = (LengthType) request.from();
@@ -49,6 +74,11 @@ public class LengthConverter implements QuantityConverter{
         return request.value() * metersInUnit.get(from) / metersInUnit.get(to);
     }
 
+    /**
+     * Возвращает текст со списком единиц группы в метрах.
+     *
+     * @return справка с переводом километра, мили и дюйма в метры
+     */
     @Override
     public String getActualCourse() {
         return String.format(Locale.US, """

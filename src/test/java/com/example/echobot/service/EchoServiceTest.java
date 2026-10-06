@@ -13,34 +13,50 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class EchoServiceTest {
 
+    /** Экземпляр эхо-сервиса, создаваемый заново перед каждым тестом. */
     private EchoService echoService;
 
+    /**
+     * Создаёт эхо-сервис перед каждым тестом.
+     */
     @BeforeEach
     void setUp() {
         echoService = new EchoService();
     }
 
+    /**
+     * Проверяет, что сервис возвращает входной текст без изменений.
+     *
+     * @param input входное сообщение пользователя
+     */
     @ParameterizedTest(name = "Вход: '{0}'")
     @ValueSource(strings = {
             "Привет",
             "Cтрока с пробелами",
             "До переноса строки\nПеред табуляцией\tПосле неё"
     })
-    @DisplayName("prepareBotResponse возвращает идентичный входной текст")
+    @DisplayName("processBotResponse возвращает идентичный входной текст")
     void shouldReturnExactSameText(String input) {
         String result = echoService.processBotResponse(input);
         assertEquals(input, result, "Метод должен вернуть ТОЧНО тот же текст");
     }
 
+    /**
+     * Проверяет, что на пустую строку возвращается подсказка вместо эха.
+     */
     @Test
-    @DisplayName("prepareBotResponse обрабатывает пустую строку")
+    @DisplayName("processBotResponse обрабатывает пустую строку")
     void shouldHandleEmptyString() {
         String result = echoService.processBotResponse("");
         assertEquals("Сообщение не должно быть пустым", result);
     }
 
+    /**
+     * Проверяет, что строка из пробелов и управляющих символов
+     * считается пустой.
+     */
     @Test
-    @DisplayName("prepareBotResponse обрабатывает строку из пробелов")
+    @DisplayName("processBotResponse обрабатывает строку из пробелов")
     void shouldHandleBlankString() {
         String result = echoService.processBotResponse("   \t\n  ");
         assertEquals("Сообщение не должно быть пустым", result);

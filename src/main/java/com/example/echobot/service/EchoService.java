@@ -7,7 +7,7 @@ public class EchoService implements BotResponseProcessor {
 
     /**
      * Возвращает исходный текст сообщения или уведомление, если текст пуст.
-     *prepareBotResponse
+     *
      * @param messageText исходный текст от пользователя
      * @return обработанный текст
      */

@@ -10,18 +10,35 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Тесты для TemperatureConverter: перевод между градусами Цельсия,
+ * Фаренгейта и Кельвина, перевод одинаковых шкал и обратный перевод.
+ */
 public class TemperatureConverterTest {
 
     /** Допустимая погрешность сравнения вещественных чисел. */
     private static final double DELTA = 1e-9;
 
+    /** Экземпляр конвертера температуры, создаваемый заново перед каждым тестом. */
     private TemperatureConverter converter;
 
+    /**
+     * Создаёт конвертер температуры перед каждым тестом.
+     */
     @BeforeEach
     void setUp() {
         converter = new TemperatureConverter();
     }
 
+    /**
+     * Проверяет перевод температуры между всеми парами шкал группы,
+     * включая отрицательные значения и абсолютный ноль.
+     *
+     * @param value    исходное значение температуры
+     * @param from     имя исходной шкалы
+     * @param to       имя целевой шкалы
+     * @param expected ожидаемый результат перевода
+     */
     @ParameterizedTest(name = "{0} {1} = {2}")
     @CsvSource({
             "0, CELSIUS, FAHRENHEIT, 32",
@@ -41,6 +58,10 @@ public class TemperatureConverterTest {
         assertEquals(expected, converter.convert(request), DELTA);
     }
 
+    /**
+     * Проверяет, что перевод температуры между одинаковыми шкалами
+     * возвращает исходное значение.
+     */
     @Test
     @DisplayName("Перевод одинаковых единиц возвращает исходное значение")
     void shouldReturnSameValueForSameUnit() {
@@ -48,6 +69,10 @@ public class TemperatureConverterTest {
         assertEquals(37.5, converter.convert(request), DELTA);
     }
 
+    /**
+     * Проверяет, что перевод из °C в °F и обратно возвращает исходное
+     * значение — аффинное преобразование не теряет точность.
+     */
     @Test
     @DisplayName("Перевод туда и обратно возвращает исходное значение")
     void shouldReturnOriginalValueAfterRoundTrip() {

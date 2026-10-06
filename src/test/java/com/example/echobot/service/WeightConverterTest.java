@@ -1,7 +1,6 @@
 package com.example.echobot.service;
 
 import com.example.echobot.service.models.QuantityModel;
-import com.example.echobot.service.models.TemperatureType;
 import com.example.echobot.service.models.WeightType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,13 +16,26 @@ public class WeightConverterTest {
     /** Допустимая погрешность сравнения вещественных чисел. */
     private static final double DELTA = 1e-9;
 
+    /** Экземпляр конвертера массы, создаваемый заново перед каждым тестом. */
     private WeightConverter converter;
 
+    /**
+     * Создаёт конвертер массы перед каждым тестом.
+     */
     @BeforeEach
     void setUp() {
         converter = new WeightConverter();
     }
 
+    /**
+     * Проверяет перевод массы относительно килограммов в прямую
+     * и в обратную сторону.
+     *
+     * @param value    исходное значение
+     * @param from     имя исходной единицы
+     * @param to       имя целевой единицы
+     * @param expected ожидаемый результат перевода
+     */
     @ParameterizedTest(name = "{0} {1} = {2}")
     @CsvSource({
             "1,    KILOGRAM, POUND,    2.2046226218487757",

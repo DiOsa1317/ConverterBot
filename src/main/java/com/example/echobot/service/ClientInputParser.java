@@ -17,8 +17,8 @@ public class ClientInputParser {
     /**
      * Разбирает сообщение клиента в запрос на перевод.
      *
-     * @param message   входное сообщение, например "5 meters to feet"
-     * @return пара: ключ — первая единица, значение — вторая единица
+     * @param message   входное сообщение, например "100 USD to EUR"
+     * @return разобранный запрос: значение, исходная единица и целевая единица
      * @throws ConversionException если формат сообщения неверный
      *                                  или единица неизвестна
      * @throws NullPointerException если передан {@code null}
@@ -37,6 +37,13 @@ public class ClientInputParser {
         return new QuantityModel(value, from, to);
     }
 
+    /**
+     * Разбирает первый токен сообщения как число.
+     *
+     * @param token текстовый токен с числовым значением
+     * @return разобранное значение
+     * @throws ConversionException если токен не является числом
+     */
     private double parseValue(String token) {
         try {
             return Double.parseDouble(token);
@@ -46,11 +53,12 @@ public class ClientInputParser {
     }
 
     /**
-     * Распознаёт строковое имя единицы измерения, пробуя оба известных enum-типа.
+     * Распознаёт строковое имя единицы измерения, перебирая все известные
+     * enum-типы величин: валюты, длину, массу и температуру.
      *
      * @param token строковое имя единицы измерения
      * @return распознанное значение
-     * @throws IllegalArgumentException если имя не найдено ни в одном из известных enum
+     * @throws ConversionException если имя не найдено ни в одном из известных enum
      */
     private QuantityType parseUnit(String token) {
         var unit = token.toUpperCase();

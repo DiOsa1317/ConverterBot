@@ -16,8 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /** Тесты для ConverterRegistry */
 public class ConverterRegistryTest {
 
+    /** Реестр конвертеров, создаваемый заново перед каждым тестом. */
     private ConverterRegistry registry;
 
+    /**
+     * Создаёт реестр со всеми четырьмя конвертерами перед каждым тестом.
+     */
     @BeforeEach
     void setUp() {
         registry = new ConverterRegistry(List.of(
@@ -28,6 +32,9 @@ public class ConverterRegistryTest {
         ));
     }
 
+    /**
+     * Проверяет, что по единице измерения находится конвертер её группы.
+     */
     @Test
     @DisplayName("Находит конвертер по единице измерения")
     void shouldFindConverterByUnit() {
@@ -41,6 +48,9 @@ public class ConverterRegistryTest {
                 registry.findConverterByUnitName(WeightType.POUND).orElseThrow().quantityType());
     }
 
+    /**
+     * Проверяет, что поиск команды справки не зависит от регистра.
+     */
     @Test
     @DisplayName("Находит конвертер по команде справки в любом регистре")
     void shouldFindConverterByCommand() {
@@ -50,12 +60,19 @@ public class ConverterRegistryTest {
                 registry.findConverterByCommand("/TEMPERATURE").orElseThrow().title());
     }
 
+    /**
+     * Проверяет, что неизвестная команда не находит конвертер.
+     */
     @Test
     @DisplayName("Возвращает пустой результат для неизвестной команды")
     void shouldReturnEmptyForUnknownCommand() {
         assertTrue(registry.findConverterByCommand("/physical").isEmpty());
     }
 
+    /**
+     * Проверяет, что порядок конвертеров в реестре совпадает
+     * с порядком их регистрации.
+     */
     @Test
     @DisplayName("Сохраняет порядок регистрации конвертеров")
     void shouldKeepRegistrationOrder() {

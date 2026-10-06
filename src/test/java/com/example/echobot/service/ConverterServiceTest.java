@@ -10,10 +10,18 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Тесты для ConverterService: форматирование результата перевода,
+ * справка по командам групп и отказ переводить между разными группами величин.
+ */
 public class ConverterServiceTest {
 
+    /** Диспетчер перевода, создаваемый заново перед каждым тестом. */
     private ConverterService converterService;
 
+    /**
+     * Создаёт реестр со всеми конвертерами и диспетчер перед каждым тестом.
+     */
     @BeforeEach
     void setUp() {
         var registry = new ConverterRegistry(List.of(
@@ -25,6 +33,10 @@ public class ConverterServiceTest {
         converterService = new ConverterService(registry);
     }
 
+    /**
+     * Проверяет, что результат переводится с четырьмя знаками после запятой
+     * через шаблон вывода.
+     */
     @Test
     @DisplayName("Форматирует результат четырьмя знаками после запятой")
     void shouldFormatResult() {
@@ -32,13 +44,22 @@ public class ConverterServiceTest {
                 converterService.convert("10.000 USD to RUB"));
     }
 
-    @ParameterizedTest(name = "Команда: '{0}")
+    /**
+     * Проверяет, что по каждой команде группы возвращается непустая справка.
+     *
+     * @param command команда справки для одной из зарегистрированных групп
+     */
+    @ParameterizedTest(name = "Команда: '{0}'")
     @ValueSource(strings = {"/currency", "/length", "/weight", "/temperature"})
     @DisplayName("Возвращает справку по каждой группе величин")
     void shouldReturnHelpByCommand(String command) {
         assertFalse(converterService.getHelp(command).isBlank());
     }
 
+    /**
+     * Проверяет, что перевод между единицами разных групп отклоняется
+     * с пояснением для пользователя.
+     */
     @Test
     @DisplayName("Отказывает в переводе между разными группами величин")
     void shouldRejectConversionBetweenDifferentGroups() {
@@ -47,7 +68,13 @@ public class ConverterServiceTest {
         assertFalse(exception.getMessage().isBlank());
     }
 
-    @ParameterizedTest(name = "Мусор: '{0}")
+    /**
+     * Проверяет, что любая ошибка ввода превращается в исключение
+     * с сообщением на русском языке, которое увидит пользователь.
+     *
+     * @param message входное сообщение с ошибкой формата или неизвестной единицей
+     */
+    @ParameterizedTest(name = "Мусор: '{0}'")
     @ValueSource(strings = {"привет", "10 USD to", "10 BTC to USD", "abc USD to EUR"})
     @DisplayName("Отвечает понятной ошибкой на некорректный ввод")
     void shouldFailWithRussianMessageBadInput(String message) {

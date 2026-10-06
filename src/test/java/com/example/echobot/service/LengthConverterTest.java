@@ -11,15 +11,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Тесты для LengthConverter. */
 public class LengthConverterTest {
+    /** Допустимая погрешность сравнения вещественных чисел. */
     private static final double DELTA = 1e-9;
 
+    /** Экземпляр конвертера длины, создаваемый заново перед каждым тестом. */
     private LengthConverter converter;
 
+    /**
+     * Создаёт конвертер длины перед каждым тестом.
+     */
     @BeforeEach
     void setUp() {
         converter = new LengthConverter();
     }
 
+    /**
+     * Проверяет перевод длины через метры как базовую единицу
+     * в прямую и в обратную сторону.
+     *
+     * @param value    исходное значение
+     * @param from     имя исходной единицы
+     * @param to       имя целевой единицы
+     * @param expected ожидаемый результат перевода
+     */
     @ParameterizedTest(name = "{0} {1} = {2}")
     @CsvSource({
             "1,   KILOMETER,  MILE,      0.6213711922373339",

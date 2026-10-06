@@ -14,13 +14,26 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class CurrencyConverterTest {
 
+    /** Экземпляр конвертера валют, создаваемый заново перед каждым тестом. */
     private CurrencyConverter currencyConverter;
 
+    /**
+     * Создаёт конвертер валют перед каждым тестом.
+     */
     @BeforeEach
     public void setUp() {
         currencyConverter = new CurrencyConverter();
     }
 
+    /**
+     * Проверяет перевод валют через рубль как базовую, включая перевод
+     * валюты в саму себя.
+     *
+     * @param value    исходное значение
+     * @param from     имя исходной валюты
+     * @param to       имя целевой валюты
+     * @param expected ожидаемый результат перевода
+     */
     @ParameterizedTest(name = "{0} {1} = {2}")
     @CsvSource({
             "10,      USD, RUB, 843.414",
