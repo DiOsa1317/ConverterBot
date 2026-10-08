@@ -44,7 +44,6 @@ AGENTS.md
 opencode.json
 dependency-reduced-pom.xml
 
-### Обработка кнопок на будущее ###
 keyboard/
 interaction/
 telegram/
