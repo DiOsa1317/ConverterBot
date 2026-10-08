@@ -33,12 +33,7 @@ public class BotApplication {
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var registry = new ConverterRegistry(List.of(
-                    new CurrencyConverter(),
-                    new LengthConverter(),
-                    new WeightConverter(),
-                    new TemperatureConverter()
-            ));
+            var registry = new ConverterRegistry();
             var converterService = new ConverterService(registry);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());

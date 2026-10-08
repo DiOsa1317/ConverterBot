@@ -24,12 +24,7 @@ public class ConverterRegistryTest {
      */
     @BeforeEach
     void setUp() {
-        registry = new ConverterRegistry(List.of(
-               new CurrencyConverter(),
-               new LengthConverter(),
-               new WeightConverter(),
-               new TemperatureConverter()
-        ));
+        registry = new ConverterRegistry();
     }
 
     /**
@@ -69,14 +64,4 @@ public class ConverterRegistryTest {
         assertTrue(registry.findConverterByCommand("/physical").isEmpty());
     }
 
-    /**
-     * Проверяет, что порядок конвертеров в реестре совпадает
-     * с порядком их регистрации.
-     */
-    @Test
-    @DisplayName("Сохраняет порядок регистрации конвертеров")
-    void shouldKeepRegistrationOrder() {
-        assertEquals(List.of("Валюты", "Длина", "Вес", "Температура"),
-                registry.all().stream().map(QuantityConverter::title).toList());
-    }
 }
