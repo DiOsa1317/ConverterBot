@@ -1,8 +1,10 @@
 package ru.urfu.converterbot.service;
 
 import java.util.Locale;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import ru.urfu.converterbot.service.models.ConversionRequest;
+import ru.urfu.converterbot.service.exceptions.ConversionException;
 
 /**
  * Диспетчер перевода величин. Принимает текстовое сообщение пользователя,
@@ -13,6 +15,27 @@ public class ConverterService implements BotResponseProcessor {
 
     /** Шаблон строки с результатом перевода. */
     private static final String RESULT_TEMPLATE = "%.4f %s = %.4f %s";
+
+    /** Текст общей справки по командам бота. */
+    private static final String GENERAL_HELP_TEXT = """
+        Этот бот конвертирует валюты и физические величины.
+        
+        Формат запроса: {число} {единица1} to {единица2}
+        Например: 100 USD to EUR
+        Или: 10 KM to MI
+        
+        Доступные валюты: /currency
+        Доступные величины:
+        1) /length
+        2) /weight
+        3) /temperature
+        """;
+    
+    /** Текст ответа при непредвиденной ошибке обработки сообщения. */
+    private static final String UNEXPECTED_ERROR_TEXT = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
+
+    /** Логгер для записи непредвиденных ошибок обработки сообщений. */
+    private final Logger logger = LoggerFactory.getLogger(ConverterService.class);
 
     /** Реестр конвертеров, по которому определяется группа величин. */
     private final ConverterRegistry registry;
@@ -30,22 +53,30 @@ public class ConverterService implements BotResponseProcessor {
         clientInputParser = new ClientInputParser();
     }
 
-    /**
-     * Обрабатывает сообщение пользователя
-     *
-     * @param messageText входное сообщение формата "{сумма} {единица1} to {единица2}",
-     *                    например "100 USD to EUR", или команды для выбора типа перевода (например, /currency)
-     * @return строка с результатом конвертации в формате "{сумма} {единица1} = {результат} {единица2}"
-     *                      или инфа о доступных переводах
-     * @throws ConversionException если запрос не распознан или единицы из разных групп
-     */
     @Override
     public String processBotResponse(String messageText) {
-        var helpConverter = registry.findConverterByCommand(messageText).orElse(null);
-        if (helpConverter != null) {
-            return helpConverter.getActualCourse();
+        try {
+            return dispatch(messageText);
+        } catch (ConversionException exception) {
+            return exception.getMessage();
+        } catch (Exception exception) {
+            logger.error("Непредвиденная ошибка при обработке сообщения: ", exception);
+            return UNEXPECTED_ERROR_TEXT;
         }
-        return convert(messageText);
+    }
+
+    private String dispatch(String messageText) {
+        if (messageText == null) {
+            return "Я понимаю только текстовые сообщения. Напишите запрос в формате: {число} {единица1} to {единица2}";
+        }
+
+        if (messageText.equalsIgnoreCase("/help") || messageText.equalsIgnoreCase("/start")) {
+            return GENERAL_HELP_TEXT;
+        }
+
+        return registry.findConverterByCommand(messageText)
+            .map(QuantityConverter::getActualCourse)
+            .orElseGet(() -> convert(messageText));
     }
 
     /**
@@ -56,45 +87,14 @@ public class ConverterService implements BotResponseProcessor {
      * @throws ConversionException если запрос не распознан, единицы неизвестны
      *                             или единицы принадлежат разным группам
      */
-    public String convert(String messageText) {
+    private String convert(String messageText) {
         var request = clientInputParser.parse(messageText);
         var converter = registry.findConverterByUnitName(request.from()).orElseThrow( () ->
-                new ConversionException("Не найден конвертер для группы: " + request.from())
+                new ConversionException("Единицы измерения неизвестны")
         );
-        checkSameGroup(converter, request);
+
         return String.format(Locale.US, RESULT_TEMPLATE,
                 request.value(), request.from(),
                 converter.convert(request), request.to());
-    }
-
-    /**
-     * Проверяет, что обе единицы запроса принадлежат одной группе величин.
-     *
-     * @param converter конвертер, найденный по исходной единице
-     * @param request   разобранный запрос пользователя
-     * @throws ConversionException если целевая единица принадлежит другой группе
-     */
-    private void checkSameGroup(QuantityConverter converter, ConversionRequest request) {
-        if (!converter.quantityType().isInstance(request.to())) {
-            throw new ConversionException(
-                    ("Нельзя перевести %s в %s: это разные группы величин.%n"
-                    + "В группе %s доступны единицы: %s")
-                            .formatted(request.from(), request.to(),
-                                    converter.title(), String.join(", ", converter.units()))
-            );
-        }
-    }
-
-    /**
-     * Возвращает справку по группе величин, запрошенной командой.
-     *
-     * @param command команда справки, например {@code /currency}
-     * @return текст со списком коэффициентов группы
-     * @throws ConversionException если команда не соответствует ни одной группе
-     */
-    public String getHelp(String command) {
-        return registry.findConverterByCommand(command)
-                .orElseThrow(() -> new ConversionException("Неизвестная команда: " + command))
-                .getActualCourse();
     }
 }

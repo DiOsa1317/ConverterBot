@@ -1,4 +1,4 @@
-package ru.urfu.converterbot.service;
+package ru.urfu.converterbot.service.exceptions;
 
 /**
  * Ошибка разбора или перевода запроса. Наследует IllegalArgumentException,

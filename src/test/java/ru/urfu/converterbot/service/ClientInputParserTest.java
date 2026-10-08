@@ -1,5 +1,6 @@
 package ru.urfu.converterbot.service;
 
+import ru.urfu.converterbot.service.exceptions.ConversionException;
 import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.TemperatureType;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,41 +1,41 @@
 package ru.urfu.converterbot.service;
 
-import ru.urfu.converterbot.service.models.*;
+import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Парсер входных сообщений клиента для извлечения единиц измерения.
- * Разбирает сообщения формата "[число] [единица1] to [единица2]"
- * и преобразует единицы в значения enum.
- *
  */
 public class ClientInputParser {
 
     /** Слово-разделитель между единицами измерения. */
-    private static  final  String TO_SEPARATOR = "to";
+    private static final String TO_SEPARATOR = "to";
 
     /**
      * Разбирает сообщение клиента в запрос на перевод.
      *
-     * @param message   входное сообщение, например "100 USD to EUR"
+     * @param message входное сообщение, например "100 USD to EUR"; не может быть {@code null}
      * @return разобранный запрос: значение, исходная единица и целевая единица
-     * @throws ConversionException если формат сообщения неверный
-     *                                  или единица неизвестна
+     * @throws InvalidUserInputException если формат сообщения неверный или единица неизвестна
      * @throws NullPointerException если передан {@code null}
      */
-    public ConversionRequest parse(String message) {
+    public ConversionRequest parse(@NotNull String message) {
+        Objects.requireNonNull(message, "Сообщение не может быть null");
         var parts = message.split(" ");
 
         if (parts.length != 4 || !parts[2].equalsIgnoreCase(TO_SEPARATOR)) {
-            throw new ConversionException("Сообщение должно выглядеть как «[число] [единица 1] to [единица 2]»");
+            throw new InvalidUserInputException(message,
+                    "Сообщение должно выглядеть как «[число] [единица 1] to [единица 2]»");
         }
 
-        var value = parseValue(parts[0]);
-        var from = parseUnit(parts[1]);
-        var to = parseUnit(parts[3]);
+        var value = parseValue(message, parts[0]);
+        var from = parseUnit(message, parts[1]);
+        var to = parseUnit(message, parts[3]);
 
         return new ConversionRequest(value, from, to);
     }
@@ -43,27 +43,30 @@ public class ClientInputParser {
     /**
      * Разбирает первый токен сообщения как число.
      *
+     * @param originalMessage исходное сообщение целиком (для текста ошибки)
      * @param token текстовый токен с числовым значением
      * @return разобранное значение
-     * @throws ConversionException если токен не является числом
+     * @throws InvalidUserInputException если токен не является числом
      */
-    private BigDecimal parseValue(String token) {
+    private BigDecimal parseValue(String originalMessage, String token) {
         try {
             return new BigDecimal(token);
         } catch (NumberFormatException exception) {
-            throw new ConversionException("Первое слово должно быть числом. Например: 100 USD to EUR");
+            throw new InvalidUserInputException(originalMessage,
+                    "Первое слово должно быть числом. Например: 100 USD to EUR");
         }
     }
 
     /**
      * Распознаёт строковое имя единицы измерения, перебирая все известные
      * enum-типы величин: валюты, длину, массу и температуру.
-     *
+     * 
+     * @param originalMessage исходное сообщение целиком (для текста ошибки)
      * @param token строковое имя единицы измерения
      * @return распознанное значение
-     * @throws ConversionException если имя не найдено ни в одном из известных enum
+     * @throws InvalidUserInputException если имя не найдено ни в одном из известных enum
      */
-    private QuantityType parseUnit(String token) {
+    private QuantityType parseUnit(String originalMessage, String token) {
         var unit = token.toUpperCase();
         try {
             return CurrencyType.valueOf(unit);
@@ -85,7 +88,7 @@ public class ClientInputParser {
         } catch (IllegalArgumentException ignored) {
         }
 
-        throw new ConversionException("Неизвестная единица измерения: " + token);
+        throw new InvalidUserInputException(originalMessage, "Неизвестная единица измерения: " + token);
     }
 }
 

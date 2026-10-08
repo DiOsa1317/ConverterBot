@@ -16,7 +16,7 @@ import ru.urfu.converterbot.service.models.ConversionRequest;
  */
 public class CurrencyConverter implements QuantityConverter {
 
-    /** Карта курсов валют относительно рубля (сколько рублей стоит 1 единица валюты) */
+    /** Карта курсов валют относительно рубля */
     private final Map<CurrencyType, BigDecimal> ratesToRub = new EnumMap<>(CurrencyType.class);
 
     /**

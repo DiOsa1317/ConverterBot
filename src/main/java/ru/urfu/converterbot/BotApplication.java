@@ -5,7 +5,6 @@ import ru.urfu.converterbot.service.*;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-import ru.urfu.converterbot.service.*;
 
 import java.util.List;
 
@@ -29,7 +28,7 @@ public class BotApplication {
      */
     static void main(String[] args) {
         try {
-            var configuration = new Configuration("config.properties",
+            var configuration = new BotConfiguration("config.properties",
                     "bot.token", "bot.username");
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");

@@ -10,7 +10,7 @@ import java.util.Properties;
  * @param keyBotToken    Ключ для получения токена авторизации из свойств конфигурации.
  * @param keyBotUsername Ключ для получения имени пользователя бота (username) из свойств конфигурации.
  */
-public record Configuration(String configFileName, String keyBotToken, String keyBotUsername) {
+public record BotConfiguration(String configFileName, String keyBotToken, String keyBotUsername) {
 
     /**
      * Загружает свойства из файла config.properties, расположенного в корне проекта.

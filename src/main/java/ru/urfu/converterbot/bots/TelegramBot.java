@@ -1,7 +1,8 @@
 package ru.urfu.converterbot.bots;
 
 import ru.urfu.converterbot.service.BotResponseProcessor;
-import ru.urfu.converterbot.service.ConversionException;
+import ru.urfu.converterbot.service.exceptions.ConversionException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -51,35 +52,16 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.botResponseProcessor = botResponseProcessor;
     }
 
-    /**
-     * Обрабатывает входящие обновления от Telegram API.
-     * Реализует логику бота: конвертирует величины.
-     *
-     * @param update объект обновления, содержащий данные о событии
-     */
     @Override
     public void onUpdateReceived(Update update) {
-        if (!update.hasMessage() || !update.getMessage().hasText()) {
+        if (!update.hasMessage()) {
             return;
         }
 
-        var messageText = update.getMessage().getText();
+        String messageText = update.getMessage().hasText() ? update.getMessage().getText() : null;
         long chatId = update.getMessage().getChatId();
 
-        if (messageText.equalsIgnoreCase("/help") || messageText.equalsIgnoreCase("/start")) {
-            sendHelpMessage(chatId);
-            return;
-        }
-
-        String responseText;
-        try {
-            responseText = botResponseProcessor.processBotResponse(messageText);
-        } catch (ConversionException exception) {
-            responseText = exception.getMessage();
-        } catch (Exception exception) {
-            logger.error("Непредвиденная ошибка при обработке сообщения: ", exception);
-            responseText = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
-        }
+        String responseText = botResponseProcessor.processBotResponse(messageText);
 
         var message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -89,37 +71,6 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(message);
         } catch (Exception e) {
             logger.error("Ошибка при отправке сообщения: ", e);
-        }
-    }
-
-    /**
-     * Отправляет пользователю справочное сообщение с инструкцией по использованию бота.
-     *
-     * @param chatId идентификатор чата
-     */
-    private void sendHelpMessage(long chatId) {
-        String helpText = """
-                Этот бот конвертирует валюты и физические величины.
-                
-                Формат запроса: {число} {единица1} to {единица2}
-                Например: 100 USD to EUR
-                Или: 10 KM to MI
-                
-                Доступные валюты: /currency
-                Доступные величины:
-                1) /length
-                2) /weight
-                3) /temperature
-                """;
-
-        var message = new SendMessage();
-        message.setChatId(String.valueOf(chatId));
-        message.setText(helpText);
-
-        try {
-            execute(message);
-        } catch (Exception exception) {
-            logger.error("Ошибка при отправке справки: ", exception);
         }
     }
 
@@ -134,23 +85,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         System.out.println("Telegram-бот '" + botUsername + "' успешно подключен.");
     }
 
-    /**
-     * Возвращает имя пользователя (username) данного бота.
-     * Требуется родительским классом для идентификации при подключении к API.
-     *
-     * @return username бота
-     */
     @Override
     public String getBotUsername() {
         return botUsername;
     }
 
-    /**
-     * Возвращает токен авторизации данного бота.
-     * Требуется родительским классом для аутентификации запросов к Telegram API.
-     *
-     * @return токен бота
-     */
     @Override
     public String getBotToken() {
         return botToken;
