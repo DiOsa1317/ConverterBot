@@ -22,43 +22,21 @@ public class TemperatureConverter implements QuantityConverter {
     /** Абсолютный ноль в градусах Цельсия — база шкалы Кельвина. */
     private static final BigDecimal ABSOLUTE_ZERO_IN_CELSIUS = new BigDecimal("273.15");
 
-    /**
-     * Возвращает название группы для меню и текста справки.
-     *
-     * @return название группы — «Температура»
-     */
     @Override
     public String title() {
         return "Температура";
     }
 
-    /**
-     * Возвращает команду, по которой бот показывает справку по группе.
-     *
-     * @return команда {@code /temperature}
-     */
     @Override
     public String command() {
         return "/temperature";
     }
 
-    /**
-     * Возвращает enum с единицами группы — по нему реестр определяет владельца запроса.
-     *
-     * @return класс enum со шкалами температуры
-     */
     @Override
     public Class<TemperatureType> quantityType() {
         return TemperatureType.class;
     }
 
-    /**
-     * Возвращает короткую подпись шкалы для кнопки меню.
-     * Кельвину соответствует имя константы, принятое в запросе пользователя.
-     *
-     * @param unit имя шкалы, например {@code CELSIUS}
-     * @return подпись «°C», «°F» или имя константы
-     */
     @Override
     public String displayName(String unit) {
         return switch (unit) {
@@ -68,13 +46,6 @@ public class TemperatureConverter implements QuantityConverter {
         };
     }
 
-    /**
-     * Переводит температуру через градусы Цельсия: значение сначала
-     * приводится к Цельсию, затем выражается в целевой шкале.
-     *
-     * @param request запрос с исходным значением и обеими шкалами группы
-     * @return переведённое значение; при одинаковых шкалах — исходное значение
-     */
     @Override
     public BigDecimal convert(ConversionRequest request) {
         var from = (TemperatureType) request.from();
@@ -122,13 +93,8 @@ public class TemperatureConverter implements QuantityConverter {
         };
     }
 
-    /**
-     * Возвращает текст с формулами связи шкал температуры.
-     *
-     * @return справка о переводе через градусы Цельсия
-     */
     @Override
-    public String getActualCourse() {
+    public String getUnitsDescription() {
         return """
                 Cвязь температур:
                 °C → °F (значение * 1.8 + 32);

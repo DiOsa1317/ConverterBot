@@ -59,31 +59,19 @@ public class LengthConverter implements QuantityConverter {
         return LengthType.class;
     }
 
-    /**
-     * Переводит длину через метры: значение умножается на коэффициент
-     * исходной единицы и делится на коэффициент целевой.
-     *
-     * @param request запрос с исходным значением и обеими единицами группы
-     * @return переведённое значение; при одинаковых единицах — исходное значение
-     */
     @Override
     public BigDecimal convert(ConversionRequest request) {
-        var from = (LengthType) request.from();
-        var to = (LengthType) request.to();
-        if (from == to) {
-            return request.value();
+        if (!(request.from() instanceof LengthType from)
+            || !(request.to() instanceof LengthType to)) {
+            throw new IllegalArgumentException(
+                    "LengthConverter не может обработать запрос: " + request);
         }
         return request.value().multiply(metersInUnit.get(from))
                 .divide(metersInUnit.get(to), 10, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Возвращает текст со списком единиц группы в метрах.
-     *
-     * @return справка с переводом километра, мили и дюйма в метры
-     */
     @Override
-    public String getActualCourse() {
+    public String getUnitsDescription() {
         return String.format(Locale.US, """
                 Величины длин относительно метров:
                 Километр = %f м;

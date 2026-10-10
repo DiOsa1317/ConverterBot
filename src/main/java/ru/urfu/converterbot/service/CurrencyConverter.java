@@ -30,43 +30,21 @@ public class CurrencyConverter implements QuantityConverter {
         ratesToRub.put(CurrencyType.KZT, new BigDecimal("1.91"));
     }
 
-    /**
-     * Возвращает название группы для меню и текста справки.
-     *
-     * @return название группы — «Валюты»
-     */
     @Override
     public String title() {
         return "Валюты";
     }
 
-    /**
-     * Возвращает команду, по которой бот показывает справку по группе.
-     *
-     * @return команда {@code /currency}
-     */
     @Override
     public String command() {
         return "/currency";
     }
 
-    /**
-     * Возвращает enum с единицами группы — по нему реестр определяет владельца запроса.
-     *
-     * @return класс enum с типами валют
-     */
     @Override
     public Class<CurrencyType> quantityType() {
         return CurrencyType.class;
     }
 
-    /**
-     * Переводит валюту через рубль как базовую: значение умножается на курс
-     * исходной валюты и делится на курс целевой.
-     *
-     * @param request запрос с исходным значением и обеими валютами группы
-     * @return переведённое значение; при одинаковых валютах — исходное значение
-     */
     @Override
     public BigDecimal convert(ConversionRequest request) {
         var from = (CurrencyType) request.from();
@@ -77,13 +55,8 @@ public class CurrencyConverter implements QuantityConverter {
         return request.value().multiply(ratesToRub.get(from)).divide(ratesToRub.get(to), 10, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Возвращает текст со списком действующих курсов валют к рублю.
-     *
-     * @return справка с курсами доллара, евро, юаня и тенге
-     */
     @Override
-    public String getActualCourse() {
+    public String getUnitsDescription() {
         return String.format(Locale.US, """
                 Доступны переводы по таким курсам:
                 Рубли к долларам - %.4f;

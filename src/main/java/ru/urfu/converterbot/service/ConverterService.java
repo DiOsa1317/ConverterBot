@@ -17,7 +17,7 @@ public class ConverterService implements BotResponseProcessor {
     private static final String RESULT_TEMPLATE = "%.4f %s = %.4f %s";
 
     /** Текст общей справки по командам бота. */
-    private static final String GENERAL_HELP_TEXT = """
+    private static final String HELP_TEXT = """
         Этот бот конвертирует валюты и физические величины.
         
         Формат запроса: {число} {единица1} to {единица2}
@@ -31,6 +31,11 @@ public class ConverterService implements BotResponseProcessor {
         3) /temperature
         """;
     
+    private static final String START_TEXT = """
+    Приветствую вас! Этот бот конвертирует валюты и физические величины.
+    Чтобы узнать подробнее, введите /help
+    """;
+    
     /** Текст ответа при непредвиденной ошибке обработки сообщения. */
     private static final String UNEXPECTED_ERROR_TEXT = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
 
@@ -41,16 +46,16 @@ public class ConverterService implements BotResponseProcessor {
     private final ConverterRegistry registry;
 
     /** Парсер ввода пользователя: превращает текст в запрос на перевод. */
-    private final ClientInputParser clientInputParser;
+    private final Parser clientInputParser;
 
     /**
      * Создаёт диспетчер с собственным парсером ввода.
      *
      * @param registry реестр конвертеров, в котором ищется группа величин
      */
-    public ConverterService(ConverterRegistry registry) {
+    public ConverterService(ConverterRegistry registry, Parser parser) {
         this.registry = registry;
-        clientInputParser = new ClientInputParser();
+        clientInputParser = parser;
     }
 
     @Override
@@ -70,12 +75,16 @@ public class ConverterService implements BotResponseProcessor {
             return "Я понимаю только текстовые сообщения. Напишите запрос в формате: {число} {единица1} to {единица2}";
         }
 
-        if (messageText.equalsIgnoreCase("/help") || messageText.equalsIgnoreCase("/start")) {
-            return GENERAL_HELP_TEXT;
+        if (messageText.equalsIgnoreCase("/start")) {
+            return START_TEXT;
+        }
+
+        if (messageText.equalsIgnoreCase("/help")) {
+            return HELP_TEXT;
         }
 
         return registry.findConverterByCommand(messageText)
-            .map(QuantityConverter::getActualCourse)
+            .map(QuantityConverter::getUnitsDescription)
             .orElseGet(() -> convert(messageText));
     }
 

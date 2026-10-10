@@ -6,12 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import ru.urfu.converterbot.service.exceptions.ConversionException;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 /**
  * Тесты для ConverterService: форматирование результата перевода,
  * справка по командам групп и отказ переводить между разными группами величин.
@@ -27,7 +21,8 @@ public class ConverterServiceTest {
     @BeforeEach
     void setUp() {
         var registry = new ConverterRegistry();
-        converterService = new ConverterService(registry);
+        var parser = new ClientInputParser();
+        converterService = new ConverterService(registry, parser);
     }
 
     /**

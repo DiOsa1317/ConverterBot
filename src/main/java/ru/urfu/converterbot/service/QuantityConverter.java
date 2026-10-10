@@ -48,7 +48,7 @@ public interface QuantityConverter {
      *
      * @return текст справки для отправки в чат
      */
-    String getActualCourse();
+    String getUnitsDescription();
 
     /**
      * Возвращает единицы группы в порядке объявления в enum.

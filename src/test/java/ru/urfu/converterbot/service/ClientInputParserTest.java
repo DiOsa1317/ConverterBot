@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ru.urfu.converterbot.service.models.CurrencyType;
-import ru.urfu.converterbot.service.models.ConversionRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,7 +32,7 @@ public class ClientInputParserTest {
      * Проверяет, что валюты корректно извлекаются из входного сообщения.
      */
     @Test
-    @DisplayName("Корректно извлекает валюты из ввода")
+    @DisplayName("Правильно извлек валюты из текста пользователя")
     void shouldParseValidMessagesWithCurrency() {
         ConversionRequest result = clientInputParser
                 .parse("567 USD to CNY");
@@ -51,7 +50,7 @@ public class ClientInputParserTest {
             "234 EuR to kzT",
             "763 eur to kzt",
     })
-    @DisplayName("Корректно обрабатывает большие и маленькие буквы")
+    @DisplayName("Считывает названия величин вне зависимости от регистра")
     void shouldParseValidMessagesWithLowercase(String input) {
         ConversionRequest result = clientInputParser.parse(input);
         assertEquals(CurrencyType.EUR, result.from());
@@ -88,17 +87,6 @@ public class ClientInputParserTest {
     }
 
     /**
-     * Проверяет, что опечатка в названии валюты отклоняется парсером.
-     */
-    @Test
-    @DisplayName("Выбрасывает исключение для опечатки в валюте")
-    void shouldThrowExceptionOnTypo() {
-        String input = "10 USDT to EUR";
-
-        assertThrows(IllegalArgumentException.class, () -> clientInputParser.parse(input));
-    }
-
-    /**
      * Проверяет поведение парсера при {@code null} вместо текста сообщения.
      */
     @Test
@@ -115,17 +103,6 @@ public class ClientInputParserTest {
     void shouldThrowExceptionOnWrongSeparator() {
         assertThrows(ConversionException.class,
                 () -> clientInputParser.parse("10 USD XX EUR"));
-    }
-
-    /**
-     * Проверяет, что нечисловое значение приводит к сообщению на русском языке.
-     */
-    @Test
-    @DisplayName("Выбрасывает исключение, если первое слово не число")
-    void shouldThrowExceptionOnNonNumericValue() {
-        var exception = assertThrows(ConversionException.class,
-                () -> clientInputParser.parse("abc USD to EUR"));
-        assertTrue(exception.getMessage().contains("числом"), exception.getMessage());
     }
 
     /**

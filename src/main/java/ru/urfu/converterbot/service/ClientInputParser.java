@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Парсер входных сообщений клиента для извлечения единиц измерения.
  */
-public class ClientInputParser {
+public class ClientInputParser implements Parser {
 
     /** Слово-разделитель между единицами измерения. */
     private static final String TO_SEPARATOR = "to";

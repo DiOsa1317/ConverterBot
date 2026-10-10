@@ -34,7 +34,8 @@ public class BotApplication {
             logger.info("Конфигурация успешно загружена");
 
             var registry = new ConverterRegistry();
-            var converterService = new ConverterService(registry);
+            var parser = new ClientInputParser();
+            var converterService = new ConverterService(registry, parser);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
