@@ -40,3 +40,13 @@ build/
 .DS_Store
 
 config.properties
+AGENTS.md
+opencode.json
+dependency-reduced-pom.xml
+bin/
+
+### Обработка кнопок на будущее ###
+keyboard/
+interaction/
+telegram/
+response/

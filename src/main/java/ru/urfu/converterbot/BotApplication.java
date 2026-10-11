@@ -1,9 +1,12 @@
-package com.example.echobot;
+package ru.urfu.converterbot;
 
-import com.example.echobot.bots.TelegramBot;
-import com.example.echobot.service.EchoService;
+import ru.urfu.converterbot.bots.TelegramBot;
+import ru.urfu.converterbot.service.*;
+
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
+
+import java.util.List;
 
 /**
  * Точка входа в приложение TelegramBot.
@@ -25,15 +28,18 @@ public class BotApplication {
      */
     static void main(String[] args) {
         try {
-            var configuration = new Configuration("config.properties",
+            var configuration = new BotConfiguration("config.properties",
                     "bot.token", "bot.username");
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var echoService = new EchoService();
+            var registry = new ConverterRegistry();
+            var parser = new ClientInputParser();
+            var converterService = new ConverterService(registry, parser);
+
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
-            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, echoService);
+            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, converterService);
             telegramBot.start();
         } catch (Exception e) {
             logger.error("Ошибка при запуске", e);

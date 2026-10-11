@@ -1,6 +1,7 @@
-package com.example.echobot.bots;
+package ru.urfu.converterbot.bots;
 
-import com.example.echobot.service.BotResponseProcessor;
+import ru.urfu.converterbot.service.BotResponseProcessor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -12,9 +13,8 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 
 /**
- * Основной класс эхо-бота для Telegram.
- * Наследует TelegramLongPollingBot и реализует логику повторения
- * текстовых сообщений пользователей в режиме Long Polling.
+ * Основной класс бота для Telegram.
+ * Наследует TelegramLongPollingBot и реализует прием сообщений пользователя и возвращение ему ответа
  */
 public class TelegramBot extends TelegramLongPollingBot {
 
@@ -39,7 +39,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
 
     /**
-     * Создает новый экземпляр эхо-бота.
+     * Создает новый экземпляр бота.
      *
      * @param token       токен авторизации бота
      * @param name        имя пользователя бота (username)
@@ -51,19 +51,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         this.botResponseProcessor = botResponseProcessor;
     }
 
-    /**
-     * Обрабатывает входящие обновления от Telegram API.
-     * Реализует логику эхо-бота: повторяет текстовые сообщения пользователя.
-     *
-     * @param update объект обновления, содержащий данные о событии
-     */
     @Override
     public void onUpdateReceived(Update update) {
-        if (!update.hasMessage() || !update.getMessage().hasText()) {
+        if (!update.hasMessage()) {
             return;
         }
 
-        var messageText = update.getMessage().getText();
+        String messageText = update.getMessage().hasText() ? update.getMessage().getText() : null;
         long chatId = update.getMessage().getChatId();
 
         String responseText = botResponseProcessor.processBotResponse(messageText);
@@ -90,23 +84,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         System.out.println("Telegram-бот '" + botUsername + "' успешно подключен.");
     }
 
-    /**
-     * Возвращает имя пользователя (username) данного бота.
-     * Требуется родительским классом для идентификации при подключении к API.
-     *
-     * @return username бота
-     */
     @Override
     public String getBotUsername() {
         return botUsername;
     }
 
-    /**
-     * Возвращает токен авторизации данного бота.
-     * Требуется родительским классом для аутентификации запросов к Telegram API.
-     *
-     * @return токен бота
-     */
     @Override
     public String getBotToken() {
         return botToken;
