@@ -1,4 +1,4 @@
-package ru.urfu.converterbot.service;
+package ru.urfu.converterbot.service.converters;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

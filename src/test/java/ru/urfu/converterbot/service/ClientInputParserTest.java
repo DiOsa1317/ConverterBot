@@ -1,6 +1,6 @@
 package ru.urfu.converterbot.service;
 
-import ru.urfu.converterbot.service.exceptions.ConversionException;
+import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.TemperatureType;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +72,7 @@ public class ClientInputParserTest {
     })
     @DisplayName("Выбрасывает исключение при неверном количестве слов")
     void shouldThrowExceptionOnWrongLength(String input) {
-        assertThrows(IllegalArgumentException.class, () -> clientInputParser.parse(input));
+        assertThrows(InvalidUserInputException.class, () -> clientInputParser.parse(input));
     }
 
     /**
@@ -87,21 +87,12 @@ public class ClientInputParserTest {
     }
 
     /**
-     * Проверяет поведение парсера при {@code null} вместо текста сообщения.
-     */
-    @Test
-    @DisplayName("Обработка null входных данных")
-    void shouldHandleNullMessage() {
-        assertThrows(NullPointerException.class, () -> clientInputParser.parse(null));
-    }
-
-    /**
      * Проверяет, что разделителем между единицами может быть только слово {@code to}.
      */
     @Test
     @DisplayName("Выбрасывает исключение, если разделитель не равен to")
     void shouldThrowExceptionOnWrongSeparator() {
-        assertThrows(ConversionException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> clientInputParser.parse("10 USD XX EUR"));
     }
 

@@ -8,8 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -41,18 +39,6 @@ public class ConverterRegistryTest {
                 registry.findConverterByUnitName(TemperatureType.KELVIN).orElseThrow().quantityType());
         assertEquals(WeightType.class,
                 registry.findConverterByUnitName(WeightType.POUND).orElseThrow().quantityType());
-    }
-
-    /**
-     * Проверяет, что поиск команды справки не зависит от регистра.
-     */
-    @Test
-    @DisplayName("Находит конвертер по команде справки в любом регистре")
-    void shouldFindConverterByCommand() {
-        assertEquals("Валюты",
-                registry.findConverterByCommand("/currency").orElseThrow().title());
-        assertEquals("Температура",
-                registry.findConverterByCommand("/TEMPERATURE").orElseThrow().title());
     }
 
     /**

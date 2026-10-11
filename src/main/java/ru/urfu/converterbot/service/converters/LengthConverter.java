@@ -1,4 +1,4 @@
-package ru.urfu.converterbot.service;
+package ru.urfu.converterbot.service.converters;
 
 import ru.urfu.converterbot.service.models.LengthType;
 import ru.urfu.converterbot.service.models.ConversionRequest;

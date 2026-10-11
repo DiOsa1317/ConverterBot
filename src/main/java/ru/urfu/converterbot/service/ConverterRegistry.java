@@ -1,5 +1,6 @@
 package ru.urfu.converterbot.service;
 
+import ru.urfu.converterbot.service.converters.*;
 import ru.urfu.converterbot.service.models.*;
 
 import java.util.HashMap;

@@ -1,7 +1,6 @@
 package ru.urfu.converterbot.bots;
 
 import ru.urfu.converterbot.service.BotResponseProcessor;
-import ru.urfu.converterbot.service.exceptions.ConversionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

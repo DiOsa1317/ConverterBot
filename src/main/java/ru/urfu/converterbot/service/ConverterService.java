@@ -4,7 +4,7 @@ import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import ru.urfu.converterbot.service.exceptions.ConversionException;
+import ru.urfu.converterbot.service.converters.QuantityConverter;
 
 /**
  * Диспетчер перевода величин. Принимает текстовое сообщение пользователя,
@@ -39,6 +39,8 @@ public class ConverterService implements BotResponseProcessor {
     /** Текст ответа при непредвиденной ошибке обработки сообщения. */
     private static final String UNEXPECTED_ERROR_TEXT = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
 
+    private static final String WRONG_MESSAGE_TEXT = "Я понимаю только текстовые сообщения. Напишите запрос в формате: {число} {единица1} to {единица2}";
+
     /** Логгер для записи непредвиденных ошибок обработки сообщений. */
     private final Logger logger = LoggerFactory.getLogger(ConverterService.class);
 
@@ -62,8 +64,9 @@ public class ConverterService implements BotResponseProcessor {
     public String processBotResponse(String messageText) {
         try {
             return dispatch(messageText);
-        } catch (ConversionException exception) {
-            return exception.getMessage();
+        } catch (IllegalArgumentException exception) {
+            logger.error("Ошибка при обработке аргументов: ", exception);
+            return WRONG_MESSAGE_TEXT;
         } catch (Exception exception) {
             logger.error("Непредвиденная ошибка при обработке сообщения: ", exception);
             return UNEXPECTED_ERROR_TEXT;
@@ -72,7 +75,7 @@ public class ConverterService implements BotResponseProcessor {
 
     private String dispatch(String messageText) {
         if (messageText == null) {
-            return "Я понимаю только текстовые сообщения. Напишите запрос в формате: {число} {единица1} to {единица2}";
+            return WRONG_MESSAGE_TEXT;
         }
 
         if (messageText.equalsIgnoreCase("/start")) {
@@ -93,13 +96,13 @@ public class ConverterService implements BotResponseProcessor {
      *
      * @param messageText входное сообщение формата "{число} {единица1} to {единица2}"
      * @return строка результата в формате "{значение} {из} = {результат} {в}"
-     * @throws ConversionException если запрос не распознан, единицы неизвестны
+     * @throws IllegalArgumentException если запрос не распознан, единицы неизвестны
      *                             или единицы принадлежат разным группам
      */
     private String convert(String messageText) {
         var request = clientInputParser.parse(messageText);
         var converter = registry.findConverterByUnitName(request.from()).orElseThrow( () ->
-                new ConversionException("Единицы измерения неизвестны")
+                new IllegalArgumentException("Единицы измерения неизвестны")
         );
 
         return String.format(Locale.US, RESULT_TEMPLATE,

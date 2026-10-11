@@ -1,4 +1,4 @@
-package ru.urfu.converterbot.service;
+package ru.urfu.converterbot.service.converters;
 
 import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.WeightType;
@@ -13,9 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Тесты для WeightConverter. */
 public class WeightConverterTest {
-
-    /** Допустимая погрешность сравнения вещественных чисел. */
-    private static final BigDecimal DELTA = new BigDecimal(1e-9);
 
     /** Экземпляр конвертера массы, создаваемый заново перед каждым тестом. */
     private WeightConverter converter;
