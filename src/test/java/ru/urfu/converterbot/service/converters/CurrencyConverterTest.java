@@ -44,7 +44,7 @@ public class CurrencyConverterTest {
             "1,       CNY, RUB, 12.5355",
             "50,      EUR, EUR, 50"
     })
-    @DisplayName("Конвертирует валюты через рубль как базовую")
+    @DisplayName("Правильно конвертирует валюты")
     void shouldConvertCurrency(BigDecimal value, String from, String to, BigDecimal expected) {
         var request = new ConversionRequest(value,
                 CurrencyType.valueOf(from), CurrencyType.valueOf(to));

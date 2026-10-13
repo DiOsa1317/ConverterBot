@@ -45,7 +45,7 @@ public class LengthConverterTest {
             "12,  INCH,       CENTIMETER, 30.48",
             "1,   INCH,       METER,     0.0254"
     })
-    @DisplayName("Переводит длину через метры - базовую единицу")
+    @DisplayName("Правильно переводит величины")
     void shouldConvertLength(BigDecimal value, String from, String to, BigDecimal expected) {
         var request = new ConversionRequest(value, LengthType.valueOf(from), LengthType.valueOf(to));
         BigDecimal result = converter.convert(request);
