@@ -30,26 +30,6 @@ public class LengthConverter implements QuantityConverter {
     }
 
     /**
-     * Возвращает название группы для меню и текста справки.
-     *
-     * @return название группы — «Длина»
-     */
-    @Override
-    public String title() {
-        return "Длина";
-    }
-
-    /**
-     * Возвращает команду, по которой бот показывает справку по группе.
-     *
-     * @return команда {@code /length}
-     */
-    @Override
-    public String command() {
-        return "/length";
-    }
-
-    /**
      * Возвращает enum с единицами группы — по нему реестр определяет владельца запроса.
      *
      * @return класс enum с типами длины

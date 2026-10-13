@@ -12,7 +12,6 @@ import ru.urfu.converterbot.service.models.ConversionRequest;
 
 /**
  * Конвертер валют для обработки запросов на конвертацию.
- * Использует фиксированные курсы относительно рубля (RUB) как базовой валюты.
  */
 public class CurrencyConverter implements QuantityConverter {
 
@@ -28,16 +27,6 @@ public class CurrencyConverter implements QuantityConverter {
         ratesToRub.put(CurrencyType.EUR, new BigDecimal("95.8709"));
         ratesToRub.put(CurrencyType.CNY, new BigDecimal("12.5355"));
         ratesToRub.put(CurrencyType.KZT, new BigDecimal("1.91"));
-    }
-
-    @Override
-    public String title() {
-        return "Валюты";
-    }
-
-    @Override
-    public String command() {
-        return "/currency";
     }
 
     @Override

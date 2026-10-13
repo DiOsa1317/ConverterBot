@@ -6,8 +6,6 @@ import ru.urfu.converterbot.service.*;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 
-import java.util.List;
-
 /**
  * Точка входа в приложение TelegramBot.
  * Отвечает за загрузку конфигурации из локального файла,

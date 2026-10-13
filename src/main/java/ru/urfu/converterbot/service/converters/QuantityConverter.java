@@ -13,21 +13,6 @@ import java.util.List;
  * новой группы не требует изменений в диспетчере.
  */
 public interface QuantityConverter {
-
-    /**
-     * Возвращает название группы величин для меню и текста справки.
-     *
-     * @return название группы, например «Валюты»
-     */
-    String title();
-
-    /**
-     * Возвращает команду, по которой бот показывает справку по этой группе.
-     *
-     * @return команда с ведущим слэшем, например {@code /currency}
-     */
-    String command();
-
     /**
      * Возвращает enum с единицами группы. По нему определяется, кому принадлежит запрос.
      *
@@ -59,15 +44,5 @@ public interface QuantityConverter {
         return Arrays.stream(quantityType().getEnumConstants())
                 .map(unit -> ((Enum<?>) unit).name())
                 .toList();
-    }
-
-    /**
-     * Возвращает короткую подпись единицы для кнопки меню.
-     *
-     * @param unit имя единицы, например {@code MILE}
-     * @return подпись для интерфейса; по умолчанию — имя константы
-     */
-    default String displayName(String unit) {
-        return unit;
     }
 }

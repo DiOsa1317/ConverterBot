@@ -46,6 +46,7 @@ public class TelegramBot extends TelegramLongPollingBot {
      * @param botResponseProcessor сервис для подготовки ответа
      */
     public TelegramBot(String token, String name, BotResponseProcessor botResponseProcessor) {
+        super(token);
         this.botToken = token;
         this.botUsername = name;
         this.botResponseProcessor = botResponseProcessor;

@@ -28,16 +28,6 @@ public class WeightConverter implements QuantityConverter {
     }
 
     @Override
-    public String title() {
-        return "Вес";
-    }
-
-    @Override
-    public String command() {
-        return "/weight";
-    }
-
-    @Override
     public Class<WeightType> quantityType() {
         return WeightType.class;
     }
