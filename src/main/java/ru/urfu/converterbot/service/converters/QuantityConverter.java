@@ -34,15 +34,4 @@ public interface QuantityConverter {
      * @return текст справки для отправки в чат
      */
     String getUnitsDescription();
-
-    /**
-     * Возвращает единицы группы в порядке объявления в enum.
-     *
-     * @return список имён констант группы
-     */
-    default List<String> units() {
-        return Arrays.stream(quantityType().getEnumConstants())
-                .map(unit -> ((Enum<?>) unit).name())
-                .toList();
-    }
 }
