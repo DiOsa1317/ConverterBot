@@ -12,7 +12,6 @@ import ru.urfu.converterbot.service.models.ConversionRequest;
 
 /**
  * Конвертер валют для обработки запросов на конвертацию.
- * Использует фиксированные курсы относительно рубля (RUB) как базовой валюты.
  */
 public class CurrencyConverter implements QuantityConverter {
 
@@ -31,24 +30,19 @@ public class CurrencyConverter implements QuantityConverter {
     }
 
     @Override
-    public String title() {
-        return "Валюты";
-    }
-
-    @Override
-    public String command() {
-        return "/currency";
-    }
-
-    @Override
     public Class<CurrencyType> quantityType() {
         return CurrencyType.class;
     }
 
     @Override
     public BigDecimal convert(ConversionRequest request) {
-        var from = (CurrencyType) request.from();
-        var to = (CurrencyType) request.to();
+        if (!(request.from() instanceof CurrencyType) || !(request.to() instanceof CurrencyType))
+        {
+            throw new IllegalAccessError();
+        }
+
+        var from = request.from();
+        var to = request.to();
         if (from == to) {
             return request.value();
         }

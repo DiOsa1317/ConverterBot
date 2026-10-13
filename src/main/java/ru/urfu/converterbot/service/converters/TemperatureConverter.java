@@ -23,27 +23,8 @@ public class TemperatureConverter implements QuantityConverter {
     private static final BigDecimal ABSOLUTE_ZERO_IN_CELSIUS = new BigDecimal("273.15");
 
     @Override
-    public String title() {
-        return "Температура";
-    }
-
-    @Override
-    public String command() {
-        return "/temperature";
-    }
-
-    @Override
     public Class<TemperatureType> quantityType() {
         return TemperatureType.class;
-    }
-
-    @Override
-    public String displayName(String unit) {
-        return switch (unit) {
-            case "CELSIUS" -> "°C";
-            case "FAHRENHEIT" -> "°F";
-            default -> unit;
-        };
     }
 
     @Override

@@ -4,7 +4,12 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -15,6 +20,14 @@ public class ClientInputParser implements Parser {
 
     /** Слово-разделитель между единицами измерения. */
     private static final String TO_SEPARATOR = "to";
+
+    private static final Map<String, QuantityType> UNITS = Stream.of(
+            CurrencyType.values(),
+            LengthType.values(),
+            WeightType.values(),
+            TemperatureType.values()
+    ).flatMap(Arrays::stream)
+    .collect(Collectors.toMap(Enum::name, unit -> unit));
 
     /**
      * Разбирает сообщение клиента в запрос на перевод.
@@ -67,28 +80,14 @@ public class ClientInputParser implements Parser {
      * @throws InvalidUserInputException если имя не найдено ни в одном из известных enum
      */
     private QuantityType parseUnit(String originalMessage, String token) {
-        var unit = token.toUpperCase();
-        try {
-            return CurrencyType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
+        var unit = UNITS.get(token.toUpperCase(Locale.ROOT));
+
+        if (unit == null) {
+            throw new InvalidUserInputException(originalMessage, 
+                "Неизвестная единица измерения: " + token);
         }
 
-        try {
-            return LengthType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        try {
-            return WeightType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        try {
-            return TemperatureType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        throw new InvalidUserInputException(originalMessage, "Неизвестная единица измерения: " + token);
+        return unit;
     }
 }
 
