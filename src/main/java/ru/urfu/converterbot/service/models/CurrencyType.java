@@ -1,12 +1,30 @@
 package ru.urfu.converterbot.service.models;
 
+import java.util.List;
+
 /**
  * Перечисление поддерживаемых типов валют
  */
 public enum CurrencyType implements QuantityType {
-    RUB,
-    EUR,
-    USD,
-    CNY,
-    KZT
+    RUB("RUB", "RUBLE", "руб"),
+    EUR("EUR", "EURO", "евро"),
+    USD("USD", "DOLLAR", "доллар"),
+    CNY("CNY", "YUAN", "юань"),
+    KZT("KZT", "TENGE", "тенге");
+
+    private final List<String> codes;
+
+    /**
+     * Создаёт тип валюты с заданным набором кодов.
+     *
+     * @param codes коды, по которым распознаются величины
+     */
+    CurrencyType(String... codes) {
+        this.codes = List.of(codes);
+    }
+
+    @Override
+    public List<String> getCodes() {
+        return codes;
+    }
 }

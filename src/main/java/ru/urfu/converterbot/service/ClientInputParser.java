@@ -67,28 +67,13 @@ public class ClientInputParser implements Parser {
      * @throws InvalidUserInputException если имя не найдено ни в одном из известных enum
      */
     private QuantityType parseUnit(String originalMessage, String token) {
-        var unit = token.toUpperCase();
-        try {
-            return CurrencyType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        try {
-            return LengthType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        try {
-            return WeightType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        try {
-            return TemperatureType.valueOf(unit);
-        } catch (IllegalArgumentException ignored) {
-        }
-
-        throw new InvalidUserInputException(originalMessage, "Неизвестная единица измерения: " + token);
+        return QuantityType.fromCode(CurrencyType.class, token)
+                .<QuantityType>map(unit -> unit)
+                 .or(() -> QuantityType.fromCode(LengthType.class, token).map(unit -> (QuantityType) unit))
+                .or(() -> QuantityType.fromCode(WeightType.class, token).map(unit -> (QuantityType) unit))
+                .or(() -> QuantityType.fromCode(TemperatureType.class, token).map(unit -> (QuantityType) unit))
+                .orElseThrow(() -> new InvalidUserInputException(
+                        originalMessage, "Неизвестная единица измерения: " + token));
     }
 }
 

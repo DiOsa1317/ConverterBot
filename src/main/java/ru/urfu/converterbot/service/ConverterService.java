@@ -106,7 +106,7 @@ public class ConverterService implements BotResponseProcessor {
         );
 
         return String.format(Locale.US, RESULT_TEMPLATE,
-                request.value(), request.from(),
-                converter.convert(request), request.to());
+                request.value(), request.from().getCode(),
+                converter.convert(request), request.to().getCode());
     }
 }

@@ -19,9 +19,10 @@ public class ConverterRegistry {
     private final LengthConverter lengthConverter = new LengthConverter();
     private final TemperatureConverter temperatureConverter = new TemperatureConverter();
 
-    /** Доступные конвертеры */
+    /** Доступные конвертеры по типам величин*/
     private final Map<Class<? extends QuantityType>, QuantityConverter> convertersByTypes = new HashMap<>();
 
+    /** Доступные конвертеры по командам*/
     private final Map<String, QuantityConverter> convertersByCommands = new HashMap<>();
 
     /**

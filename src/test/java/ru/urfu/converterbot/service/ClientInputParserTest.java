@@ -83,7 +83,7 @@ public class ClientInputParserTest {
     void shouldThrowExceptionOnInvalidCurrency() {
         String input = "10 BTC to USD";
 
-        assertThrows(IllegalArgumentException.class, () -> clientInputParser.parse(input));
+        assertThrows(InvalidUserInputException.class, () -> clientInputParser.parse(input));
     }
 
     /**
@@ -92,7 +92,7 @@ public class ClientInputParserTest {
     @Test
     @DisplayName("Выбрасывает исключение, если разделитель не равен to")
     void shouldThrowExceptionOnWrongSeparator() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(InvalidUserInputException.class,
                 () -> clientInputParser.parse("10 USD XX EUR"));
     }
 
