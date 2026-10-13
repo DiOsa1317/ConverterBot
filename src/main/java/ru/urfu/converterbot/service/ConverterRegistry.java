@@ -4,7 +4,6 @@ import ru.urfu.converterbot.service.converters.*;
 import ru.urfu.converterbot.service.models.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -12,7 +11,7 @@ import java.util.Optional;
  * Реестр конвертеров величин. Хранит список зарегистрированных конвертеров
  * и находит нужный по единице измерения или по команде справки.
  */
-public class ConverterRegistry {
+public class ConverterRegistry implements ConverterProvider{
 
     private final CurrencyConverter currencyConverter = new CurrencyConverter();
     private final WeightConverter weightConverter = new WeightConverter();
@@ -31,15 +30,6 @@ public class ConverterRegistry {
     public ConverterRegistry() {
         registerConvertersByTypes();
         registerConvertersByCommands();
-    }
-
-    /**
-     * Возвращает все зарегистрированные конвертеры в порядке регистрации.
-     *
-     * @return неизменяемый список конвертеров
-     */
-    public List<QuantityConverter> all() {
-        return convertersByTypes.values().stream().toList();
     }
 
     /**

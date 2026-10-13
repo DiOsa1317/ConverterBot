@@ -1,6 +1,8 @@
 package ru.urfu.converterbot.service;
 
 import java.util.Locale;
+
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,13 +41,14 @@ public class ConverterService implements BotResponseProcessor {
     /** Текст ответа при непредвиденной ошибке обработки сообщения. */
     private static final String UNEXPECTED_ERROR_TEXT = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
 
-    private static final String WRONG_MESSAGE_TEXT = "Я понимаю только текстовые сообщения. Напишите запрос в формате: {число} {единица1} to {единица2}";
+    private static final String WRONG_MESSAGE_TEXT =
+            "Я понимаю только текстовые сообщения. Напишите запрос в формате: {число} {единица1} to {единица2}";
 
     /** Логгер для записи непредвиденных ошибок обработки сообщений. */
     private final Logger logger = LoggerFactory.getLogger(ConverterService.class);
 
     /** Реестр конвертеров, по которому определяется группа величин. */
-    private final ConverterRegistry registry;
+    private final ConverterProvider converterProvider;
 
     /** Парсер ввода пользователя: превращает текст в запрос на перевод. */
     private final Parser clientInputParser;
@@ -53,10 +56,10 @@ public class ConverterService implements BotResponseProcessor {
     /**
      * Создаёт диспетчер с собственным парсером ввода.
      *
-     * @param registry реестр конвертеров, в котором ищется группа величин
+     * @param converterProvider реестр конвертеров, в котором ищется группа величин
      */
-    public ConverterService(ConverterRegistry registry, Parser parser) {
-        this.registry = registry;
+    public ConverterService(@NotNull ConverterProvider converterProvider, @NotNull Parser parser) {
+        this.converterProvider = converterProvider;
         clientInputParser = parser;
     }
 
@@ -86,7 +89,7 @@ public class ConverterService implements BotResponseProcessor {
             return HELP_TEXT;
         }
 
-        return registry.findConverterByCommand(messageText)
+        return converterProvider.findConverterByCommand(messageText)
             .map(QuantityConverter::getUnitsDescription)
             .orElseGet(() -> convert(messageText));
     }
@@ -101,7 +104,7 @@ public class ConverterService implements BotResponseProcessor {
      */
     private String convert(String messageText) {
         var request = clientInputParser.parse(messageText);
-        var converter = registry.findConverterByUnitName(request.from()).orElseThrow( () ->
+        var converter = converterProvider.findConverterByUnitName(request.from()).orElseThrow( () ->
                 new IllegalArgumentException("Единицы измерения неизвестны")
         );
 
