@@ -77,7 +77,7 @@ public class TemperatureConverter implements QuantityConverter {
     @Override
     public String getUnitsDescription() {
         return """
-                Cвязь температур:
+                Связь температур:
                 °C → °F (значение * 1.8 + 32);
                 °C → K (значение + 273.15);
                 """;

@@ -21,23 +21,23 @@ public class ConverterService implements BotResponseProcessor {
     /** Текст общей справки по командам бота. */
     private static final String HELP_TEXT = """
         Этот бот конвертирует валюты и физические величины.
-        
+
         Формат запроса: {число} {единица1} to {единица2}
         Например: 100 USD to EUR
         Или: 10 KM to MI
-        
+
         Доступные валюты: /currency
         Доступные величины:
         1) /length
         2) /weight
         3) /temperature
         """;
-    
+
     private static final String START_TEXT = """
     Приветствую вас! Этот бот конвертирует валюты и физические величины.
     Чтобы узнать подробнее, введите /help
     """;
-    
+
     /** Текст ответа при непредвиденной ошибке обработки сообщения. */
     private static final String UNEXPECTED_ERROR_TEXT = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
 

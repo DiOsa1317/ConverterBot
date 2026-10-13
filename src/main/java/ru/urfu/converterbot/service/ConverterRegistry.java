@@ -11,7 +11,7 @@ import java.util.Optional;
  * Реестр конвертеров величин. Хранит список зарегистрированных конвертеров
  * и находит нужный по единице измерения или по команде справки.
  */
-public class ConverterRegistry implements ConverterProvider{
+public class ConverterRegistry implements ConverterProvider {
 
     private final CurrencyConverter currencyConverter = new CurrencyConverter();
     private final WeightConverter weightConverter = new WeightConverter();

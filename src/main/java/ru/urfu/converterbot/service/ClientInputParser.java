@@ -60,7 +60,7 @@ public class ClientInputParser implements Parser {
     /**
      * Распознаёт строковое имя единицы измерения, перебирая все известные
      * enum-типы величин: валюты, длину, массу и температуру.
-     * 
+     *
      * @param originalMessage исходное сообщение целиком (для текста ошибки)
      * @param token строковое имя единицы измерения
      * @return распознанное значение
@@ -69,7 +69,7 @@ public class ClientInputParser implements Parser {
     private QuantityType parseUnit(String originalMessage, String token) {
         return QuantityType.fromCode(CurrencyType.class, token)
                 .<QuantityType>map(unit -> unit)
-                 .or(() -> QuantityType.fromCode(LengthType.class, token).map(unit -> (QuantityType) unit))
+                .or(() -> QuantityType.fromCode(LengthType.class, token).map(unit -> (QuantityType) unit))
                 .or(() -> QuantityType.fromCode(WeightType.class, token).map(unit -> (QuantityType) unit))
                 .or(() -> QuantityType.fromCode(TemperatureType.class, token).map(unit -> (QuantityType) unit))
                 .orElseThrow(() -> new InvalidUserInputException(
