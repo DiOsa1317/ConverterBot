@@ -29,10 +29,6 @@ public class CurrencyConverter implements QuantityConverter<CurrencyType> {
         ratesToRub.put(CurrencyType.KZT, new BigDecimal("1.91"));
     }
 
-    @Override
-    public Class<CurrencyType> quantityType() {
-        return CurrencyType.class;
-    }
 
     @Override
     public BigDecimal convert(ConversionRequest<CurrencyType> request) {

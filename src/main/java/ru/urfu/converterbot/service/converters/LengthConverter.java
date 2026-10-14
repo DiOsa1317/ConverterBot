@@ -29,15 +29,6 @@ public class LengthConverter implements QuantityConverter<LengthType> {
         metersInUnit.put(LengthType.INCH, new BigDecimal("0.0254"));
     }
 
-    /**
-     * Возвращает enum с единицами группы — по нему реестр определяет владельца запроса.
-     *
-     * @return класс enum с типами длины
-     */
-    @Override
-    public Class<LengthType> quantityType() {
-        return LengthType.class;
-    }
 
     @Override
     public BigDecimal convert(ConversionRequest<LengthType> request) {

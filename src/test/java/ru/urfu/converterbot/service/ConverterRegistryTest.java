@@ -1,5 +1,9 @@
 package ru.urfu.converterbot.service;
 
+import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.LengthConverter;
+import ru.urfu.converterbot.service.converters.TemperatureConverter;
+import ru.urfu.converterbot.service.converters.WeightConverter;
 import ru.urfu.converterbot.service.models.CurrencyType;
 import ru.urfu.converterbot.service.models.LengthType;
 import ru.urfu.converterbot.service.models.TemperatureType;
@@ -31,14 +35,14 @@ public class ConverterRegistryTest {
     @Test
     @DisplayName("Находит конвертер по единице измерения")
     void shouldFindConverterByUnit() {
-        assertEquals(CurrencyType.class,
-                registry.findConverterByUnitName(CurrencyType.USD).orElseThrow().quantityType());
-        assertEquals(LengthType.class,
-                registry.findConverterByUnitName(LengthType.KILOMETER).orElseThrow().quantityType());
-        assertEquals(TemperatureType.class,
-                registry.findConverterByUnitName(TemperatureType.KELVIN).orElseThrow().quantityType());
-        assertEquals(WeightType.class,
-                registry.findConverterByUnitName(WeightType.POUND).orElseThrow().quantityType());
+        assertEquals(CurrencyConverter.class,
+                registry.findConverterByUnitName(CurrencyType.USD).orElseThrow().getClass());
+        assertEquals(LengthConverter.class,
+                registry.findConverterByUnitName(LengthType.KILOMETER).orElseThrow().getClass());
+        assertEquals(TemperatureConverter.class,
+                registry.findConverterByUnitName(TemperatureType.KELVIN).orElseThrow().getClass());
+        assertEquals(WeightConverter.class,
+                registry.findConverterByUnitName(WeightType.POUND).orElseThrow().getClass());
     }
 
     /**

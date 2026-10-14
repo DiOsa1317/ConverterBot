@@ -27,10 +27,6 @@ public class WeightConverter implements QuantityConverter<WeightType> {
         kilogramsInUnit.put(WeightType.POUND, new BigDecimal("0.45359237"));
     }
 
-    @Override
-    public Class<WeightType> quantityType() {
-        return WeightType.class;
-    }
 
     @Override
     public BigDecimal convert(ConversionRequest<WeightType> request) {

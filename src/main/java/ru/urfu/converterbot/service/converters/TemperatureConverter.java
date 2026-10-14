@@ -23,11 +23,6 @@ public class TemperatureConverter implements QuantityConverter<TemperatureType> 
     private static final BigDecimal ABSOLUTE_ZERO_IN_CELSIUS = new BigDecimal("273.15");
 
     @Override
-    public Class<TemperatureType> quantityType() {
-        return TemperatureType.class;
-    }
-
-    @Override
     public BigDecimal convert(ConversionRequest<TemperatureType> request) {
         var from = request.from();
         var to = request.to();

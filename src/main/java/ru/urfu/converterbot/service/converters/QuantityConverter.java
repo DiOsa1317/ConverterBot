@@ -11,12 +11,6 @@ import java.math.BigDecimal;
  * новой группы не требует изменений в диспетчере.
  */
 public interface QuantityConverter<T extends QuantityType> {
-    /**
-     * Возвращает enum с единицами группы. По нему определяется, кому принадлежит запрос.
-     *
-     * @return класс enum, реализующий {@link QuantityType}
-     */
-    Class<T> quantityType();
 
     /**
      * Выполняет перевод по разобранному запросу.
