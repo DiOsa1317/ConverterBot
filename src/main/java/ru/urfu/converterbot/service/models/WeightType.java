@@ -2,7 +2,7 @@ package ru.urfu.converterbot.service.models;
 
 import java.util.List;
 
-/** Единицы массы. */
+
 public enum WeightType implements QuantityType {
     KILOGRAM("kg", "KILOGRAM", "KG", "килограмм", "кг"),
     GRAM("g", "GRAM", "G", "грамм", "г"),

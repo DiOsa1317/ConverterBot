@@ -46,7 +46,7 @@ public class CurrencyConverterTest {
     })
     @DisplayName("Правильно конвертирует валюты")
     void shouldConvertCurrency(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest(value,
+        var request = new ConversionRequest<CurrencyType>(value,
                 CurrencyType.valueOf(from), CurrencyType.valueOf(to));
         BigDecimal result = currencyConverter.convert(request);
         assertEquals(0, expected.compareTo(result),

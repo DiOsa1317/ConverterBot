@@ -7,9 +7,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Конвертер температуры. Переводит через градусы Цельсия как промежуточную шкалу,
- * потому что перевод между °C, °F и K является аффинным преобразованием, а не линейным:
- * результат нельзя получить умножением исходного значения на коэффициент.
+ * Конвертер температуры.
  */
 public class TemperatureConverter implements QuantityConverter<TemperatureType> {
 

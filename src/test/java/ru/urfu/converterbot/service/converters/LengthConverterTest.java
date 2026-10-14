@@ -47,7 +47,7 @@ public class LengthConverterTest {
     })
     @DisplayName("Правильно переводит величины")
     void shouldConvertLength(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest(value, LengthType.valueOf(from), LengthType.valueOf(to));
+        var request = new ConversionRequest<LengthType>(value, LengthType.valueOf(from), LengthType.valueOf(to));
         BigDecimal result = converter.convert(request);
         assertEquals(0, expected.compareTo(result),
                 () -> "Ожидалось: " + expected + ", но получено: " + result);

@@ -1,7 +1,6 @@
 package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
-import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.TemperatureType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +33,7 @@ public class ClientInputParserTest {
     @Test
     @DisplayName("Правильно извлек валюты из текста пользователя")
     void shouldParseValidMessagesWithCurrency() {
-        ConversionRequest result = clientInputParser
+        var result = clientInputParser
                 .parse("567 USD to CNY");
         assertEquals(CurrencyType.USD, result.from());
         assertEquals(CurrencyType.CNY, result.to());
@@ -52,7 +51,7 @@ public class ClientInputParserTest {
     })
     @DisplayName("Считывает названия величин вне зависимости от регистра")
     void shouldParseValidMessagesWithLowercase(String input) {
-        ConversionRequest result = clientInputParser.parse(input);
+        var result = clientInputParser.parse(input);
         assertEquals(CurrencyType.EUR, result.from());
         assertEquals(CurrencyType.KZT, result.to());
     }

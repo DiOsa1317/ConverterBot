@@ -55,7 +55,7 @@ public class TemperatureConverterTest {
     })
     @DisplayName("Переводит температуру между градусами Цельсия, Фаренгейта и Кельвина")
     void shouldConvertTemperature(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest(value, TemperatureType.valueOf(from), TemperatureType.valueOf(to));
+        var request = new ConversionRequest<TemperatureType>(value, TemperatureType.valueOf(from), TemperatureType.valueOf(to));
         BigDecimal result = converter.convert(request);
         assertEquals(0, expected.compareTo(result),
                 () -> "Ожидалось: " + expected + ", но получено: " + result);
@@ -69,7 +69,7 @@ public class TemperatureConverterTest {
     @DisplayName("Перевод одинаковых единиц возвращает исходное значение")
     void shouldReturnSameValueForSameUnit() {
         BigDecimal inputValue = new BigDecimal("37.5");
-        var request = new ConversionRequest(inputValue, TemperatureType.CELSIUS, TemperatureType.CELSIUS);
+        var request = new ConversionRequest<TemperatureType>(inputValue, TemperatureType.CELSIUS, TemperatureType.CELSIUS);
         BigDecimal result = converter.convert(request);
         assertEquals(0, inputValue.compareTo(result),
                 "При конвертации в ту же шкалу значение должно остаться неизменным");
@@ -84,10 +84,10 @@ public class TemperatureConverterTest {
     void shouldReturnOriginalValueAfterRoundTrip() {
         BigDecimal originalValue = new BigDecimal("15");
 
-        var toFahrenheitReq = new ConversionRequest(originalValue, TemperatureType.CELSIUS, TemperatureType.FAHRENHEIT);
+        var toFahrenheitReq = new ConversionRequest<TemperatureType>(originalValue, TemperatureType.CELSIUS, TemperatureType.FAHRENHEIT);
         BigDecimal fahrenheitResult = converter.convert(toFahrenheitReq);
 
-        var backToCelsiusReq = new ConversionRequest(fahrenheitResult, TemperatureType.FAHRENHEIT, TemperatureType.CELSIUS);
+        var backToCelsiusReq = new ConversionRequest<TemperatureType>(fahrenheitResult, TemperatureType.FAHRENHEIT, TemperatureType.CELSIUS);
         BigDecimal celsiusResult = converter.convert(backToCelsiusReq);
 
         assertEquals(0, originalValue.compareTo(celsiusResult),

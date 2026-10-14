@@ -2,9 +2,7 @@ package ru.urfu.converterbot.service.models;
 
 import java.util.List;
 
-/**
- * Перечисление поддерживаемых типов валют
- */
+
 public enum CurrencyType implements QuantityType {
     RUB("RUB", "RUBLE", "руб"),
     EUR("EUR", "EURO", "евро"),

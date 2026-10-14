@@ -44,7 +44,7 @@ public class WeightConverterTest {
     })
     @DisplayName("Переводит единицы веса относительно килограммов")
     void shouldConvertWeight(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest(value, WeightType.valueOf(from), WeightType.valueOf(to));
+        var request = new ConversionRequest<WeightType>(value, WeightType.valueOf(from), WeightType.valueOf(to));
         BigDecimal result = converter.convert(request);
         assertEquals(0, expected.compareTo(result),
                 "Ожидалось " + expected + ", но получили " + result);

@@ -2,7 +2,7 @@ package ru.urfu.converterbot.service.models;
 
 import java.util.List;
 
-/** Единицы температуры*/
+
 public enum TemperatureType implements QuantityType {
     CELSIUS("°C", "CELSIUS", "Цельсий"),
     FAHRENHEIT("°F", "FAHRENHEIT", "Фаренгейт"),

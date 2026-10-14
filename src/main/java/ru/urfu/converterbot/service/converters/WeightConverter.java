@@ -10,8 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Конвертер массы. Все переводы идут через килограмм как базовую единицу,
- * поэтому перевод в обе стороны симметричен и не требует таблицы пар.
+ * Конвертер массы.
  */
 public class WeightConverter implements QuantityConverter<WeightType> {
     /** Сколько килограммов содержится в одной единице измерения. */

@@ -10,8 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Конвертер длины. Все переводы идут через метры как базовую единицу,
- * поэтому перевод в обе стороны симметричен и не требует таблицы пар.
+ * Конвертер длины.
  */
 public class LengthConverter implements QuantityConverter<LengthType> {
 

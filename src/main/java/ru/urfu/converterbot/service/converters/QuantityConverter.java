@@ -6,9 +6,7 @@ import ru.urfu.converterbot.service.models.QuantityType;
 import java.math.BigDecimal;
 
 /**
- * Конвертер одной группы величин: валюты, длины, веса или температуры.
- * Каждая группа живет в своём enum и в своём конвертере, поэтому добавление
- * новой группы не требует изменений в диспетчере.
+ * Конвертер группы величин.
  */
 public interface QuantityConverter<T extends QuantityType> {
 
