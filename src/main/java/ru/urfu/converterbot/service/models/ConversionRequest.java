@@ -11,10 +11,10 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
  * @param from единица измерения, из которой переводим
  * @param to единица измерения, в которую переводим
  */
-public record ConversionRequest(
+public record ConversionRequest<T extends QuantityType>(
     BigDecimal value, 
-    QuantityType from, 
-    QuantityType to) {
+    T from,
+    T to) {
     /**
      * Компактный конструктор: проверяет, что обе единицы измерения принадлежат
      * одной и той же группе величин (оба — валюты, оба — величины длины, и т.д.).

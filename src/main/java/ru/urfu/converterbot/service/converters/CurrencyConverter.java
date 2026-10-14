@@ -13,7 +13,7 @@ import ru.urfu.converterbot.service.models.ConversionRequest;
 /**
  * Конвертер валют для обработки запросов на конвертацию.
  */
-public class CurrencyConverter implements QuantityConverter {
+public class CurrencyConverter implements QuantityConverter<CurrencyType> {
 
     /** Карта курсов валют относительно рубля */
     private final Map<CurrencyType, BigDecimal> ratesToRub = new EnumMap<>(CurrencyType.class);
@@ -35,9 +35,9 @@ public class CurrencyConverter implements QuantityConverter {
     }
 
     @Override
-    public BigDecimal convert(ConversionRequest request) {
-        var from = (CurrencyType) request.from();
-        var to = (CurrencyType) request.to();
+    public BigDecimal convert(ConversionRequest<CurrencyType> request) {
+        var from = request.from();
+        var to = request.to();
         if (from == to) {
             return request.value();
         }

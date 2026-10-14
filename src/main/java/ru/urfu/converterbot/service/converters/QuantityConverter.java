@@ -4,21 +4,19 @@ import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.QuantityType;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Конвертер одной группы величин: валюты, длины, веса или температуры.
  * Каждая группа живет в своём enum и в своём конвертере, поэтому добавление
  * новой группы не требует изменений в диспетчере.
  */
-public interface QuantityConverter {
+public interface QuantityConverter<T extends QuantityType> {
     /**
      * Возвращает enum с единицами группы. По нему определяется, кому принадлежит запрос.
      *
      * @return класс enum, реализующий {@link QuantityType}
      */
-    Class<? extends QuantityType> quantityType();
+    Class<T> quantityType();
 
     /**
      * Выполняет перевод по разобранному запросу.
@@ -26,7 +24,7 @@ public interface QuantityConverter {
      * @param request запрос с исходным значением и обеими единицами одной группы
      * @return переведённое значение
      */
-    BigDecimal convert(ConversionRequest request);
+    BigDecimal convert(ConversionRequest<T> request);
 
     /**
      * Возвращает текст со справкой по коэффициентам группы.

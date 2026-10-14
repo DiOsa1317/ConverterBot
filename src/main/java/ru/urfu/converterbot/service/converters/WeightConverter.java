@@ -13,7 +13,7 @@ import java.util.Map;
  * Конвертер массы. Все переводы идут через килограмм как базовую единицу,
  * поэтому перевод в обе стороны симметричен и не требует таблицы пар.
  */
-public class WeightConverter implements QuantityConverter {
+public class WeightConverter implements QuantityConverter<WeightType> {
     /** Сколько килограммов содержится в одной единице измерения. */
     private final Map<WeightType, BigDecimal> kilogramsInUnit = new EnumMap<>(WeightType.class);
 
@@ -33,9 +33,9 @@ public class WeightConverter implements QuantityConverter {
     }
 
     @Override
-    public BigDecimal convert(ConversionRequest request) {
-        var from = (WeightType) request.from();
-        var to = (WeightType) request.to();
+    public BigDecimal convert(ConversionRequest<WeightType> request) {
+        var from = request.from();
+        var to = request.to();
         if (from == to) {
             return request.value();
         }

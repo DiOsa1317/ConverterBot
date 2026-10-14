@@ -19,10 +19,10 @@ public class ConverterRegistry implements ConverterProvider {
     private final TemperatureConverter temperatureConverter = new TemperatureConverter();
 
     /** Доступные конвертеры по типам величин*/
-    private final Map<Class<? extends QuantityType>, QuantityConverter> convertersByTypes = new HashMap<>();
+    private final Map<Class<? extends QuantityType>, QuantityConverter<?>> convertersByTypes = new HashMap<>();
 
     /** Доступные конвертеры по командам*/
-    private final Map<String, QuantityConverter> convertersByCommands = new HashMap<>();
+    private final Map<String, QuantityConverter<?>> convertersByCommands = new HashMap<>();
 
     /**
      * Создаёт реестр и защищает переданный список от внешних изменений.

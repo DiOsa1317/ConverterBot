@@ -24,7 +24,7 @@ public class ClientInputParser implements Parser {
      * @throws InvalidUserInputException если формат сообщения неверный или единица неизвестна
      * @throws NullPointerException если передан {@code null}
      */
-    public ConversionRequest parse(@NotNull String message) {
+    public ConversionRequest<QuantityType> parse(@NotNull String message) {
         Objects.requireNonNull(message, "Сообщение не может быть null");
         var parts = message.split(" ");
 
@@ -37,7 +37,7 @@ public class ClientInputParser implements Parser {
         var from = parseUnit(message, parts[1]);
         var to = parseUnit(message, parts[3]);
 
-        return new ConversionRequest(value, from, to);
+        return new ConversionRequest<>(value, from, to);
     }
 
     /**

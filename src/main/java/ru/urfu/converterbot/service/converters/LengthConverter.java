@@ -13,7 +13,7 @@ import java.util.Map;
  * Конвертер длины. Все переводы идут через метры как базовую единицу,
  * поэтому перевод в обе стороны симметричен и не требует таблицы пар.
  */
-public class LengthConverter implements QuantityConverter {
+public class LengthConverter implements QuantityConverter<LengthType> {
 
     /** Сколько метров содержится в одной единице измерения. */
     private final Map<LengthType, BigDecimal> metersInUnit = new EnumMap<>(LengthType.class);
@@ -40,11 +40,11 @@ public class LengthConverter implements QuantityConverter {
     }
 
     @Override
-    public BigDecimal convert(ConversionRequest request) {
-        if (!(request.from() instanceof LengthType from)
-            || !(request.to() instanceof LengthType to)) {
-            throw new IllegalArgumentException(
-                    "LengthConverter не может обработать запрос: " + request);
+    public BigDecimal convert(ConversionRequest<LengthType> request) {
+        var from = request.from();
+        var to = request.to();
+        if (from == to) {
+            return request.value();
         }
         return request.value().multiply(metersInUnit.get(from))
                 .divide(metersInUnit.get(to), 10, RoundingMode.HALF_UP);

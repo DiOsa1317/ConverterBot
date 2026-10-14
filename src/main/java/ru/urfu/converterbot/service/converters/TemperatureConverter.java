@@ -11,7 +11,7 @@ import java.math.RoundingMode;
  * потому что перевод между °C, °F и K является аффинным преобразованием, а не линейным:
  * результат нельзя получить умножением исходного значения на коэффициент.
  */
-public class TemperatureConverter implements QuantityConverter {
+public class TemperatureConverter implements QuantityConverter<TemperatureType> {
 
     /** Сколько градусов Цельсия в одном градусе Фаренгейта. */
     private static final BigDecimal FAHRENHEIT_IN_CELSIUS = new BigDecimal("1.8");
@@ -28,9 +28,9 @@ public class TemperatureConverter implements QuantityConverter {
     }
 
     @Override
-    public BigDecimal convert(ConversionRequest request) {
-        var from = (TemperatureType) request.from();
-        var to = (TemperatureType) request.to();
+    public BigDecimal convert(ConversionRequest<TemperatureType> request) {
+        var from = request.from();
+        var to = request.to();
         if (from == to) {
             return request.value();
         }
@@ -52,13 +52,6 @@ public class TemperatureConverter implements QuantityConverter {
         };
     }
 
-    /**
-     * Выражает значение в градусах Цельсия в целевой шкале.
-     *
-     * @param celsius значение в градусах Цельсия
-     * @param unit    целевая шкала
-     * @return значение в целевой шкале
-     */
     /**
      * Выражает значение в градусах Цельсия в целевой шкале.
      *
