@@ -14,7 +14,7 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 /**
  * Основной класс бота для Telegram.
- * Наследует TelegramLongPollingBot и реализует прием сообщений пользователя 
+ * Реализует прием сообщений пользователя
  * и возвращение ему ответа
  */
 public class TelegramBot extends TelegramLongPollingBot {
