@@ -72,8 +72,14 @@ public class BotServiceTest {
     @Test
     @DisplayName("Отвечает приветствием на /start")
     void shouldReturnStartText() {
-        assertTrue(botService.processBotResponse("/start")
-            .contains("Приветствую вас! Этот бот конвертирует валюты и физические величины. Чтобы узнать подробнее, введите /help"));
+        String expected = """
+            Приветствую вас! Этот бот конвертирует валюты и физические величины.
+            Чтобы узнать подробнее, введите /help
+            """;
+
+        String actual = botService.processBotResponse("/start");
+
+        assertTrue(actual.contains(expected));
     }
 
     /**
