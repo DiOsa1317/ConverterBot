@@ -1,6 +1,6 @@
 package ru.urfu.converterbot.service.converters;
 
-import ru.urfu.converterbot.service.models.ConversionRequest;
+import ru.urfu.converterbot.service.converters.models.WeightData;
 import ru.urfu.converterbot.service.models.WeightType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +22,7 @@ public class WeightConverterTest {
      */
     @BeforeEach
     void setUp() {
-        converter = new WeightConverter();
+        converter = new WeightConverter(new WeightData());
     }
 
     /**
@@ -44,8 +44,7 @@ public class WeightConverterTest {
     })
     @DisplayName("Переводит единицы веса относительно килограммов")
     void shouldConvertWeight(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest<WeightType>(value, WeightType.valueOf(from), WeightType.valueOf(to));
-        BigDecimal result = converter.convert(request);
+        BigDecimal result = converter.convert(value, WeightType.valueOf(from), WeightType.valueOf(to));
         assertEquals(0, expected.compareTo(result),
                 "Ожидалось " + expected + ", но получили " + result);
     }

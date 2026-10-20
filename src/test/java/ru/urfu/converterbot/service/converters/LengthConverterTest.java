@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import ru.urfu.converterbot.service.models.ConversionRequest;
+
+import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.models.LengthType;
 
 import java.math.BigDecimal;
@@ -24,7 +25,7 @@ public class LengthConverterTest {
      */
     @BeforeEach
     void setUp() {
-        converter = new LengthConverter();
+        converter = new LengthConverter(new LengthData());
     }
 
     /**
@@ -47,8 +48,7 @@ public class LengthConverterTest {
     })
     @DisplayName("Правильно переводит величины")
     void shouldConvertLength(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest<LengthType>(value, LengthType.valueOf(from), LengthType.valueOf(to));
-        BigDecimal result = converter.convert(request);
+        BigDecimal result = converter.convert(value, LengthType.valueOf(from), LengthType.valueOf(to));
         assertEquals(0, expected.compareTo(result),
                 () -> "Ожидалось: " + expected + ", но получено: " + result);
     }

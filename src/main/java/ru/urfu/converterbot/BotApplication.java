@@ -45,7 +45,7 @@ public class BotApplication {
             var weightConverter = new WeightConverter(new WeightData());
             var currencyConverter = new CurrencyConverter(new CurrencyData());
             var temperatureConverter = new TemperatureConverter(new TemperatureData());
-            var converterService = new BotService(
+            var botService = new BotService(
                                             currencyConverter,
                                             lengthConverter,
                                             weightConverter,
@@ -55,7 +55,7 @@ public class BotApplication {
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
-            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, converterService);
+            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, botService);
             telegramBot.start();
         } catch (Exception e) {
             logger.error("Ошибка при запуске", e);

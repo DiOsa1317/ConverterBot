@@ -7,26 +7,45 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.LengthConverter;
+import ru.urfu.converterbot.service.converters.TemperatureConverter;
+import ru.urfu.converterbot.service.converters.WeightConverter;
+import ru.urfu.converterbot.service.converters.models.CurrencyData;
+import ru.urfu.converterbot.service.converters.models.LengthData;
+import ru.urfu.converterbot.service.converters.models.TemperatureData;
+import ru.urfu.converterbot.service.converters.models.WeightData;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Тесты для ConverterService
  */
-public class ConverterServiceTest {
+public class BotServiceTest {
 
     /**
      * Диспетчер перевода, создаваемый заново перед каждым тестом.
      */
-    private BotService converterService;
+    private BotService botService;
 
     /**
      * Создаёт реестр со всеми конвертерами и диспетчер перед каждым тестом.
      */
     @BeforeEach
     void setUp() {
-        var registry = new ConverterRegistry();
         var parser = new ClientInputParser();
-        converterService = new BotService(registry, parser);
+        var formatter = new BotMessageFormatter();
+        var lengthConverter = new LengthConverter(new LengthData());
+        var weightConverter = new WeightConverter(new WeightData());
+        var currencyConverter = new CurrencyConverter(new CurrencyData());
+        var temperatureConverter = new TemperatureConverter(new TemperatureData());
+        botService = new BotService(
+                            currencyConverter,
+                            lengthConverter,
+                            weightConverter,
+                            temperatureConverter,
+                            parser,
+                            formatter);
     }
 
     /**
@@ -44,7 +63,7 @@ public class ConverterServiceTest {
     })
     @DisplayName("Форматирует результат четырьмя знаками после запятой")
     void shouldFormatResult(String request, String expected) {
-        assertEquals(expected, converterService.processBotResponse(request));
+        assertEquals(expected, botService.processBotResponse(request));
     }
 
     /**
@@ -53,7 +72,8 @@ public class ConverterServiceTest {
     @Test
     @DisplayName("Отвечает приветствием на /start")
     void shouldReturnStartText() {
-        assertTrue(converterService.processBotResponse("/start").contains("Приветствую"));
+        assertTrue(botService.processBotResponse("/start")
+            .contains("Приветствую вас! Этот бот конвертирует валюты и физические величины. Чтобы узнать подробнее, введите /help"));
     }
 
     /**
@@ -62,7 +82,8 @@ public class ConverterServiceTest {
     @Test
     @DisplayName("Отвечает справкой на /help")
     void shouldReturnHelpText() {
-        assertTrue(converterService.processBotResponse("/help").contains("Формат запроса"));
+        assertTrue(botService.processBotResponse("/help")
+            .contains("Формат запроса"));
     }
 
     /**
@@ -80,7 +101,7 @@ public class ConverterServiceTest {
     })
     @DisplayName("Возвращает справку по группе на её команду")
     void shouldReturnGroupHelp(String command, String expectedFragment) {
-        assertTrue(converterService.processBotResponse(command).contains(expectedFragment));
+        assertTrue(botService.processBotResponse(command).contains(expectedFragment));
     }
 
     /**
@@ -99,7 +120,7 @@ public class ConverterServiceTest {
     })
     @DisplayName("Не выбрасывает исключение на некорректный ввод")
     void shouldNotThrowOnInvalidInput(String message) {
-        assertDoesNotThrow(() -> converterService.processBotResponse(message));
+        assertDoesNotThrow(() -> botService.processBotResponse(message));
     }
 
     /**
@@ -108,6 +129,6 @@ public class ConverterServiceTest {
     @Test
     @DisplayName("Не выбрасывает исключение на null")
     void shouldNotThrowOnNull() {
-        assertDoesNotThrow(() -> converterService.processBotResponse(null));
+        assertDoesNotThrow(() -> botService.processBotResponse(null));
     }
 }

@@ -29,10 +29,11 @@ public class ClientInputParserTest {
 
     /**
      * Проверяет, что валюты корректно извлекаются из входного сообщения.
+     * @throws InvalidUserInputException 
      */
     @Test
     @DisplayName("Правильно извлек валюты из текста пользователя")
-    void shouldParseValidMessagesWithCurrency() {
+    void shouldParseValidMessagesWithCurrency() throws InvalidUserInputException {
         var result = clientInputParser
                 .parse("567 USD to CNY");
         assertEquals(CurrencyType.USD, result.from());
@@ -43,6 +44,7 @@ public class ClientInputParserTest {
      * Проверяет, что регистр букв в единицах измерения не важен.
      *
      * @param input входное сообщение, записанное в смешанном регистре
+     * @throws InvalidUserInputException 
      */
     @ParameterizedTest(name = "Вход: '{0}'")
     @ValueSource(strings = {
@@ -50,7 +52,7 @@ public class ClientInputParserTest {
             "763 eur to kzt",
     })
     @DisplayName("Считывает названия величин вне зависимости от регистра")
-    void shouldParseValidMessagesWithLowercase(String input) {
+    void shouldParseValidMessagesWithLowercase(String input) throws InvalidUserInputException {
         var result = clientInputParser.parse(input);
         assertEquals(CurrencyType.EUR, result.from());
         assertEquals(CurrencyType.KZT, result.to());
@@ -98,10 +100,11 @@ public class ClientInputParserTest {
     /**
      * Проверяет, что единицы физических величин распознаются
      * наравне с валютами.
+     * @throws InvalidUserInputException 
      */
     @Test
     @DisplayName("Разбирает единицы физических величин")
-    void shouldParsePhysicalUnits() {
+    void shouldParsePhysicalUnits() throws InvalidUserInputException {
         var result = clientInputParser.parse("20 CELSIUS to FAHRENHEIT");
         assertEquals(TemperatureType.CELSIUS, result.from());
         assertEquals(TemperatureType.FAHRENHEIT, result.to());

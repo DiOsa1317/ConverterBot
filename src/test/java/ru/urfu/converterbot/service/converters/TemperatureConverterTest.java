@@ -5,7 +5,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import ru.urfu.converterbot.service.models.ConversionRequest;
+
+import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.models.TemperatureType;
 
 import java.math.BigDecimal;
@@ -28,7 +29,7 @@ public class TemperatureConverterTest {
      */
     @BeforeEach
     void setUp() {
-        converter = new TemperatureConverter();
+        converter = new TemperatureConverter(new TemperatureData());
     }
 
     /**
@@ -55,8 +56,7 @@ public class TemperatureConverterTest {
     })
     @DisplayName("Переводит температуру между градусами Цельсия, Фаренгейта и Кельвина")
     void shouldConvertTemperature(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest<TemperatureType>(value, TemperatureType.valueOf(from), TemperatureType.valueOf(to));
-        BigDecimal result = converter.convert(request);
+        BigDecimal result = converter.convert(value, TemperatureType.valueOf(from), TemperatureType.valueOf(to));
         assertEquals(0, expected.compareTo(result),
                 () -> "Ожидалось: " + expected + ", но получено: " + result);
     }
@@ -69,8 +69,7 @@ public class TemperatureConverterTest {
     @DisplayName("Перевод одинаковых единиц возвращает исходное значение")
     void shouldReturnSameValueForSameUnit() {
         BigDecimal inputValue = new BigDecimal("37.5");
-        var request = new ConversionRequest<TemperatureType>(inputValue, TemperatureType.CELSIUS, TemperatureType.CELSIUS);
-        BigDecimal result = converter.convert(request);
+        BigDecimal result = converter.convert(inputValue, TemperatureType.CELSIUS, TemperatureType.CELSIUS);
         assertEquals(0, inputValue.compareTo(result),
                 "При конвертации в ту же шкалу значение должно остаться неизменным");
     }
@@ -84,11 +83,9 @@ public class TemperatureConverterTest {
     void shouldReturnOriginalValueAfterRoundTrip() {
         BigDecimal originalValue = new BigDecimal("15");
 
-        var toFahrenheitReq = new ConversionRequest<TemperatureType>(originalValue, TemperatureType.CELSIUS, TemperatureType.FAHRENHEIT);
-        BigDecimal fahrenheitResult = converter.convert(toFahrenheitReq);
+        BigDecimal fahrenheitResult = converter.convert(originalValue, TemperatureType.CELSIUS, TemperatureType.FAHRENHEIT);
 
-        var backToCelsiusReq = new ConversionRequest<TemperatureType>(fahrenheitResult, TemperatureType.FAHRENHEIT, TemperatureType.CELSIUS);
-        BigDecimal celsiusResult = converter.convert(backToCelsiusReq);
+        BigDecimal celsiusResult = converter.convert(fahrenheitResult, TemperatureType.FAHRENHEIT, TemperatureType.CELSIUS);
 
         assertEquals(0, originalValue.compareTo(celsiusResult),
                 () -> "После кругового преобразования значение изменилось. Было: " + originalValue + ", стало: " + celsiusResult);

@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import ru.urfu.converterbot.service.models.ConversionRequest;
+
+import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.models.CurrencyType;
 
 import java.math.BigDecimal;
@@ -24,7 +25,7 @@ public class CurrencyConverterTest {
      */
     @BeforeEach
     public void setUp() {
-        currencyConverter = new CurrencyConverter();
+        currencyConverter = new CurrencyConverter(new CurrencyData());
     }
 
     /**
@@ -46,9 +47,7 @@ public class CurrencyConverterTest {
     })
     @DisplayName("Правильно конвертирует валюты")
     void shouldConvertCurrency(BigDecimal value, String from, String to, BigDecimal expected) {
-        var request = new ConversionRequest<CurrencyType>(value,
-                CurrencyType.valueOf(from), CurrencyType.valueOf(to));
-        BigDecimal result = currencyConverter.convert(request);
+        BigDecimal result = currencyConverter.convert(value, CurrencyType.valueOf(from), CurrencyType.valueOf(to));
         assertEquals(0, expected.compareTo(result),
                 () -> "Ожидалось: " + expected + ", но получено: " + result);
     }

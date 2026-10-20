@@ -83,7 +83,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             throws TelegramApiException {
         TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
         botsApi.registerBot(this);
-        System.out.println("Telegram-бот '" + botUsername + "' успешно подключен.");
+        logger.info("Telegram-бот '" + botUsername + "' успешно подключен.");
     }
 
     @Override

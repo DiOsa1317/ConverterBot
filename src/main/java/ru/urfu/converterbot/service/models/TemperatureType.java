@@ -4,9 +4,9 @@ import java.util.List;
 
 
 public enum TemperatureType implements QuantityType {
-    CELSIUS("°C", "CELSIUS", "Цельсий"),
-    FAHRENHEIT("°F", "FAHRENHEIT", "Фаренгейт"),
-    KELVIN("K", "KELVIN", "Кельвин", "К");
+    CELSIUS("°C", "C", "c", "CELSIUS", "Цельсий"),
+    FAHRENHEIT("°F", "F", "f", "FAHRENHEIT", "Фаренгейт"),
+    KELVIN("K", "k", "KELVIN", "Кельвин", "К");
 
     private final List<String> codes;
 
