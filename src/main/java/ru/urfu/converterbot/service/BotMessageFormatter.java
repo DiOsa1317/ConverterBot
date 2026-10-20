@@ -7,6 +7,9 @@ import java.util.Map;
 import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.QuantityType;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
  * Формирует тексты сообщений, которые бот показывает пользователю.
  */
@@ -41,6 +44,9 @@ public class BotMessageFormatter implements MessageFormatter{
 
     private static final String UNEXPECTED_ERROR_TEXT =
             "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
+            
+    private static final DateTimeFormatter DATE_FORMATTER =
+        DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
     @Override 
     public String start() {
@@ -80,5 +86,25 @@ public class BotMessageFormatter implements MessageFormatter{
         return String.format(Locale.US, RESULT_TEMPLATE,
                 request.value(), request.from().getCode(),
                 result, request.to().getCode());
+    }
+
+    @Override
+    public String currencyRates(QuantityType baseUnit, Map<QuantityType, BigDecimal> rates,
+            LocalDateTime lastUpdated
+    ) {
+        StringBuilder builder = new StringBuilder(
+                rates("Курсы валют ЦБ РФ", baseUnit, rates)
+        );
+
+        builder.append(System.lineSeparator());
+
+        if (lastUpdated == null) {
+            builder.append("Время последнего обновления неизвестно.");
+        } else {
+            builder.append("Последнее обновление: ")
+                    .append(lastUpdated.format(DATE_FORMATTER));
+        }
+
+        return builder.toString();
     }
 }
