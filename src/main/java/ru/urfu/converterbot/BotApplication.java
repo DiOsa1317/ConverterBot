@@ -2,6 +2,10 @@ package ru.urfu.converterbot;
 
 import ru.urfu.converterbot.bots.TelegramBot;
 import ru.urfu.converterbot.service.*;
+import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.LengthConverter;
+import ru.urfu.converterbot.service.converters.TemperatureConverter;
+import ru.urfu.converterbot.service.converters.WeightConverter;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -31,9 +35,19 @@ public class BotApplication {
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var registry = new ConverterRegistry();
             var parser = new ClientInputParser();
-            var converterService = new ConverterService(registry, parser);
+            var formatter = new BotMessageFormatter();
+            var lengthConverter = new LengthConverter();
+            var weightConverter = new WeightConverter();
+            var currencyConverter = new CurrencyConverter();
+            var temperatureConverter = new TemperatureConverter();
+            var converterService = new ConverterService(
+                                            currencyConverter,
+                                            lengthConverter,
+                                            weightConverter,
+                                            temperatureConverter,
+                                            parser,
+                                            formatter);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());

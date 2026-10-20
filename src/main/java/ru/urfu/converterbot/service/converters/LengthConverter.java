@@ -1,18 +1,18 @@
 package ru.urfu.converterbot.service.converters;
 
 import ru.urfu.converterbot.service.models.LengthType;
-import ru.urfu.converterbot.service.models.ConversionRequest;
+import ru.urfu.converterbot.service.models.QuantityType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.EnumMap;
-import java.util.Locale;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Конвертер длины.
  */
-public class LengthConverter implements QuantityConverter<LengthType> {
+public class LengthConverter implements QuantityConverter {
 
     /** Сколько метров содержится в одной единице измерения. */
     private final Map<LengthType, BigDecimal> metersInUnit = new EnumMap<>(LengthType.class);
@@ -30,26 +30,27 @@ public class LengthConverter implements QuantityConverter<LengthType> {
 
 
     @Override
-    public BigDecimal convert(ConversionRequest<LengthType> request) {
-        var from = request.from();
-        var to = request.to();
+    public BigDecimal convert(BigDecimal value, QuantityType from, QuantityType to) {
         if (from == to) {
-            return request.value();
+            return value;
         }
-        return request.value().multiply(metersInUnit.get(from))
+        return value.multiply(metersInUnit.get(from))
                 .divide(metersInUnit.get(to), 10, RoundingMode.HALF_UP);
     }
 
     @Override
-    public String getUnitsDescription() {
-        return String.format(Locale.US, """
-                Величины длин относительно метров:
-                Километр = %f м;
-                Миля = %f м;
-                Дюйм = %f м;
-                """,
-                metersInUnit.get(LengthType.KILOMETER),
-                metersInUnit.get(LengthType.MILE),
-                metersInUnit.get(LengthType.INCH));
+    public QuantityType baseUnit() {
+        return LengthType.METER;
+    }
+
+    @Override
+    public Map<QuantityType, BigDecimal> getReferenceRates() {
+        var rates = new LinkedHashMap<QuantityType, BigDecimal>();
+        for (LengthType unit : LengthType.values()) {
+            if (unit != LengthType.METER) {
+                rates.put(unit, convert(BigDecimal.ONE, LengthType.METER, unit));
+            }
+        }
+        return rates;
     }
 }

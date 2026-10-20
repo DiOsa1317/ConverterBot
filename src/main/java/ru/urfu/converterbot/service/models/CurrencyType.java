@@ -25,4 +25,9 @@ public enum CurrencyType implements QuantityType {
     public List<String> getCodes() {
         return codes;
     }
+
+    @Override
+    public BotCommand group() {
+        return BotCommand.CURRENCY;
+    }
 }

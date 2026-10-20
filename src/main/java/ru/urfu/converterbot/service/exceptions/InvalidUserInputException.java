@@ -4,7 +4,7 @@ package ru.urfu.converterbot.service.exceptions;
  * Исключение, сигнализирующее о том, что сообщение пользователя не соответствует
  * ожидаемому формату ввода (до какой-либо попытки конвертации).
  */
-public class InvalidUserInputException extends RuntimeException {
+public class InvalidUserInputException extends Exception {
 
     /** Исходное сообщение пользователя, из-за которого возникла ошибка. */
     private final String userInput;

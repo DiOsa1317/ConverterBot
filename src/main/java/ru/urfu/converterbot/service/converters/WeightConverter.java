@@ -1,18 +1,18 @@
 package ru.urfu.converterbot.service.converters;
 
-import ru.urfu.converterbot.service.models.ConversionRequest;
+import ru.urfu.converterbot.service.models.QuantityType;
 import ru.urfu.converterbot.service.models.WeightType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.EnumMap;
-import java.util.Locale;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Конвертер массы.
  */
-public class WeightConverter implements QuantityConverter<WeightType> {
+public class WeightConverter implements QuantityConverter {
     /** Сколько килограммов содержится в одной единице измерения. */
     private final Map<WeightType, BigDecimal> kilogramsInUnit = new EnumMap<>(WeightType.class);
 
@@ -28,26 +28,31 @@ public class WeightConverter implements QuantityConverter<WeightType> {
 
 
     @Override
-    public BigDecimal convert(ConversionRequest<WeightType> request) {
-        var from = request.from();
-        var to = request.to();
-        if (from == to) {
-            return request.value();
+    public BigDecimal convert(BigDecimal value, QuantityType from, QuantityType to) {
+        if (!(from instanceof WeightType fromType)
+                || !(to instanceof WeightType toType)) {
+            throw new IllegalArgumentException("TemperatureConverter не может обработать запрос");
         }
-        return request.value().multiply(kilogramsInUnit.get(from))
+        if (fromType == toType) {
+            return value;
+        }
+        return value.multiply(kilogramsInUnit.get(from))
                 .divide(kilogramsInUnit.get(to), 10, RoundingMode.HALF_UP);
     }
 
     @Override
-    public String getUnitsDescription() {
-        return String.format(Locale.US, """
-                Величины весов относительно килограммов:
-                Грамм = %f кг;
-                Фунт = %f кг;
-                Тонна = %f кг;
-                """,
-                kilogramsInUnit.get(WeightType.GRAM),
-                kilogramsInUnit.get(WeightType.POUND),
-                kilogramsInUnit.get(WeightType.TON));
+    public Map<QuantityType, BigDecimal> getReferenceRates() {
+        var rates = new LinkedHashMap<QuantityType, BigDecimal>();
+        for (WeightType unit : WeightType.values()) {
+            if (unit != WeightType.KILOGRAM) {
+                rates.put(unit, convert(BigDecimal.ONE, WeightType.KILOGRAM, unit));
+            }
+        }
+        return rates;
+    }
+
+    @Override
+    public QuantityType baseUnit() {
+        return WeightType.KILOGRAM;
     }
 }

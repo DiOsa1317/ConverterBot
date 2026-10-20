@@ -52,4 +52,11 @@ public interface QuantityType {
                 .filter(unit -> unit.matches(token))
                 .findFirst();
     }
+
+    /**
+     * Возвращает группу величин, к которой относится единица.
+     *
+     * @return группа величин, например {@link BotCommand#LENGTH} для километра
+     */
+    BotCommand group();
 }

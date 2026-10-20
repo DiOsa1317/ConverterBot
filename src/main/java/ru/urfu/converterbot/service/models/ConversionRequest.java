@@ -6,28 +6,48 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 /**
  * Формат разбора запроса на конвертацию: число и единицы измерения одного типа,
  * между которыми нужно выполнить перевод.
- *
- * @param value числовое значение, которое нужно перевести
- * @param from единица измерения, из которой переводим
- * @param to единица измерения, в которую переводим
  */
-public record ConversionRequest<T extends QuantityType>(
-    BigDecimal value, 
-    T from,
-    T to) {
+public class ConversionRequest {
+    /** Числовое значение, которое нужно перевести. */
+    private final BigDecimal value;
+
+    /** Единица измерения, из которой переводим. */
+    private final QuantityType from;
+
+    /** Единица измерения, в которую переводим. */
+    private final QuantityType to;
+
     /**
-     * Компактный конструктор: проверяет, что обе единицы измерения принадлежат
-     * одной и той же группе величин (оба — валюты, оба — величины длины, и т.д.).
+     * Создаёт запрос, проверяя, что единицы принадлежат одной группе величин.
      *
+     * @param value числовое значение
+     * @param from исходная единица
+     * @param to целевая единица
      * @throws InvalidUserInputException если единицы принадлежат разным группам
      */
-    public ConversionRequest {
+    public ConversionRequest(BigDecimal value, QuantityType from, QuantityType to)
+            throws InvalidUserInputException {
         if (from.getClass() != to.getClass()) {
-            throw new InvalidUserInputException(
-                    from + " to " + to,
-                    "Нельзя перевести " + from + " в " + to + ": это разные группы величин."
-            );
+            throw new InvalidUserInputException(from + " to " + to,
+                    "Нельзя перевести " + from + " в " + to + ": это разные группы величин.");
         }
+        this.value = value;
+        this.from = from;
+        this.to = to;
+    }
+
+    /** @return числовое значение */
+    public BigDecimal value() { return value; }
+
+    /** @return исходная единица */
+    public QuantityType from() { return from; }
+
+    /** @return целевая единица */
+    public QuantityType to() { return to; }
+
+    @Override
+    public String toString() {
+        return value + " " + from + " to " + to;
     }
 }
 

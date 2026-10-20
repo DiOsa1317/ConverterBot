@@ -16,15 +16,8 @@ public class ClientInputParser implements Parser {
     /** Слово-разделитель между единицами измерения. */
     private static final String TO_SEPARATOR = "to";
 
-    /**
-     * Разбирает сообщение клиента в запрос на перевод.
-     *
-     * @param message входное сообщение, например "100 USD to EUR"; не может быть {@code null}
-     * @return разобранный запрос: значение, исходная единица и целевая единица
-     * @throws InvalidUserInputException если формат сообщения неверный или единица неизвестна
-     * @throws NullPointerException если передан {@code null}
-     */
-    public ConversionRequest<QuantityType> parse(@NotNull String message) {
+    @Override 
+    public ConversionRequest parse(@NotNull String message) throws InvalidUserInputException {
         Objects.requireNonNull(message, "Сообщение не может быть null");
         var parts = message.split(" ");
 
@@ -37,7 +30,7 @@ public class ClientInputParser implements Parser {
         var from = parseUnit(message, parts[1]);
         var to = parseUnit(message, parts[3]);
 
-        return new ConversionRequest<>(value, from, to);
+        return new ConversionRequest(value, from, to);
     }
 
     /**
@@ -48,7 +41,7 @@ public class ClientInputParser implements Parser {
      * @return разобранное значение
      * @throws InvalidUserInputException если токен не является числом
      */
-    private BigDecimal parseValue(String originalMessage, String token) {
+    private BigDecimal parseValue(String originalMessage, String token) throws InvalidUserInputException {
         try {
             return new BigDecimal(token);
         } catch (NumberFormatException exception) {
@@ -66,7 +59,7 @@ public class ClientInputParser implements Parser {
      * @return распознанное значение
      * @throws InvalidUserInputException если имя не найдено ни в одном из известных enum
      */
-    private QuantityType parseUnit(String originalMessage, String token) {
+    private QuantityType parseUnit(String originalMessage, String token) throws InvalidUserInputException {
         return QuantityType.fromCode(CurrencyType.class, token)
                 .<QuantityType>map(unit -> unit)
                 .or(() -> QuantityType.fromCode(LengthType.class, token).map(unit -> (QuantityType) unit))

@@ -1,15 +1,17 @@
 package ru.urfu.converterbot.service.converters;
 
-import ru.urfu.converterbot.service.models.ConversionRequest;
+import ru.urfu.converterbot.service.models.QuantityType;
 import ru.urfu.converterbot.service.models.TemperatureType;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Конвертер температуры.
  */
-public class TemperatureConverter implements QuantityConverter<TemperatureType> {
+public class TemperatureConverter implements QuantityConverter {
 
     /** Сколько градусов Цельсия в одном градусе Фаренгейта. */
     private static final BigDecimal FAHRENHEIT_IN_CELSIUS = new BigDecimal("1.8");
@@ -21,13 +23,15 @@ public class TemperatureConverter implements QuantityConverter<TemperatureType> 
     private static final BigDecimal ABSOLUTE_ZERO_IN_CELSIUS = new BigDecimal("273.15");
 
     @Override
-    public BigDecimal convert(ConversionRequest<TemperatureType> request) {
-        var from = request.from();
-        var to = request.to();
-        if (from == to) {
-            return request.value();
+    public BigDecimal convert(BigDecimal value, QuantityType from, QuantityType to) {
+        if (!(from instanceof TemperatureType fromType)
+                || !(to instanceof TemperatureType toType)) {
+            throw new IllegalArgumentException("TemperatureConverter не может обработать запрос");
         }
-        return fromCelsius(toCelsius(request.value(), from), to);
+        if (fromType == toType) {
+            return value;
+        }
+        return fromCelsius(toCelsius(value, fromType), toType);
     }
 
     /**
@@ -61,11 +65,18 @@ public class TemperatureConverter implements QuantityConverter<TemperatureType> 
     }
 
     @Override
-    public String getUnitsDescription() {
-        return """
-                Связь температур:
-                °C → °F (значение * 1.8 + 32);
-                °C → K (значение + 273.15);
-                """;
+    public Map<QuantityType, BigDecimal> getReferenceRates() {
+        var rates = new LinkedHashMap<QuantityType, BigDecimal>();
+        for (TemperatureType unit : TemperatureType.values()) {
+            if (unit != TemperatureType.CELSIUS) {
+                rates.put(unit, convert(BigDecimal.ONE, TemperatureType.CELSIUS, unit));
+            }
+        }
+        return rates;
+    }
+
+    @Override
+    public QuantityType baseUnit() {
+        return TemperatureType.CELSIUS;
     }
 }

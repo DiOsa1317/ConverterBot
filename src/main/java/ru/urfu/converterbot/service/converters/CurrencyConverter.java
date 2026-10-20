@@ -4,16 +4,16 @@ package ru.urfu.converterbot.service.converters;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.EnumMap;
-import java.util.Locale;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import ru.urfu.converterbot.service.models.CurrencyType;
-import ru.urfu.converterbot.service.models.ConversionRequest;
+import ru.urfu.converterbot.service.models.QuantityType;
 
 /**
  * Конвертер валют для обработки запросов на конвертацию.
  */
-public class CurrencyConverter implements QuantityConverter<CurrencyType> {
+public class CurrencyConverter implements QuantityConverter {
 
     /** Карта курсов валют относительно рубля */
     private final Map<CurrencyType, BigDecimal> ratesToRub = new EnumMap<>(CurrencyType.class);
@@ -31,27 +31,27 @@ public class CurrencyConverter implements QuantityConverter<CurrencyType> {
 
 
     @Override
-    public BigDecimal convert(ConversionRequest<CurrencyType> request) {
-        var from = request.from();
-        var to = request.to();
+    public BigDecimal convert(BigDecimal value, QuantityType from, QuantityType to) {
         if (from == to) {
-            return request.value();
+            return value;
         }
-        return request.value().multiply(ratesToRub.get(from)).divide(ratesToRub.get(to), 10, RoundingMode.HALF_UP);
+        return value.multiply(ratesToRub.get(from)).divide(ratesToRub.get(to), 10, RoundingMode.HALF_UP);
     }
 
     @Override
-    public String getUnitsDescription() {
-        return String.format(Locale.US, """
-                Доступны переводы по таким курсам:
-                Рубли к долларам - %.4f;
-                Рубли к евро - %.4f;
-                Рубли к юаням - %.4f;
-                Рубли к тенге - %.4f;
-                """,
-                ratesToRub.get(CurrencyType.USD),
-                ratesToRub.get(CurrencyType.EUR),
-                ratesToRub.get(CurrencyType.CNY),
-                ratesToRub.get(CurrencyType.KZT));
+    public Map<QuantityType, BigDecimal> getReferenceRates() {
+        var rates = new LinkedHashMap<QuantityType, BigDecimal>();
+        for (CurrencyType unit : CurrencyType.values()) {
+            if (unit != CurrencyType.RUB) {
+                rates.put(unit, convert(BigDecimal.ONE, CurrencyType.RUB, unit));
+            }
+        }
+        return rates;
+    }
+
+
+    @Override
+    public QuantityType baseUnit() {
+        return CurrencyType.RUB;
     }
 }

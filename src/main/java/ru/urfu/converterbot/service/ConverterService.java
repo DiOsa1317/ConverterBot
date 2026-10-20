@@ -1,12 +1,17 @@
 package ru.urfu.converterbot.service;
 
-import java.util.Locale;
-
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.LengthConverter;
 import ru.urfu.converterbot.service.converters.QuantityConverter;
+import ru.urfu.converterbot.service.converters.TemperatureConverter;
+import ru.urfu.converterbot.service.converters.WeightConverter;
+import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
+import ru.urfu.converterbot.service.models.*;
 
 /**
  * Диспетчер перевода величин. Принимает текстовое сообщение пользователя,
@@ -15,52 +20,41 @@ import ru.urfu.converterbot.service.converters.QuantityConverter;
  */
 public class ConverterService implements BotResponseProcessor {
 
-    /** Шаблон строки с результатом перевода. */
-    private static final String RESULT_TEMPLATE = "%.4f %s = %.4f %s";
-
-    /** Текст общей справки по командам бота. */
-    private static final String HELP_TEXT = """
-        Этот бот конвертирует валюты и физические величины.
-
-        Формат запроса: {число} {единица1} to {единица2}
-        Например: 100 USD to EUR
-        Или: 10 KM to MI
-
-        Доступные валюты: /currency
-        Доступные величины:
-        1) /length
-        2) /weight
-        3) /temperature
-        """;
-
-    private static final String START_TEXT = """
-    Приветствую вас! Этот бот конвертирует валюты и физические величины.
-    Чтобы узнать подробнее, введите /help
-    """;
-
-    /** Текст ответа при непредвиденной ошибке обработки сообщения. */
-    private static final String UNEXPECTED_ERROR_TEXT = "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
-
-    private static final String WRONG_MESSAGE_TEXT =
-            "Я понимаю только текстовые сообщения. Напишите запрос в формате: {число} {единица1} to {единица2}";
-
-    /** Логгер для записи непредвиденных ошибок обработки сообщений. */
     private final Logger logger = LoggerFactory.getLogger(ConverterService.class);
 
-    /** Реестр конвертеров, по которому определяется группа величин. */
-    private final ConverterProvider converterProvider;
+    private final CurrencyConverter currencyConverter;
 
-    /** Парсер ввода пользователя: превращает текст в запрос на перевод. */
+    private final LengthConverter lengthConverter;
+
+    private final WeightConverter weightConverter;
+
+    private final TemperatureConverter temperatureConverter;
+
     private final Parser clientInputParser;
 
+    private final MessageFormatter messageFormatter;
+
     /**
-     * Создаёт диспетчер с собственным парсером ввода.
+     * Создаёт диспетчер с явно переданными конвертерами всех групп.
      *
-     * @param converterProvider реестр конвертеров, в котором ищется группа величин
+     * @param currencyConverter конвертер валют
+     * @param lengthConverter конвертер длины
+     * @param weightConverter конвертер массы
+     * @param temperatureConverter конвертер температуры
+     * @param parser парсер ввода пользователя
      */
-    public ConverterService(@NotNull ConverterProvider converterProvider, @NotNull Parser parser) {
-        this.converterProvider = converterProvider;
-        clientInputParser = parser;
+    public ConverterService(@NotNull CurrencyConverter currencyConverter,
+                            @NotNull LengthConverter lengthConverter,
+                            @NotNull WeightConverter weightConverter,
+                            @NotNull TemperatureConverter temperatureConverter,
+                            @NotNull Parser parser,
+                            @NotNull MessageFormatter messageFormatter) {
+        this.currencyConverter = currencyConverter;
+        this.lengthConverter = lengthConverter;
+        this.weightConverter = weightConverter;
+        this.temperatureConverter = temperatureConverter;
+        this.clientInputParser = parser;
+        this.messageFormatter = messageFormatter;
     }
 
     @Override
@@ -69,29 +63,46 @@ public class ConverterService implements BotResponseProcessor {
             return dispatch(messageText);
         } catch (IllegalArgumentException exception) {
             logger.error("Ошибка при обработке аргументов: ", exception);
-            return WRONG_MESSAGE_TEXT;
+            return messageFormatter.invalidInput();
         } catch (Exception exception) {
             logger.error("Непредвиденная ошибка при обработке сообщения: ", exception);
-            return UNEXPECTED_ERROR_TEXT;
+            return messageFormatter.unexpectedError();
         }
     }
 
-    private String dispatch(String messageText) {
+    private String dispatch(@Nullable String messageText) throws InvalidUserInputException {
         if (messageText == null) {
-            return WRONG_MESSAGE_TEXT;
+            return messageFormatter.noText();
         }
-
         if (messageText.equalsIgnoreCase("/start")) {
-            return START_TEXT;
+            return messageFormatter.start();
         }
-
         if (messageText.equalsIgnoreCase("/help")) {
-            return HELP_TEXT;
+            return messageFormatter.help();
         }
+        for (BotCommand command : BotCommand.values()) {
+        if (command.matches(messageText)) {
+            var converter = converterFor(command);
+            return messageFormatter.rates(command.title(),
+                    converter.baseUnit(), converter.getReferenceRates());
+        }
+    }
+        return convert(messageText);
+    }
 
-        return converterProvider.findConverterByCommand(messageText)
-            .map(QuantityConverter::getUnitsDescription)
-            .orElseGet(() -> convert(messageText));
+    /**
+     * Возвращает конвертер, соответствующий команде справки.
+     *
+     * @param command команда группы величин
+     * @return конвертер этой группы
+     */
+    private QuantityConverter converterFor(BotCommand command) {
+        return switch (command) {
+            case CURRENCY -> currencyConverter;
+            case LENGTH -> lengthConverter;
+            case WEIGHT -> weightConverter;
+            case TEMPERATURE -> temperatureConverter;
+        };
     }
 
     /**
@@ -99,17 +110,14 @@ public class ConverterService implements BotResponseProcessor {
      *
      * @param messageText входное сообщение формата "{число} {единица1} to {единица2}"
      * @return строка результата в формате "{значение} {из} = {результат} {в}"
-     * @throws IllegalArgumentException если запрос не распознан, единицы неизвестны
-     *                             или единицы принадлежат разным группам
+     * @throws InvalidUserInputException если запрос не распознан, единицы неизвестны
+     *                                   или принадлежат разным группам
      */
-    private String convert(String messageText) {
+    private String convert(String messageText) throws InvalidUserInputException {
         var request = clientInputParser.parse(messageText);
-        var converter = converterProvider.findConverterByUnitName(request.from()).orElseThrow( () ->
-                new IllegalArgumentException("Единицы измерения неизвестны")
-        );
+        var result = converterFor(request.from().group())
+            .convert(request.value(), request.from(), request.to());
 
-        return String.format(Locale.US, RESULT_TEMPLATE,
-                request.value(), request.from().getCode(),
-                converter.convert(request), request.to().getCode());
+        return messageFormatter.getResult(request, result);
     }
 }
