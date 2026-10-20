@@ -26,6 +26,13 @@ public class TemperatureData implements ConversionData {
         return rates;
     }
 
+    /**
+     * Возвращает смещение для перевода значения из указанной шкалы
+     * в градусы Цельсия.
+     *
+     * @param unit исходная единица температуры
+     * @return смещение, которое необходимо прибавить к значению
+     */
     public BigDecimal toCelsiusOffset(QuantityType unit) {
         return switch ((TemperatureType) unit) {
             case CELSIUS -> ZERO;
@@ -34,6 +41,13 @@ public class TemperatureData implements ConversionData {
         };
     }
 
+    /**
+     * Возвращает смещение для перевода значения из градусов Цельсия
+     * в указанную температурную шкалу.
+     *
+     * @param unit целевая единица температуры
+     * @return смещение, которое необходимо прибавить к значению
+     */
     public BigDecimal fromCelsiusOffset(QuantityType unit) {
         return switch ((TemperatureType) unit) {
             case CELSIUS -> ZERO;
@@ -42,6 +56,13 @@ public class TemperatureData implements ConversionData {
         };
     }
 
+    /**
+     * Возвращает коэффициент умножения при переводе значения
+     * из указанной температурной шкалы в градусы Цельсия.
+     *
+     * @param unit исходная единица температуры
+     * @return коэффициент преобразования
+     */
     public BigDecimal toCelsiusRate(QuantityType unit) {
         return switch ((TemperatureType) unit) {
             case CELSIUS, KELVIN -> ONE;
@@ -49,6 +70,13 @@ public class TemperatureData implements ConversionData {
         };
     }
 
+    /**
+     * Возвращает коэффициент умножения при переводе значения
+     * из градусов Цельсия в указанную температурную шкалу.
+     *
+     * @param unit целевая единица температуры
+     * @return коэффициент преобразования
+     */
     public BigDecimal fromCelsiusRate(QuantityType unit) {
         return switch ((TemperatureType) unit) {
             case CELSIUS, KELVIN -> ONE;

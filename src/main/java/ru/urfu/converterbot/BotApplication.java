@@ -43,7 +43,11 @@ public class BotApplication {
             var formatter = new BotMessageFormatter();
             var lengthConverter = new LengthConverter(new LengthData());
             var weightConverter = new WeightConverter(new WeightData());
-            var currencyConverter = new CurrencyConverter(new CurrencyData());
+            var currencyData = new CurrencyData();
+            var currencyConverter = new CurrencyConverter(currencyData);
+            CurrencyRateService currencyRateService = 
+                new CurrencyRateService(currencyData, currencyConverter);
+            currencyRateService.start();
             var temperatureConverter = new TemperatureConverter(new TemperatureData());
             var botService = new BotService(
                                             currencyConverter,

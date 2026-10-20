@@ -8,7 +8,7 @@ import ru.urfu.converterbot.service.models.CurrencyType;
 
 public class CurrencyData implements ConversionData{
 
-    private final Map<QuantityType, BigDecimal> rates = Map.of(
+    private Map<QuantityType, BigDecimal> rates = Map.of(
             CurrencyType.RUB, new BigDecimal("1.0"),
             CurrencyType.USD, new BigDecimal("84.3414"),
             CurrencyType.EUR, new BigDecimal("95.8709"),
@@ -20,5 +20,11 @@ public class CurrencyData implements ConversionData{
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }
-    
+
+    /**
+     * Обновляет данные о валютах
+     */
+    public void update(Map<QuantityType, BigDecimal> newRates) {
+        rates = Map.copyOf(newRates);
+    }
 }

@@ -1,8 +1,8 @@
 package ru.urfu.converterbot.service.converters;
 
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -15,6 +15,8 @@ import ru.urfu.converterbot.service.models.QuantityType;
  * Конвертер валют для обработки запросов на конвертацию.
  */
 public class CurrencyConverter implements QuantityConverter {
+
+    public volatile LocalDateTime lastUpdated;
 
     private final ConversionData currencyData;
 

@@ -82,6 +82,13 @@ public class BotService implements BotResponseProcessor {
         }
         for (BotCommand command : BotCommand.values()) {
         if (command.matches(messageText)) {
+            if (command == BotCommand.CURRENCY) {
+                return messageFormatter.currencyRates(
+                    currencyConverter.baseUnit(),
+                    currencyConverter.getReferenceRates(),
+                    currencyConverter.lastUpdated);
+            }
+            
             var converter = converterFor(command);
             return messageFormatter.rates(command.title(),
                     converter.baseUnit(), converter.getReferenceRates());
