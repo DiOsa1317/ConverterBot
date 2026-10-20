@@ -17,7 +17,7 @@ public enum LengthType implements QuantityType {
      *
      * @param codes коды, по которым распознаются величины
      */
-    LengthType(String... codes) {
+    private LengthType(String... codes) {
         this.codes = List.of(codes);
     }
 

@@ -6,6 +6,10 @@ import ru.urfu.converterbot.service.converters.CurrencyConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
 import ru.urfu.converterbot.service.converters.TemperatureConverter;
 import ru.urfu.converterbot.service.converters.WeightConverter;
+import ru.urfu.converterbot.service.converters.models.CurrencyData;
+import ru.urfu.converterbot.service.converters.models.LengthData;
+import ru.urfu.converterbot.service.converters.models.TemperatureData;
+import ru.urfu.converterbot.service.converters.models.WeightData;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -37,10 +41,10 @@ public class BotApplication {
 
             var parser = new ClientInputParser();
             var formatter = new BotMessageFormatter();
-            var lengthConverter = new LengthConverter();
-            var weightConverter = new WeightConverter();
-            var currencyConverter = new CurrencyConverter();
-            var temperatureConverter = new TemperatureConverter();
+            var lengthConverter = new LengthConverter(new LengthData());
+            var weightConverter = new WeightConverter(new WeightData());
+            var currencyConverter = new CurrencyConverter(new CurrencyData());
+            var temperatureConverter = new TemperatureConverter(new TemperatureData());
             var converterService = new BotService(
                                             currencyConverter,
                                             lengthConverter,

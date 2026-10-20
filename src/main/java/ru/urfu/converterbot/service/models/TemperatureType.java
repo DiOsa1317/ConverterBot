@@ -15,7 +15,7 @@ public enum TemperatureType implements QuantityType {
      *
      * @param codes коды, по которым распознаются величины
      */
-    TemperatureType(String... codes) {
+    private TemperatureType(String... codes) {
         this.codes = List.of(codes);
     }
 

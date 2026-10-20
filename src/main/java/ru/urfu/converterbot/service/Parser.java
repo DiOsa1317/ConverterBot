@@ -1,7 +1,7 @@
 package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
-import ru.urfu.converterbot.service.models.ConversionRequest;
+import ru.urfu.converterbot.service.models.*;
 import org.jetbrains.annotations.NotNull;
 
 /**

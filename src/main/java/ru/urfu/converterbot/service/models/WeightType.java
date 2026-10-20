@@ -17,7 +17,7 @@ public enum WeightType implements QuantityType {
      *
      * @param codes коды, по которым распознаются величины
      */
-    WeightType(String... codes) {
+    private WeightType(String... codes) {
         this.codes = List.of(codes);
     }
 

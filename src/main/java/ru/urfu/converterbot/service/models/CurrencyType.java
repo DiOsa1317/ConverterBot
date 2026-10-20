@@ -17,7 +17,7 @@ public enum CurrencyType implements QuantityType {
      *
      * @param codes коды, по которым распознаются величины
      */
-    CurrencyType(String... codes) {
+    private CurrencyType(String... codes) {
         this.codes = List.of(codes);
     }
 
