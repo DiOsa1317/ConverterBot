@@ -41,7 +41,7 @@ public class BotApplication {
             var weightConverter = new WeightConverter();
             var currencyConverter = new CurrencyConverter();
             var temperatureConverter = new TemperatureConverter();
-            var converterService = new ConverterService(
+            var converterService = new BotService(
                                             currencyConverter,
                                             lengthConverter,
                                             weightConverter,

@@ -18,9 +18,9 @@ import ru.urfu.converterbot.service.models.*;
  * определяет группу величин через реестр и возвращает готовый ответ для чата.
  * Реализует интерфейс {@link BotResponseProcessor}.
  */
-public class ConverterService implements BotResponseProcessor {
+public class BotService implements BotResponseProcessor {
 
-    private final Logger logger = LoggerFactory.getLogger(ConverterService.class);
+    private final Logger logger = LoggerFactory.getLogger(BotService.class);
 
     private final CurrencyConverter currencyConverter;
 
@@ -43,7 +43,7 @@ public class ConverterService implements BotResponseProcessor {
      * @param temperatureConverter конвертер температуры
      * @param parser парсер ввода пользователя
      */
-    public ConverterService(@NotNull CurrencyConverter currencyConverter,
+    public BotService(@NotNull CurrencyConverter currencyConverter,
                             @NotNull LengthConverter lengthConverter,
                             @NotNull WeightConverter weightConverter,
                             @NotNull TemperatureConverter temperatureConverter,

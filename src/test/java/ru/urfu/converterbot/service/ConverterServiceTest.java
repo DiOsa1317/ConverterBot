@@ -17,7 +17,7 @@ public class ConverterServiceTest {
     /**
      * Диспетчер перевода, создаваемый заново перед каждым тестом.
      */
-    private ConverterService converterService;
+    private BotService converterService;
 
     /**
      * Создаёт реестр со всеми конвертерами и диспетчер перед каждым тестом.
@@ -26,7 +26,7 @@ public class ConverterServiceTest {
     void setUp() {
         var registry = new ConverterRegistry();
         var parser = new ClientInputParser();
-        converterService = new ConverterService(registry, parser);
+        converterService = new BotService(registry, parser);
     }
 
     /**
