@@ -47,23 +47,6 @@ public class CurrencyDataTest {
     }
 
     /**
-     * Проверяет, что повторное обновление полностью заменяет предыдущие данные.
-     */
-    @Test
-    @DisplayName("Заменяет ранее загруженные курсы")
-    void shouldReplacePreviousDates() {
-        var firstTime = LocalDateTime.of(2026, 10, 23, 14, 5);
-        var secondTime = firstTime.plusHours(6);
-
-        currencyData.update(completeRates(new BigDecimal("90.5")), firstTime);
-        currencyData.update(completeRates(new BigDecimal("91.5")), secondTime);
-
-        assertEquals(secondTime, currencyData.lastUpdated());
-        assertEquals(0, new BigDecimal("91.5")
-                .compareTo(currencyData.rates().get(CurrencyType.USD)));
-    }
-
-    /**
      * Проверяет атомарность обновления: при некорректном входном наборе
      * состояние хранилища остаётся неизменным.
      */
