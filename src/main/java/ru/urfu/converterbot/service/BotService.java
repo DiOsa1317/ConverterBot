@@ -14,9 +14,7 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
 /**
- * Диспетчер перевода величин. Принимает текстовое сообщение пользователя,
- * определяет группу величин через реестр и возвращает готовый ответ для чата.
- * Реализует интерфейс {@link BotResponseProcessor}.
+ * Диспетчер перевода величин.
  */
 public class BotService implements BotResponseProcessor {
 
@@ -70,6 +68,13 @@ public class BotService implements BotResponseProcessor {
         }
     }
 
+    /**
+     * Обрабатывает входящее текстовое сообщение и возвращает ответ бота.
+     *
+     * @param messageText текст сообщения от пользователя; может быть {@code null}
+     * @return отформатированная строка ответа для отправки пользователю
+     * @throws InvalidUserInputException если запрос на конвертацию не удалось распознать
+     */
     private String dispatch(@Nullable String messageText) throws InvalidUserInputException {
         if (messageText == null) {
             return messageFormatter.noText();

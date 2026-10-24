@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * Полные тесты для CurrencyRateService.
+ * Тесты контракта сервиса получения и обновления курсов валют {@link CurrencyRateService}.
  */
 class CurrencyRateServiceTest {
 
@@ -56,7 +56,7 @@ class CurrencyRateServiceTest {
             """;
 
     @BeforeEach
-    void setUp() throws IOException, InterruptedException { // Исправлено: добавлено InterruptedException
+    void setUp() throws IOException, InterruptedException {
         currencyData = mock(CurrencyData.class);
         mockHttpClient = mock(HttpClient.class);
         mockHttpResponse = mock(HttpResponse.class);
@@ -70,19 +70,23 @@ class CurrencyRateServiceTest {
         service = new CurrencyRateService(currencyData, mockHttpClient);
     }
 
+    /**
+     * Проверяет, что успешное обновление записывает корректные курсы в хранилище
+     * и возвращает признак успеха.
+     */
     @Test
     @DisplayName("Успешно обновляет курсы и сохраняет их в хранилище")
     void testUpdateRatesSuccess() {
-        boolean result = service.updateRates();
+        var result = service.updateRates();
 
         assertTrue(result, "Обновление должно пройти успешно");
 
-        ArgumentCaptor<Map<CurrencyType, BigDecimal>> ratesCaptor = ArgumentCaptor.forClass(Map.class);
-        ArgumentCaptor<LocalDateTime> dateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
+        var ratesCaptor = ArgumentCaptor.forClass(Map.class);
+        var dateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
 
         verify(currencyData).update(ratesCaptor.capture(), dateCaptor.capture());
 
-        Map<CurrencyType, BigDecimal> savedRates = ratesCaptor.getValue();
+        var savedRates = ratesCaptor.getValue();
 
         assertNotNull(savedRates);
         assertEquals(BigDecimal.ONE, savedRates.get(CurrencyType.RUB), "Курс RUB должен быть 1");
@@ -92,43 +96,55 @@ class CurrencyRateServiceTest {
         assertEquals(new BigDecimal("0.1850000000"), savedRates.get(CurrencyType.KZT));
     }
 
+    /**
+     * Проверяет, что при ошибке HTTP метод возвращает false и не модифицирует хранилище.
+     */
     @Test
-    @DisplayName("Возвращает false при ошибке HTTP (статус не 200)")
+    @DisplayName("Возвращает false при ошибке HTTP")
     void testUpdateRatesHttpError() {
         when(mockHttpResponse.statusCode()).thenReturn(500);
 
-        boolean result = service.updateRates();
+        var result = service.updateRates();
 
         assertFalse(result);
         verify(currencyData, never()).update(any(), any());
     }
 
+    /**
+     * Проверяет, что при невалидном XML метод возвращает false и не модифицирует хранилище.
+     */
     @Test
     @DisplayName("Возвращает false при ошибке парсинга XML")
     void testUpdateRatesParseError() {
         when(mockHttpResponse.body()).thenReturn("<broken>xml");
 
-        boolean result = service.updateRates();
+        var result = service.updateRates();
 
         assertFalse(result);
         verify(currencyData, never()).update(any(), any());
     }
 
+    /**
+     * Проверяет устойчивость к сетевым сбоям: метод не выбрасывает исключение наружу.
+     */
     @Test
     @DisplayName("Не падает с исключением при сетевой ошибке")
     void testUpdateRatesNetworkException() throws IOException, InterruptedException {
         when(mockHttpClient.send(any(), any())).thenThrow(new IOException("Network error"));
 
         assertDoesNotThrow(() -> {
-            boolean result = service.updateRates();
+            var result = service.updateRates();
             assertFalse(result);
         });
     }
 
+    /**
+     * Проверяет корректность парсинга полного набора валют из XML-ответа ЦБ РФ.
+     */
     @Test
     @DisplayName("Корректно парсит полный XML ответ ЦБ")
     void testParseRatesFullXml() throws Exception {
-        Map<CurrencyType, BigDecimal> rates = service.parseRates(SAMPLE_XML);
+        var rates = service.parseRates(SAMPLE_XML);
 
         assertNotNull(rates);
         assertEquals(5, rates.size());
@@ -138,10 +154,13 @@ class CurrencyRateServiceTest {
         assertEquals(new BigDecimal("0.1850000000"), rates.get(CurrencyType.KZT));
     }
 
+    /**
+     * Проверяет, что отсутствие обязательной валюты в ответе приводит к IllegalStateException.
+     */
     @Test
     @DisplayName("Выбрасывает исключение, если в XML нет обязательной валюты")
     void testParseRatesMissingCurrency() {
-        String incompleteXml = """
+        var incompleteXml = """
                 <?xml version="1.0" encoding="windows-1251"?>
                 <ValCurs>
                     <Valute><CharCode>USD</CharCode><Nominal>1</Nominal><Value>90,0000</Value></Valute>
@@ -153,15 +172,21 @@ class CurrencyRateServiceTest {
         assertThrows(IllegalStateException.class, () -> service.parseRates(incompleteXml));
     }
 
+    /**
+     * Проверяет, что неизвестные коды валют в XML игнорируются без ошибок.
+     */
     @Test
     @DisplayName("Игнорирует неизвестные валюты")
     void testParseRatesIgnoresUnknown() {
-        String xmlWithBtc = SAMPLE_XML.replace("</ValCurs>",
+        var xmlWithBtc = SAMPLE_XML.replace("</ValCurs>",
                 "<Valute><CharCode>BTC</CharCode><Nominal>1</Nominal><Value>1000</Value></Valute></ValCurs>");
 
         assertDoesNotThrow(() -> service.parseRates(xmlWithBtc));
     }
 
+    /**
+     * Проверяет, что start() инициирует немедленное первичное обновление курсов.
+     */
     @Test
     @DisplayName("start запускает первичное обновление")
     void testStartTriggersInitialUpdate() {
@@ -170,10 +195,13 @@ class CurrencyRateServiceTest {
         service.stop();
     }
 
+    /**
+     * Проверяет безопасность вызова stop() до инициализации планировщика.
+     */
     @Test
     @DisplayName("stop безопасно работает, если start не вызывался")
     void testStopWithoutStart() {
-        CurrencyRateService newService = new CurrencyRateService(currencyData, mockHttpClient);
+        var newService = new CurrencyRateService(currencyData, mockHttpClient);
         assertDoesNotThrow(newService::stop);
     }
 }

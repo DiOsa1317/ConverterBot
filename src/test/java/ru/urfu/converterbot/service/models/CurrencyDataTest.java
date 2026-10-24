@@ -12,6 +12,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Тесты контракта хранилища курсов валют {@link CurrencyData}.
+ */
 public class CurrencyDataTest {
     private CurrencyData currencyData;
 
@@ -20,12 +23,18 @@ public class CurrencyDataTest {
         currencyData = new CurrencyData();
     }
 
+    /**
+     * Проверяет начальное состояние: время последнего обновления отсутствует.
+     */
     @Test
     @DisplayName("До обновления время обновления не задано")
     void shouldHaveNoUpdateTimeInitially() {
         assertNull(currencyData.lastUpdated());
     }
 
+    /**
+     * Проверяет, что успешное обновление записывает новые курсы и актуальную метку времени.
+     */
     @Test
     @DisplayName("Обновляет курсы и время обновления")
     void shouldUpdateRatesAndTime() {
@@ -37,6 +46,9 @@ public class CurrencyDataTest {
                 .compareTo(currencyData.rates().get(CurrencyType.USD)));
     }
 
+    /**
+     * Проверяет, что повторное обновление полностью заменяет предыдущие данные.
+     */
     @Test
     @DisplayName("Заменяет ранее загруженные курсы")
     void shouldReplacePreviousDates() {
@@ -51,6 +63,10 @@ public class CurrencyDataTest {
                 .compareTo(currencyData.rates().get(CurrencyType.USD)));
     }
 
+    /**
+     * Проверяет атомарность обновления: при некорректном входном наборе
+     * состояние хранилища остаётся неизменным.
+     */
     @Test
     @DisplayName("Не принимает неполный набор курсов")
     void shouldRejectIncompleteRates() {
@@ -65,6 +81,9 @@ public class CurrencyDataTest {
         assertNull(currencyData.lastUpdated());
     }
 
+    /**
+     * Проверяет, что возвращаемая коллекция курсов защищена от внешней модификации.
+     */
     @Test
     @DisplayName("Не позволяет изменять курсы через rates()")
     void shouldExposeImmutableRates() {
@@ -75,6 +94,12 @@ public class CurrencyDataTest {
                 () -> currencyData.rates().put(CurrencyType.USD, BigDecimal.ONE));
     }
 
+    /**
+     * Формирует валидный полный набор курсов для тестовых сценариев.
+     *
+     * @param usd курс доллара США к рублю
+     * @return карта со всеми валютами из {@link CurrencyType}
+     */
     private static Map<CurrencyType, BigDecimal> completeRates(BigDecimal usd) {
         var rates = new EnumMap<CurrencyType, BigDecimal>(CurrencyType.class);
         rates.put(CurrencyType.RUB, BigDecimal.ONE);

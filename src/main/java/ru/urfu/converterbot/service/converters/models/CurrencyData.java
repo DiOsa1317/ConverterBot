@@ -14,7 +14,7 @@ import ru.urfu.converterbot.service.models.CurrencyType;
 public class CurrencyData implements ConversionData {
 
     /**
-     * Курсы по умолчанию (сколько рублей стоит одна единица валюты)
+     * Курсы по умолчанию
      */
     private static final Map<QuantityType, BigDecimal> DEFAULT_RATES = Map.of(
             CurrencyType.RUB, new BigDecimal("1.0"),
@@ -25,7 +25,7 @@ public class CurrencyData implements ConversionData {
     );
 
     /**
-     * Актуальные курсы. Заменяются целиком, поэтому поле {@code volatile}.
+     * Актуальные курсы
      */
     private volatile Map<QuantityType, BigDecimal> rates = DEFAULT_RATES;
 
