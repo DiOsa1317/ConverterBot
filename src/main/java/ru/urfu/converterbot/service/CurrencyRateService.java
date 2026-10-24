@@ -42,9 +42,7 @@ public class CurrencyRateService {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
 
     private final CurrencyData currencyData;
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(REQUEST_TIMEOUT)
-            .build();
+    private final HttpClient httpClient;
 
     private ScheduledExecutorService scheduler;
 
@@ -57,6 +55,14 @@ public class CurrencyRateService {
      */
     public CurrencyRateService(CurrencyData currencyData) {
         this.currencyData = currencyData;
+        httpClient = HttpClient.newBuilder()
+                .connectTimeout(REQUEST_TIMEOUT)
+                .build();
+    }
+
+    public CurrencyRateService(CurrencyData currencyData, HttpClient httpClient) {
+        this.currencyData = currencyData;
+        this.httpClient = httpClient;
     }
 
     /**
@@ -131,7 +137,7 @@ public class CurrencyRateService {
      * @param xml исходные данные о курсах валют
      * @return курсы валют
      */
-    static Map<CurrencyType, BigDecimal> parseRates(String xml)
+     Map<CurrencyType, BigDecimal> parseRates(String xml)
             throws ParserConfigurationException, SAXException, IOException {
         var factory = DocumentBuilderFactory.newInstance();
         factory.setFeature(DISALLOW_DOCTYPE, true);
