@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import ru.urfu.converterbot.service.converters.models.ConversionData;
 import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.models.CurrencyType;
 import ru.urfu.converterbot.service.models.QuantityType;
@@ -16,9 +15,7 @@ import ru.urfu.converterbot.service.models.QuantityType;
  */
 public class CurrencyConverter implements QuantityConverter {
 
-    public volatile LocalDateTime lastUpdated;
-
-    private final ConversionData currencyData;
+    private final CurrencyData currencyData;
 
     /**
      * Создаёт конвертер, получая данные о соотношении валют
@@ -32,7 +29,8 @@ public class CurrencyConverter implements QuantityConverter {
         if (from == to) {
             return value;
         }
-        return value.multiply(currencyData.rates().get(from)).divide(currencyData.rates().get(to), 10, RoundingMode.HALF_UP);
+        return value.multiply(currencyData.rates().get(from))
+                .divide(currencyData.rates().get(to), 10, RoundingMode.HALF_UP);
     }
 
     @Override
@@ -44,6 +42,15 @@ public class CurrencyConverter implements QuantityConverter {
             }
         }
         return rates;
+    }
+
+    /**
+     * Возвращает время последнего обновления курсов.
+     *
+     * @return время последнего обновления или {@code null}, если обновления ещё не было
+     */
+    public LocalDateTime lastUpdated() {
+        return currencyData.lastUpdated();
     }
 
     @Override

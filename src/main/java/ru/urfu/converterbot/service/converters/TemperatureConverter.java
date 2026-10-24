@@ -36,8 +36,7 @@ public class TemperatureConverter implements QuantityConverter {
         return celsius
                 .multiply(temperatureData.fromCelsiusRate(to))
                 .add(temperatureData.fromCelsiusOffset(to))
-                .setScale(10, RoundingMode.HALF_UP)
-                .stripTrailingZeros();
+                .setScale(10, RoundingMode.HALF_UP);
     }
 
     @Override

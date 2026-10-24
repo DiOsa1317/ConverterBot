@@ -63,6 +63,14 @@ public interface MessageFormatter {
      */
     String getResult(ConversionRequest request, BigDecimal result);
 
+    /**
+     * Формирует справку по курсам валют.
+     *
+     * @param baseUnit    базовая валюта
+     * @param rates       курсы валют
+     * @param lastUpdated время последнего обновления курсов
+     * @return текст справки
+     */
     String currencyRates(QuantityType baseUnit, Map<QuantityType, BigDecimal> rates,
             LocalDateTime lastUpdated);
 }
