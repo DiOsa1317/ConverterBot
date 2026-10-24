@@ -1,5 +1,6 @@
 package ru.urfu.converterbot;
 
+import org.jetbrains.annotations.NotNull;
 import ru.urfu.converterbot.bots.TelegramBot;
 import ru.urfu.converterbot.service.*;
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
@@ -39,23 +40,7 @@ public class BotApplication {
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var parser = new ClientInputParser();
-            var formatter = new BotMessageFormatter();
-            var lengthConverter = new LengthConverter(new LengthData());
-            var weightConverter = new WeightConverter(new WeightData());
-            var currencyData = new CurrencyData();
-            var currencyConverter = new CurrencyConverter(currencyData);
-            CurrencyRateService currencyRateService = 
-                new CurrencyRateService(currencyData, currencyConverter);
-            currencyRateService.start();
-            var temperatureConverter = new TemperatureConverter(new TemperatureData());
-            var botService = new BotService(
-                                            currencyConverter,
-                                            lengthConverter,
-                                            weightConverter,
-                                            temperatureConverter,
-                                            parser,
-                                            formatter);
+            var botService = getBotService();
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
@@ -65,5 +50,24 @@ public class BotApplication {
             logger.error("Ошибка при запуске", e);
             System.exit(1);
         }
+    }
+
+    private static @NotNull BotService getBotService() {
+        var parser = new ClientInputParser();
+        var formatter = new BotMessageFormatter();
+        var lengthConverter = new LengthConverter(new LengthData());
+        var weightConverter = new WeightConverter(new WeightData());
+        var currencyData = new CurrencyData();
+        var currencyConverter = new CurrencyConverter(currencyData);
+        CurrencyRateService currencyRateService = new CurrencyRateService(currencyData);
+        currencyRateService.start();
+        var temperatureConverter = new TemperatureConverter(new TemperatureData());
+        return new BotService(
+                currencyConverter,
+                lengthConverter,
+                weightConverter,
+                temperatureConverter,
+                parser,
+                formatter);
     }
 }

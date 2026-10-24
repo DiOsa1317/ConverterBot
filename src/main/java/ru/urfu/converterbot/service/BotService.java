@@ -86,7 +86,7 @@ public class BotService implements BotResponseProcessor {
                 return messageFormatter.currencyRates(
                     currencyConverter.baseUnit(),
                     currencyConverter.getReferenceRates(),
-                    currencyConverter.lastUpdated);
+                    currencyConverter.lastUpdated());
             }
             
             var converter = converterFor(command);

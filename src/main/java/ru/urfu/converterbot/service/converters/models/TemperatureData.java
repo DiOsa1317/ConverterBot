@@ -66,7 +66,8 @@ public class TemperatureData implements ConversionData {
     public BigDecimal toCelsiusRate(QuantityType unit) {
         return switch ((TemperatureType) unit) {
             case CELSIUS, KELVIN -> ONE;
-            case FAHRENHEIT -> ONE.divide(SCALE, 10, RoundingMode.HALF_UP);
+            case FAHRENHEIT -> ONE.divide(SCALE, 20, RoundingMode.HALF_UP); // было 10, стало 20
+
         };
     }
 
