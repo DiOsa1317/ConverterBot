@@ -100,9 +100,9 @@ public class BotServiceTest {
      */
     @ParameterizedTest(name = "Команда {0}")
     @CsvSource({
-            "/currency, Доступны переводы",
+            "/currency, Курсы валют ЦБ РФ",
             "/length, Величины длин",
-            "/weight, Величины весов",
+            "/weight, Величины веса",
             "/temperature, температур"
     })
     @DisplayName("Возвращает справку по группе на её команду")

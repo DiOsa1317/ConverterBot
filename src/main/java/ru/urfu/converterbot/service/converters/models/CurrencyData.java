@@ -1,14 +1,22 @@
 package ru.urfu.converterbot.service.converters.models;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.EnumSet;
 import java.util.Map;
 
 import ru.urfu.converterbot.service.models.QuantityType;
 import ru.urfu.converterbot.service.models.CurrencyType;
 
-public class CurrencyData implements ConversionData{
+/**
+ * Хранит курсы валют.
+ */
+public class CurrencyData implements ConversionData {
 
-    private Map<QuantityType, BigDecimal> rates = Map.of(
+    /**
+     * Актуальные курсы
+     */
+    private volatile Map<QuantityType, BigDecimal> rates = Map.of(
             CurrencyType.RUB, new BigDecimal("1.0"),
             CurrencyType.USD, new BigDecimal("84.3414"),
             CurrencyType.EUR, new BigDecimal("95.8709"),
@@ -16,15 +24,38 @@ public class CurrencyData implements ConversionData{
             CurrencyType.KZT, new BigDecimal("1.91")
     );
 
+    /**
+     * Время последнего успешного обновления
+     */
+    private volatile LocalDateTime lastUpdated;
+
     @Override
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }
 
     /**
-     * Обновляет данные о валютах
+     * Возвращает время последнего обновления курсов.
+     *
+     * @return время последнего обновления или {@code null}, если обновления ещё не было
      */
-    public void update(Map<QuantityType, BigDecimal> newRates) {
+    public LocalDateTime lastUpdated() {
+        return lastUpdated;
+    }
+
+    /**
+     * Обновляет курсы валют.
+     *
+     * @param newRates  новые курсы валют
+     * @param updatedAt время обновления
+     * @throws IllegalArgumentException если набор курсов неполный
+     */
+    public void update(Map<CurrencyType, BigDecimal> newRates, LocalDateTime updatedAt) {
+
+        if (!newRates.keySet().containsAll(EnumSet.allOf(CurrencyType.class))) {
+            throw new IllegalArgumentException("Неполный набор курсов валют: " + newRates.keySet());
+        }
         rates = Map.copyOf(newRates);
+        lastUpdated = updatedAt;
     }
 }
