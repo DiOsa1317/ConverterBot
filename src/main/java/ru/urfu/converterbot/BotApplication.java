@@ -5,6 +5,7 @@ import ru.urfu.converterbot.bots.TelegramBot;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
 import ru.urfu.converterbot.keyboard.service.ConversionStateService;
+import ru.urfu.converterbot.keyboard.service.KeyboardDialogService;
 import ru.urfu.converterbot.service.*;
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
@@ -50,8 +51,8 @@ public class BotApplication {
             var stateService = new ConversionStateService();
             var keyboardFactory = new KeyboardFactory();
             var renderer = new TelegramKeyboardRenderer();
-            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername,
-                    botService, stateService, keyboardFactory, renderer);
+            var dialogService = new KeyboardDialogService(stateService, keyboardFactory, botService);
+            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, dialogService, renderer);
             telegramBot.start();
         } catch (Exception e) {
             logger.error("Ошибка при запуске", e);
