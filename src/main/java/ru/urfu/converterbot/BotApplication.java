@@ -2,6 +2,9 @@ package ru.urfu.converterbot;
 
 import org.jetbrains.annotations.NotNull;
 import ru.urfu.converterbot.bots.TelegramBot;
+import ru.urfu.converterbot.keyboard.KeyboardFactory;
+import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
+import ru.urfu.converterbot.keyboard.service.ConversionStateService;
 import ru.urfu.converterbot.service.*;
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
@@ -44,7 +47,11 @@ public class BotApplication {
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
-            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, botService);
+            var stateService = new ConversionStateService();
+            var keyboardFactory = new KeyboardFactory();
+            var renderer = new TelegramKeyboardRenderer();
+            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername,
+                    botService, stateService, keyboardFactory, renderer);
             telegramBot.start();
         } catch (Exception e) {
             logger.error("Ошибка при запуске", e);
@@ -62,6 +69,7 @@ public class BotApplication {
         CurrencyRateService currencyRateService = new CurrencyRateService(currencyData);
         currencyRateService.start();
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
+
         return new BotService(
                 currencyConverter,
                 lengthConverter,
