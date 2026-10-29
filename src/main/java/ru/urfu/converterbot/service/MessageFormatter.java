@@ -6,6 +6,8 @@ import java.util.Map;
 import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.QuantityType;
 
+import java.time.LocalDateTime;
+
 public interface MessageFormatter {
     /**
      * Возвращает приветствие.
@@ -60,4 +62,15 @@ public interface MessageFormatter {
      * @return текст ответа
      */
     String getResult(ConversionRequest request, BigDecimal result);
+
+    /**
+     * Формирует справку по курсам валют.
+     *
+     * @param baseUnit    базовая валюта
+     * @param rates       курсы валют
+     * @param lastUpdated время последнего обновления курсов
+     * @return текст справки
+     */
+    String currencyRates(QuantityType baseUnit, Map<QuantityType, BigDecimal> rates,
+            LocalDateTime lastUpdated);
 }

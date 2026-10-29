@@ -1,11 +1,14 @@
 package ru.urfu.converterbot.bots;
 
-import ru.urfu.converterbot.service.BotResponseProcessor;
+import ru.urfu.converterbot.keyboard.models.BotReply;
+import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
+import ru.urfu.converterbot.keyboard.service.KeyboardDialogService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -18,26 +21,19 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
  * и возвращение ему ответа
  */
 public class TelegramBot extends TelegramLongPollingBot {
-
-    /**
-     * Токен авторизации бота, полученный от BotFather.
-     */
-    private final String botToken;
-
     /**
      * Имя пользователя (username) бота без символа @.
      */
     private final String botUsername;
 
     /**
-     * Сервис для бизнес-логики обработки сообщений.
-     */
-    private final BotResponseProcessor botResponseProcessor;
-
-    /**
      * Логгер для записи событий при работе бота
      */
     private final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
+
+    private final KeyboardDialogService dialogService;
+
+    private final TelegramKeyboardRenderer keyboardRenderer;
 
     /**
      * Создает новый экземпляр бота.
@@ -46,32 +42,54 @@ public class TelegramBot extends TelegramLongPollingBot {
      * @param name        имя пользователя бота (username)
      * @param botResponseProcessor сервис для подготовки ответа
      */
-    public TelegramBot(String token, String name, BotResponseProcessor botResponseProcessor) {
+    public TelegramBot(String token, String name,
+                   KeyboardDialogService dialogService,
+                   TelegramKeyboardRenderer keyboardRenderer) {
         super(token);
-        this.botToken = token;
         this.botUsername = name;
-        this.botResponseProcessor = botResponseProcessor;
+        this.dialogService = dialogService;
+        this.keyboardRenderer = keyboardRenderer;
     }
 
     @Override
     public void onUpdateReceived(Update update) {
+        if (update.hasCallbackQuery()) {
+            var callback = update.getCallbackQuery();
+            acknowledge(callback.getId());
+            long chatId = callback.getMessage().getChatId();
+            send(chatId, dialogService.handleAction(chatId, callback.getData()));
+            return;
+        }
         if (!update.hasMessage()) {
             return;
         }
+        var message = update.getMessage();
+        String text = message.hasText() ? message.getText() : null;
+        long chatId = message.getChatId();
+        send(chatId, dialogService.handleText(chatId, text));
+    }
 
-        String messageText = update.getMessage().hasText() ? update.getMessage().getText() : null;
-        long chatId = update.getMessage().getChatId();
+    private void acknowledge(String callbackId) {
+        var answer = new AnswerCallbackQuery();
+        answer.setCallbackQueryId(callbackId);
+        try {
+            execute(answer);
+        } catch (TelegramApiException exception) {
+            logger.error("Ошибка при ответе на callback: ", exception);
+        }
+    }
 
-        String responseText = botResponseProcessor.processBotResponse(messageText);
-
+    private void send(long chatId, BotReply reply) {
         var message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
-        message.setText(responseText);
-
+        message.setText(reply.text());
+        if (reply.keyboard() != null) {
+            message.setReplyMarkup(keyboardRenderer.render(reply.keyboard()));
+        }
         try {
             execute(message);
-        } catch (Exception e) {
-            logger.error("Ошибка при отправке сообщения: ", e);
+        } catch (TelegramApiException exception) {
+            logger.error("Ошибка при отправке сообщения: ", exception);
         }
     }
 

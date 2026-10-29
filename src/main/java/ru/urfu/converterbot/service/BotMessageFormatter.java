@@ -7,10 +7,13 @@ import java.util.Map;
 import ru.urfu.converterbot.service.models.ConversionRequest;
 import ru.urfu.converterbot.service.models.QuantityType;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
 /**
  * Формирует тексты сообщений, которые бот показывает пользователю.
  */
-public class BotMessageFormatter implements MessageFormatter{
+public class BotMessageFormatter implements MessageFormatter {
 
     private static final String RESULT_TEMPLATE = "%.4f %s = %.4f %s";
 
@@ -20,7 +23,7 @@ public class BotMessageFormatter implements MessageFormatter{
             Формат запроса: {число} {единица1} to {единица2}
             Например: 100 USD to EUR
             Или: 10 KM to MI
-
+            
             Доступные валюты: /currency
             Доступные величины:
             1) /length
@@ -42,27 +45,30 @@ public class BotMessageFormatter implements MessageFormatter{
     private static final String UNEXPECTED_ERROR_TEXT =
             "Произошла непредвиденная ошибка. Попробуйте ещё раз.";
 
-    @Override 
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+    @Override
     public String start() {
         return START_TEXT;
     }
 
-    @Override 
+    @Override
     public String help() {
         return HELP_TEXT;
     }
 
-    @Override 
+    @Override
     public String noText() {
         return NO_TEXT_MESSAGE_TEXT;
     }
 
-    @Override 
+    @Override
     public String invalidInput() {
         return INVALID_INPUT_TEXT;
     }
 
-    @Override 
+    @Override
     public String unexpectedError() {
         return UNEXPECTED_ERROR_TEXT;
     }
@@ -75,10 +81,30 @@ public class BotMessageFormatter implements MessageFormatter{
         return builder.toString();
     }
 
-    @Override 
+    @Override
     public String getResult(ConversionRequest request, BigDecimal result) {
         return String.format(Locale.US, RESULT_TEMPLATE,
                 request.value(), request.from().getCode(),
                 result, request.to().getCode());
+    }
+
+    @Override
+    public String currencyRates(QuantityType baseUnit, Map<QuantityType, BigDecimal> rates,
+                                LocalDateTime lastUpdated
+    ) {
+        var builder = new StringBuilder(
+                rates("Курсы валют ЦБ РФ", baseUnit, rates)
+        );
+
+        builder.append(System.lineSeparator());
+
+        if (lastUpdated == null) {
+            builder.append("Время последнего обновления неизвестно.");
+        } else {
+            builder.append("Последнее обновление: ")
+                    .append(lastUpdated.format(DATE_FORMATTER));
+        }
+
+        return builder.toString();
     }
 }
