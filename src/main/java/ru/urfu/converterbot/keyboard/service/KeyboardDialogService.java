@@ -84,7 +84,8 @@ public class KeyboardDialogService {
         }
 
         return new BotReply(
-                "Используйте кнопки меню для выбора действия.",
+        processor.processBotResponse(text) +
+                "\nИспользуйте кнопки меню для выбора действия.",
                 keyboardFactory.createMainMenu()
         );
     }
