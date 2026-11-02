@@ -2,7 +2,8 @@ package ru.urfu.converterbot.bots;
 
 import ru.urfu.converterbot.keyboard.models.BotReply;
 import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
-import ru.urfu.converterbot.keyboard.service.KeyboardDialogService;
+import ru.urfu.converterbot.keyboard.service.ActionProcessor;
+import ru.urfu.converterbot.keyboard.service.TextProcessor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,9 @@ public class TelegramBot extends TelegramLongPollingBot {
      */
     private final Logger logger = LoggerFactory.getLogger(TelegramBot.class);
 
-    private final KeyboardDialogService dialogService;
+    private final TextProcessor textProcessor;
+
+    private final ActionProcessor actionProcessor;
 
     private final TelegramKeyboardRenderer keyboardRenderer;
 
@@ -40,15 +43,17 @@ public class TelegramBot extends TelegramLongPollingBot {
      *
      * @param token       токен авторизации бота
      * @param name        имя пользователя бота (username)
-     * @param dialogService сервис для подготовки ответа
+     * @param messageProcessor сервис для подготовки ответа
      * @param keyboardRenderer конвертер KeyboardView в InlineKeyboardMarkup Telegram.
      */
     public TelegramBot(String token, String name,
-                   KeyboardDialogService dialogService,
+                   TextProcessor textProcessor,
+                   ActionProcessor actionProcessor,
                    TelegramKeyboardRenderer keyboardRenderer) {
         super(token);
         this.botUsername = name;
-        this.dialogService = dialogService;
+        this.textProcessor = textProcessor;
+        this.actionProcessor = actionProcessor;
         this.keyboardRenderer = keyboardRenderer;
     }
 
@@ -58,7 +63,7 @@ public class TelegramBot extends TelegramLongPollingBot {
             var callback = update.getCallbackQuery();
             acknowledge(callback.getId());
             long chatId = callback.getMessage().getChatId();
-            send(chatId, dialogService.handleAction(chatId, callback.getData()));
+            send(chatId, actionProcessor.handle(chatId, callback.getData()));
             return;
         }
         if (!update.hasMessage()) {
@@ -67,7 +72,7 @@ public class TelegramBot extends TelegramLongPollingBot {
         var message = update.getMessage();
         String text = message.hasText() ? message.getText() : null;
         long chatId = message.getChatId();
-        send(chatId, dialogService.handleText(chatId, text));
+        send(chatId, textProcessor.handle(chatId, text));
     }
 
     private void acknowledge(String callbackId) {

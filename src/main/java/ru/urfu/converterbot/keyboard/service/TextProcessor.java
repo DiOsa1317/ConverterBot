@@ -3,8 +3,8 @@ package ru.urfu.converterbot.keyboard.service;
 import java.math.BigDecimal;
 import java.util.Optional;
 
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.BotReply;
@@ -12,11 +12,7 @@ import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 
-/**
- * Ведёт пошаговый диалог выбора перевода кнопками: тип, число, исходная и целевая единицы.
- * Не зависит от платформы: принимает текст и данные кнопок, возвращает {@link BotReply}.
- */
-public class KeyboardDialogService {
+public class TextProcessor implements MessageProcessor {
 
     private static final String MENU_COMMAND = "/menu";
     private static final String START_COMMAND = "/start";
@@ -28,8 +24,8 @@ public class KeyboardDialogService {
     private static final BigDecimal MAX_VALUE = new BigDecimal("1000000000");
 
     private static final String INVALID_NUMBER_TEXT = "Не удалось распознать число. ";
-    private static final String STALE_BUTTON_TEXT =
-            "Эта кнопка устарела. Введите /menu, чтобы начать заново.";
+    private static final String NUMBER_EXAMPLE_TEXT = "Введите число. Например: 100";
+    private static final String MENU_HINT_TEXT = "Используйте кнопки меню для выбора действия.";
 
     private final ConversionStateService stateService;
 
@@ -44,7 +40,7 @@ public class KeyboardDialogService {
      * @param keyboardFactory фабрика клавиатур
      * @param processor обработчик текстовых запросов
      */
-    public KeyboardDialogService(@NotNull ConversionStateService stateService,
+    public TextProcessor(@NotNull ConversionStateService stateService,
                                  @NotNull KeyboardFactory keyboardFactory,
                                  @NotNull BotResponseProcessor processor) {
         this.stateService = stateService;
@@ -52,17 +48,11 @@ public class KeyboardDialogService {
         this.processor = processor;
     }
 
-    /**
-     * Обрабатывает текстовое сообщение пользователя.
-     *
-     * @param chatId идентификатор чата
-     * @param text текст сообщения или {@code null}, если текста нет
-     * @return ответ для отправки в чат
-     */
-    public BotReply handleText(long chatId, @Nullable String text) {
+    @Override
+    public BotReply handle(long chatId, @Nullable String text) {
         if (text != null && text.equalsIgnoreCase(START_COMMAND)) {
             stateService.reset(chatId);
-            return new BotReply(START_TEXT, keyboardFactory.toMenu());
+            return new BotReply(START_TEXT, keyboardFactory.createMainMenu());
         }
 
         if (text != null && text.equalsIgnoreCase(MENU_COMMAND)) {
@@ -73,57 +63,26 @@ public class KeyboardDialogService {
         var context = stateService.getChatContext(chatId);
 
         if (context.state() == State.AWAITING_NUMBER) {
-            if (text == null) {
-                return new BotReply(
-                        "Введите число. Например: 100",
-                        null
-                );
+            if (text == null || text.isBlank()) {
+                return new BotReply(NUMBER_EXAMPLE_TEXT);
             }
 
             return handleNumber(chatId, context, text);
         }
 
+        if (text == null || text.isBlank()) {
+            return new BotReply(
+                    MENU_HINT_TEXT,
+                    keyboardFactory.createMainMenu()
+            );
+        }
+
         return new BotReply(
-        processor.processBotResponse(text) +
-                "\nИспользуйте кнопки меню для выбора действия.",
+                processor.processBotResponse(text),
                 keyboardFactory.createMainMenu()
         );
     }
-
-
-    /**
-     * Обрабатывает нажатие кнопки.
-     *
-     * @param chatId идентификатор чата
-     * @param data данные нажатой кнопки
-     * @return ответ для отправки в чат
-     */
-    public BotReply handleAction(long chatId, @NotNull String data) {
-        var context = stateService.getChatContext(chatId);
-        if (data.equals("MENU")) {
-            stateService.reset(chatId);
-            return replyFor(stateService.getChatContext(chatId));
-        }
-        if (data.startsWith(KeyboardFactory.TYPE_PREFIX)) {
-            String type = data.substring(KeyboardFactory.TYPE_PREFIX.length());
-            return moveTo(chatId, new ChatContext(State.AWAITING_NUMBER, type, null, null, null));
-        }
-        if (data.startsWith(KeyboardFactory.FROM_PREFIX)
-                && context.state() == State.AWAITING_SOURCE) {
-            var fromUnit = data.substring(KeyboardFactory.FROM_PREFIX.length());
-            return moveTo(chatId, new ChatContext(State.AWAITING_TARGET,
-                    context.conversionType(), context.number(), fromUnit, null));
-        }
-        if (data.startsWith(KeyboardFactory.TO_PREFIX)
-                && context.state() == State.AWAITING_TARGET) {
-            var toUnit = data.substring(KeyboardFactory.TO_PREFIX.length());
-            stateService.reset(chatId);
-            var query = context.number() + " " + context.fromUnit() + " to " + toUnit;
-            return new BotReply(processor.processBotResponse(query), null);
-        }
-        return new BotReply(STALE_BUTTON_TEXT, null);
-    }
-
+    
     private BotReply handleNumber(long chatId, ChatContext context, String text) {
         var number = parseNumber(text);
         if (number.isEmpty()) {

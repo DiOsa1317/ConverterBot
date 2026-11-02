@@ -1,9 +1,30 @@
 package ru.urfu.converterbot.keyboard.models;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Описывает одну кнопку клавиатуры.
  *
  * @param label текст, отображаемый на кнопке
- * @param actionData данные, передаваемые боту при нажатии
+ * @param action тип действия кнопки
+ * @param value значение действия, например код категории или единицы
  */
-public record KeyboardButton(String label, String actionData) { }
+public record KeyboardButton(
+        @NotNull String label,
+        @NotNull ButtonAction action,
+        @NotNull String value) {
+
+    /**
+     * Возвращает данные, которые будут переданы Telegram при нажатии кнопки.
+     *
+     * @return строка callback-данных
+     */
+    public String callbackData() {
+        return switch (action) {
+            case TYPE -> "TYPE:" + value;
+            case FROM -> "FROM:" + value;
+            case TO -> "TO:" + value;
+            case MENU -> "MENU";
+        };
+    }
+ }
