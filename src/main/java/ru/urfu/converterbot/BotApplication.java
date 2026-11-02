@@ -37,7 +37,7 @@ public class BotApplication {
      *
      * @param args аргументы командной строки (в текущей реализации не используются)
      */
-    static void main(String[] args) {
+    void main(String[] args) {
         try {
             var configuration = new BotConfiguration("config.properties",
                     "bot.token", "bot.username");
@@ -60,7 +60,7 @@ public class BotApplication {
         }
     }
 
-    private static @NotNull BotService getBotService() {
+    private @NotNull BotService getBotService() {
         var parser = new ClientInputParser();
         var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());
