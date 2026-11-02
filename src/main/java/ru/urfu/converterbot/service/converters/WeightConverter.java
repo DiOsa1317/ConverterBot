@@ -1,6 +1,5 @@
 package ru.urfu.converterbot.service.converters;
 
-import ru.urfu.converterbot.service.converters.models.ConversionData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
 import ru.urfu.converterbot.service.models.QuantityType;
 import ru.urfu.converterbot.service.models.WeightType;
@@ -15,7 +14,7 @@ import java.util.Map;
  */
 public class WeightConverter implements QuantityConverter {
 
-    private final ConversionData weightData;
+    private final WeightData weightData;
 
     /**
      * Создаёт конвертер, получая данные о соотношении весов

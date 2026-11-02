@@ -6,7 +6,7 @@ import ru.urfu.converterbot.service.models.QuantityType;
 import java.math.BigDecimal;
 import java.util.Map;
 
-public class LengthData implements ConversionData{
+public class LengthData {
 
     private final Map<QuantityType, BigDecimal> rates = Map.of(
             LengthType.METER, new BigDecimal("1.0"),
@@ -16,7 +16,6 @@ public class LengthData implements ConversionData{
             LengthType.INCH, new BigDecimal("0.0254")
     );
 
-    @Override
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }

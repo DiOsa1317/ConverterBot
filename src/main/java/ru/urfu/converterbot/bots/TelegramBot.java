@@ -40,7 +40,8 @@ public class TelegramBot extends TelegramLongPollingBot {
      *
      * @param token       токен авторизации бота
      * @param name        имя пользователя бота (username)
-     * @param botResponseProcessor сервис для подготовки ответа
+     * @param dialogService сервис для подготовки ответа
+     * @param keyboardRenderer конвертер KeyboardView в InlineKeyboardMarkup Telegram.
      */
     public TelegramBot(String token, String name,
                    KeyboardDialogService dialogService,
