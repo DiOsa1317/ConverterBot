@@ -10,4 +10,8 @@ import org.jetbrains.annotations.Nullable;
  * @param keyboard клавиатура или {@code null}, если кнопки не нужны
  */
 public record BotReply(@NotNull String text, @Nullable KeyboardView keyboard) {
+    
+    public BotReply(@NotNull String text) {
+        this(text, null);
+    }
 }

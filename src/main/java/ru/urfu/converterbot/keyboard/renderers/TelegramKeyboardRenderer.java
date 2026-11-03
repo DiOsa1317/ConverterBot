@@ -32,7 +32,7 @@ public class TelegramKeyboardRenderer {
             for (var button : row.buttons()) {
                 telegramRow.add(InlineKeyboardButton.builder()
                         .text(button.label())
-                        .callbackData(button.actionData())
+                        .callbackData(button.callbackData())
                         .build());
             }
             rows.add(telegramRow);

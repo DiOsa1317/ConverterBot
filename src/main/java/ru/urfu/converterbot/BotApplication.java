@@ -5,7 +5,9 @@ import ru.urfu.converterbot.bots.TelegramBot;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
 import ru.urfu.converterbot.keyboard.service.ConversionStateService;
-import ru.urfu.converterbot.keyboard.service.KeyboardDialogService;
+import ru.urfu.converterbot.keyboard.service.TextProcessor;
+import ru.urfu.converterbot.keyboard.service.ActionProcessor;
+
 import ru.urfu.converterbot.service.*;
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
@@ -37,7 +39,7 @@ public class BotApplication {
      *
      * @param args аргументы командной строки (в текущей реализации не используются)
      */
-    static void main(String[] args) {
+    void main(String[] args) {
         try {
             var configuration = new BotConfiguration("config.properties",
                     "bot.token", "bot.username");
@@ -51,8 +53,9 @@ public class BotApplication {
             var stateService = new ConversionStateService();
             var keyboardFactory = new KeyboardFactory();
             var renderer = new TelegramKeyboardRenderer();
-            var dialogService = new KeyboardDialogService(stateService, keyboardFactory, botService);
-            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, dialogService, renderer);
+            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService);
+            var actionProcessor = new ActionProcessor(stateService, keyboardFactory, botService);
+            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, textProcessor, actionProcessor, renderer);
             telegramBot.start();
         } catch (Exception e) {
             logger.error("Ошибка при запуске", e);
@@ -60,7 +63,7 @@ public class BotApplication {
         }
     }
 
-    private static @NotNull BotService getBotService() {
+    private @NotNull BotService getBotService() {
         var parser = new ClientInputParser();
         var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());

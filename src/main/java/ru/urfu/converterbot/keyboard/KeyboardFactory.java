@@ -3,6 +3,7 @@ package ru.urfu.converterbot.keyboard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import ru.urfu.converterbot.keyboard.models.ButtonAction;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.KeyboardButton;
 import ru.urfu.converterbot.keyboard.models.KeyboardRow;
@@ -13,13 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KeyboardFactory {
-
-    public static final String TYPE_PREFIX = "TYPE:";
-
-    public static final String FROM_PREFIX = "FROM:";
-
-    public static final String TO_PREFIX = "TO:";
-
+    
     /**
      * Создаёт главное меню с категориями конвертации.
      *
@@ -28,10 +23,10 @@ public class KeyboardFactory {
     @NotNull
     public KeyboardView createMainMenu() {
         return toView(List.of(
-                new KeyboardButton("Валюты", TYPE_PREFIX + "CURRENCY"),
-                new KeyboardButton("Температура", TYPE_PREFIX + "TEMPERATURE"),
-                new KeyboardButton("Вес", TYPE_PREFIX + "WEIGHT"),
-                new KeyboardButton("Длина", TYPE_PREFIX + "LENGTH")), true);
+                new KeyboardButton("Валюты", ButtonAction.TYPE, "CURRENCY"),
+                new KeyboardButton("Температура", ButtonAction.TYPE, "TEMPERATURE"),
+                new KeyboardButton("Вес", ButtonAction.TYPE, "WEIGHT"),
+                new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH")), true);
     }
 
     /**
@@ -44,7 +39,7 @@ public class KeyboardFactory {
     public KeyboardView createSourceUnitKeyboard(@NotNull String conversionType) {
         var buttons = new ArrayList<KeyboardButton>();
         for (QuantityType unit : unitsOf(conversionType)) {
-            buttons.add(new KeyboardButton(unit.getCode(), FROM_PREFIX + unit.getCode()));
+            buttons.add(new KeyboardButton(unit.getCode(), ButtonAction.FROM, unit.getCode()));
         }
         return toView(buttons, false);
     }
@@ -65,7 +60,7 @@ public class KeyboardFactory {
         var buttons = new ArrayList<KeyboardButton>();
         for (QuantityType unit : unitsOf(conversionType)) {
             if (!unit.getCode().equals(fromUnit)) {
-                buttons.add(new KeyboardButton(unit.getCode(), TO_PREFIX + unit.getCode()));
+                buttons.add(new KeyboardButton(unit.getCode(), ButtonAction.TO, unit.getCode()));
             }
         }
         return toView(buttons, false);
@@ -107,8 +102,7 @@ public class KeyboardFactory {
     /* Создает клавиатуру только с кнопкой меню для стартового сообщения */
     public KeyboardView toMenu() {
         var rows = new ArrayList<KeyboardRow>();
-        rows.add(new KeyboardRow(List.of(
-                new KeyboardButton("Меню", "MENU")
+        rows.add(new KeyboardRow(List.of(new KeyboardButton("Меню", ButtonAction.MENU, "")
         )));
 
         return new KeyboardView(rows);
@@ -125,7 +119,7 @@ public class KeyboardFactory {
 
         if (!isMain) {
             rows.add(new KeyboardRow(List.of(
-                    new KeyboardButton("Меню", "MENU")
+                    new KeyboardButton("Меню", ButtonAction.MENU, "")
             )));
         }
 
