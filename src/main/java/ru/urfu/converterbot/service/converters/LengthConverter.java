@@ -1,6 +1,5 @@
 package ru.urfu.converterbot.service.converters;
 
-import ru.urfu.converterbot.service.converters.models.ConversionData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.models.LengthType;
 import ru.urfu.converterbot.service.models.QuantityType;
@@ -15,7 +14,7 @@ import java.util.Map;
  */
 public class LengthConverter implements QuantityConverter {
 
-    private final ConversionData lengthData;
+    private final LengthData lengthData;
 
     /**
      * Создаёт конвертер, получая данные о соотношении длин

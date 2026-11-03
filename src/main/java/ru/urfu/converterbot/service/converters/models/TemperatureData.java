@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Map;
 
-public class TemperatureData implements ConversionData {
+public class TemperatureData {
 
     private static final BigDecimal ONE = BigDecimal.ONE;
     private static final BigDecimal ZERO = BigDecimal.ZERO;
@@ -21,7 +21,6 @@ public class TemperatureData implements ConversionData {
             TemperatureType.KELVIN, ONE
     );
 
-    @Override
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }

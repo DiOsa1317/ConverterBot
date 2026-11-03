@@ -1,5 +1,9 @@
 package ru.urfu.converterbot.keyboard;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import ru.urfu.converterbot.keyboard.models.ButtonAction;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.KeyboardButton;
 import ru.urfu.converterbot.keyboard.models.KeyboardRow;
@@ -10,36 +14,65 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class KeyboardFactory {
-
+    
+    /**
+     * Создаёт главное меню с категориями конвертации.
+     *
+     * @return клавиатура главного меню
+     */
+    @NotNull
     public KeyboardView createMainMenu() {
-        var buttons = List.of(
-                new KeyboardButton("Валюты", "TYPE_CURRENCY"),
-                new KeyboardButton("Длина", "TYPE_LENGTH"),
-                new KeyboardButton("Вес", "TYPE_WEIGHT"),
-                new KeyboardButton("Температура", "TYPE_TEMPERATURE")
-        );
-        return new KeyboardView(List.of(new KeyboardRow(buttons)));
+        return toView(List.of(
+                new KeyboardButton("Валюты", ButtonAction.TYPE, "CURRENCY"),
+                new KeyboardButton("Температура", ButtonAction.TYPE, "TEMPERATURE"),
+                new KeyboardButton("Вес", ButtonAction.TYPE, "WEIGHT"),
+                new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH")), true);
     }
 
-    public KeyboardView createSourceUnitKeyboard(String conversionType) {
-        List<KeyboardButton> buttons = new ArrayList<>();
+    /**
+     * Создаёт клавиатуру выбора исходной единицы измерения.
+     *
+     * @param conversionType категория конвертации
+     * @return клавиатура выбора исходной единицы и кнопка меню
+     */
+    @NotNull
+    public KeyboardView createSourceUnitKeyboard(@NotNull String conversionType) {
+        var buttons = new ArrayList<KeyboardButton>();
         for (QuantityType unit : unitsOf(conversionType)) {
-            buttons.add(new KeyboardButton(unit.getCode(), "FROM:" + unit.getCode()));
+            buttons.add(new KeyboardButton(unit.getCode(), ButtonAction.FROM, unit.getCode()));
         }
-        return new KeyboardView(List.of(new KeyboardRow(buttons)));
+        return toView(buttons, false);
     }
 
-    public KeyboardView createTargetUnitKeyboard(String conversionType, String fromUnit) {
-        List<KeyboardButton> buttons = new ArrayList<>();
+    /**
+     * Создаёт клавиатуру выбора целевой единицы измерения.
+     *
+     * <p>Исходная единица исключается из списка вариантов.</p>
+     *
+     * @param conversionType категория конвертации
+     * @param fromUnit код исходной единицы
+     * @return клавиатура выбора целевой единицы и кнопка меню
+     */
+    @NotNull
+    public KeyboardView createTargetUnitKeyboard(
+                @NotNull String conversionType, 
+                @NotNull String fromUnit) {
+        var buttons = new ArrayList<KeyboardButton>();
         for (QuantityType unit : unitsOf(conversionType)) {
-            if (unit.getCode().equals(fromUnit)) {
-                continue;
+            if (!unit.getCode().equals(fromUnit)) {
+                buttons.add(new KeyboardButton(unit.getCode(), ButtonAction.TO, unit.getCode()));
             }
-            buttons.add(new KeyboardButton(unit.getCode(), "FROM:" + unit.getCode()));
         }
-        return new KeyboardView(List.of(new KeyboardRow(buttons)));
+        return toView(buttons, false);
     }
 
+    /**
+     * Создаёт клавиатуру, соответствующую текущему состоянию диалога.
+     *
+     * @param context текущее состояние диалога
+     * @return подходящая клавиатура или {@code null}, если она не нужна
+     */
+    @Nullable
     public KeyboardView createFor(ChatContext context) {
         return switch (context.state()) {
             case IDLE -> createMainMenu();
@@ -49,7 +82,14 @@ public class KeyboardFactory {
         };
     }
 
-    public List<QuantityType> unitsOf(String conversionType) {
+    /**
+     * Возвращает единицы измерения выбранной категории.
+     *
+     * @param conversionType категория: CURRENCY, LENGTH, WEIGHT или TEMPERATURE
+     * @return список единиц измерения; пустой список для неизвестной категории
+     */
+    @NotNull
+    public List<QuantityType> unitsOf(@NotNull String conversionType) {
         return switch (conversionType) {
             case "CURRENCY" -> List.of(CurrencyType.values());
             case "LENGTH" -> List.of(LengthType.values());
@@ -57,5 +97,32 @@ public class KeyboardFactory {
             case "TEMPERATURE" -> List.of(TemperatureType.values());
             default -> List.of();
         };
+    }
+
+    /* Создает клавиатуру только с кнопкой меню для стартового сообщения */
+    public KeyboardView toMenu() {
+        var rows = new ArrayList<KeyboardRow>();
+        rows.add(new KeyboardRow(List.of(new KeyboardButton("Меню", ButtonAction.MENU, "")
+        )));
+
+        return new KeyboardView(rows);
+    }
+
+    private KeyboardView toView(List<KeyboardButton> buttons, Boolean isMain) {
+        var rows = new ArrayList<KeyboardRow>();
+
+        for (int i = 0; i < buttons.size(); i += 2) {
+            rows.add(new KeyboardRow(
+                    buttons.subList(i, Math.min(i + 2, buttons.size()))
+            ));
+        }
+
+        if (!isMain) {
+            rows.add(new KeyboardRow(List.of(
+                    new KeyboardButton("Меню", ButtonAction.MENU, "")
+            )));
+        }
+
+        return new KeyboardView(rows);
     }
 }

@@ -13,8 +13,13 @@ import java.util.List;
  */
 public class TelegramKeyboardRenderer {
 
-    public TelegramKeyboardRenderer() {}
-
+     /**
+     * Преобразует представление клавиатуры в формат Telegram API.
+     *
+     * @param view описание клавиатуры
+     * @return inline-клавиатура или {@code null}, если клавиатура отсутствует
+     *         либо не содержит строк
+     */
     public InlineKeyboardMarkup render(KeyboardView view) {
         if (view == null || view.isEmpty()) {
             return null;
@@ -27,7 +32,7 @@ public class TelegramKeyboardRenderer {
             for (var button : row.buttons()) {
                 telegramRow.add(InlineKeyboardButton.builder()
                         .text(button.label())
-                        .callbackData(button.actionData())
+                        .callbackData(button.callbackData())
                         .build());
             }
             rows.add(telegramRow);

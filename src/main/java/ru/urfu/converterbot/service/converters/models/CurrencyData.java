@@ -11,7 +11,7 @@ import ru.urfu.converterbot.service.models.CurrencyType;
 /**
  * Хранит курсы валют.
  */
-public class CurrencyData implements ConversionData {
+public class CurrencyData {
 
     /**
      * Актуальные курсы
@@ -29,7 +29,6 @@ public class CurrencyData implements ConversionData {
      */
     private volatile LocalDateTime lastUpdated;
 
-    @Override
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }
