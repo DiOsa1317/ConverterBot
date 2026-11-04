@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class BotMessageFormatterTest {
 
+    /** Форматтер сообщений, создаваемый перед каждым тестом. */
     private BotMessageFormatter formatter;
 
     @BeforeEach

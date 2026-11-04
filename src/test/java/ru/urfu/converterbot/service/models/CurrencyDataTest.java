@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Тесты контракта хранилища курсов валют {@link CurrencyData}.
  */
 public class CurrencyDataTest {
+    /** Хранилище курсов валют, используемое в тестах. */
     private CurrencyData currencyData;
 
     @BeforeEach
