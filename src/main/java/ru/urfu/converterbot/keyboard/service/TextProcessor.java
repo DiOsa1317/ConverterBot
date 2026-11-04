@@ -101,7 +101,7 @@ public class TextProcessor implements MessageProcessor {
         }
 
         return new BotReply(
-                processor.processBotResponse(text),
+                processor.processBotResponse(text) + MENU_HINT_TEXT,
                 keyboardFactory.createMainMenu()
         );
     }

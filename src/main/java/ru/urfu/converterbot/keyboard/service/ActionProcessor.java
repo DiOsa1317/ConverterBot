@@ -46,17 +46,17 @@ public class ActionProcessor implements MessageProcessor {
             stateService.reset(chatId);
             return replyFor(stateService.getChatContext(chatId));
         }
-        if (data.startsWith(ButtonAction.TYPE.toString() + ":")) {
+        if (data.startsWith(ButtonAction.TYPE + ":")) {
             String type = data.substring(ButtonAction.TYPE.toString().length() + 1);
             return moveTo(chatId, new ChatContext(State.AWAITING_NUMBER, type, null, null, null));
         }
-        if (data.startsWith(ButtonAction.FROM.toString() + ":")
+        if (data.startsWith(ButtonAction.FROM + ":")
                 && context.state() == State.AWAITING_SOURCE) {
             var fromUnit = data.substring(ButtonAction.FROM.toString().length() + 1);
             return moveTo(chatId, new ChatContext(State.AWAITING_TARGET,
                     context.conversionType(), context.number(), fromUnit, null));
         }
-        if (data.startsWith(ButtonAction.TO.toString() + ":")
+        if (data.startsWith(ButtonAction.TO + ":")
                 && context.state() == State.AWAITING_TARGET) {
             var toUnit = data.substring(ButtonAction.TO.toString().length() + 1);
             stateService.reset(chatId);
