@@ -16,16 +16,29 @@ public class TextProcessor implements MessageProcessor {
 
     private static final String MENU_COMMAND = "/menu";
     private static final String START_COMMAND = "/start";
+    private static final String HELP_COMMAND = "/help";
 
     private static final String START_TEXT = """
         Приветствую вас! Этот бот конвертирует валюты и физические величины.
+        Чтобы узнать подробнее, введите /help.
         """;
 
     private static final BigDecimal MAX_VALUE = new BigDecimal("1000000000");
 
     private static final String INVALID_NUMBER_TEXT = "Не удалось распознать число. ";
     private static final String NUMBER_EXAMPLE_TEXT = "Введите число. Например: 100";
-    private static final String MENU_HINT_TEXT = "Используйте кнопки меню для выбора действия.";
+    private static final String MENU_HINT_TEXT = "Используйте кнопки меню для выбора типа перевода.";
+    private static final String HELP_TEXT = """
+            Формат запроса: {число} {единица1} to {единица2}
+            Например: 100 USD to EUR
+            Или: 10 KM to MI
+            
+            Доступные валюты: /currency
+            Доступные величины:
+            1) /length
+            2) /weight
+            3) /temperature
+            """;
 
     private final ConversionStateService stateService;
 
@@ -50,27 +63,37 @@ public class TextProcessor implements MessageProcessor {
 
     @Override
     public BotReply handle(long chatId, @Nullable String text) {
-        if (text != null && text.equalsIgnoreCase(START_COMMAND)) {
+        var context = stateService.getChatContext(chatId);
+        if (text == null) {
+            if (context.state() == State.AWAITING_NUMBER) {
+                return new BotReply(NUMBER_EXAMPLE_TEXT);
+            }
+            return new BotReply(MENU_HINT_TEXT, keyboardFactory.createMainMenu());
+        }
+        if (text.equalsIgnoreCase(START_COMMAND)) {
             stateService.reset(chatId);
-            return new BotReply(START_TEXT, keyboardFactory.createMainMenu());
+            return new BotReply(START_TEXT + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
         }
 
-        if (text != null && text.equalsIgnoreCase(MENU_COMMAND)) {
+        if (text.equalsIgnoreCase(MENU_COMMAND)) {
             stateService.reset(chatId);
             return replyFor(stateService.getChatContext(chatId));
         }
 
-        var context = stateService.getChatContext(chatId);
+        if (text.equalsIgnoreCase(HELP_COMMAND)) {
+            stateService.reset(chatId);
+            return new BotReply(HELP_TEXT + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
+        }
 
         if (context.state() == State.AWAITING_NUMBER) {
-            if (text == null || text.isBlank()) {
+            if (text.isBlank()) {
                 return new BotReply(NUMBER_EXAMPLE_TEXT);
             }
 
             return handleNumber(chatId, context, text);
         }
 
-        if (text == null || text.isBlank()) {
+        if (text.isBlank()) {
             return new BotReply(
                     MENU_HINT_TEXT,
                     keyboardFactory.createMainMenu()

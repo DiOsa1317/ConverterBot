@@ -9,26 +9,6 @@ import ru.urfu.converterbot.service.models.QuantityType;
 import java.time.LocalDateTime;
 
 public interface MessageFormatter {
-    /**
-     * Возвращает приветствие.
-     *
-     * @return текст приветствия
-     */
-    String start();
-
-    /**
-     * Возвращает общую справку.
-     *
-     * @return текст справки
-     */
-    String help();
-
-    /**
-     * Возвращает ответ на сообщение без текста.
-     *
-     * @return текст ответа
-     */
-    String noText();
 
     /**
      * Возвращает ответ на сообщение в неверном формате.

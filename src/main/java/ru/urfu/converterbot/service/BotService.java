@@ -76,15 +76,6 @@ public class BotService implements BotResponseProcessor {
      * @throws InvalidUserInputException если запрос на конвертацию не удалось распознать
      */
     private String dispatch(@Nullable String messageText) throws InvalidUserInputException {
-        if (messageText == null) {
-            return messageFormatter.noText();
-        }
-        if (messageText.equalsIgnoreCase("/start")) {
-            return messageFormatter.start();
-        }
-        if (messageText.equalsIgnoreCase("/help")) {
-            return messageFormatter.help();
-        }
         for (BotCommand command : BotCommand.values()) {
         if (command.matches(messageText)) {
             if (command == BotCommand.CURRENCY) {
