@@ -11,6 +11,7 @@ import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 
+/** Обработчик нажатий на клавиатуру пользователем*/
 public class ActionProcessor implements MessageProcessor {
 
     private static final String STALE_BUTTON_TEXT =
@@ -46,17 +47,17 @@ public class ActionProcessor implements MessageProcessor {
             stateService.reset(chatId);
             return replyFor(stateService.getChatContext(chatId));
         }
-        if (data.startsWith(ButtonAction.TYPE.toString() + ":")) {
+        if (data.startsWith(ButtonAction.TYPE + ":")) {
             String type = data.substring(ButtonAction.TYPE.toString().length() + 1);
             return moveTo(chatId, new ChatContext(State.AWAITING_NUMBER, type, null, null, null));
         }
-        if (data.startsWith(ButtonAction.FROM.toString() + ":")
+        if (data.startsWith(ButtonAction.FROM + ":")
                 && context.state() == State.AWAITING_SOURCE) {
             var fromUnit = data.substring(ButtonAction.FROM.toString().length() + 1);
             return moveTo(chatId, new ChatContext(State.AWAITING_TARGET,
                     context.conversionType(), context.number(), fromUnit, null));
         }
-        if (data.startsWith(ButtonAction.TO.toString() + ":")
+        if (data.startsWith(ButtonAction.TO + ":")
                 && context.state() == State.AWAITING_TARGET) {
             var toUnit = data.substring(ButtonAction.TO.toString().length() + 1);
             stateService.reset(chatId);
@@ -66,15 +67,28 @@ public class ActionProcessor implements MessageProcessor {
         return new BotReply(STALE_BUTTON_TEXT);
     }
 
+    /** Возвращает ответ для пользователя и перемещает на следующий этап
+     * @param chatId - id чата
+     * @param next - следующий контекст чата
+     * @return ответ бота
+     * */
     private BotReply moveTo(long chatId, ChatContext next) {
         stateService.updateContext(chatId, next);
         return replyFor(next);
     }
 
+    /** Подбирает ответ для пользователя в зависимости от контекста
+     * @param context - следующий контекст чата
+     * @return ответ бота
+     * */
     private BotReply replyFor(ChatContext context) {
         return new BotReply(promptFor(context), keyboardFactory.createFor(context));
     }
 
+    /** Подбирает строковую часть ответа для пользователя в зависимости от контекста
+     * @param context - следующий контекст чата
+     * @return строковая часть ответа
+     * */
     private String promptFor(ChatContext context) {
         return switch (context.state()) {
             case IDLE -> "Выберите тип перевода:";

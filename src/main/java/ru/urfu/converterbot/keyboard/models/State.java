@@ -1,5 +1,6 @@
 package ru.urfu.converterbot.keyboard.models;
 
+/** Текущее состояние диалога */
 public enum State {
     IDLE,
     AWAITING_NUMBER,

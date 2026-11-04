@@ -3,31 +3,20 @@ package ru.urfu.converterbot.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.models.CurrencyType;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeHttpClient;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeHttpResponse;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.LocalDateTime;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 /**
  * Тесты контракта сервиса получения и обновления курсов валют {@link CurrencyRateService}.
  */
 class CurrencyRateServiceTest {
-
-    private CurrencyData currencyData;
-    private HttpClient mockHttpClient;
-    private HttpResponse<String> mockHttpResponse;
-    private CurrencyRateService service;
 
     private static final String SAMPLE_XML = """
             <?xml version="1.0" encoding="windows-1251"?>
@@ -55,111 +44,96 @@ class CurrencyRateServiceTest {
             </ValCurs>
             """;
 
+    private CurrencyData currencyData;
+
     @BeforeEach
-    void setUp() throws IOException, InterruptedException {
-        currencyData = mock(CurrencyData.class);
-        mockHttpClient = mock(HttpClient.class);
-        mockHttpResponse = mock(HttpResponse.class);
-
-        when(mockHttpResponse.statusCode()).thenReturn(200);
-        when(mockHttpResponse.body()).thenReturn(SAMPLE_XML);
-
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(mockHttpResponse);
-
-        service = new CurrencyRateService(currencyData, mockHttpClient);
+    void setUp() {
+        currencyData = new CurrencyData();
     }
 
-    /**
-     * Проверяет, что успешное обновление записывает корректные курсы в хранилище
-     * и возвращает признак успеха.
-     */
+    private CurrencyRateService createServiceWithResponse(int statusCode, String body) {
+        var response = new FakeHttpResponse(statusCode, body);
+        return new CurrencyRateService(currencyData, new FakeHttpClient(response));
+    }
+
+    private CurrencyRateService createServiceWithException(IOException exception) {
+        return new CurrencyRateService(currencyData, new FakeHttpClient(exception));
+    }
+
     @Test
-    @DisplayName("Успешно обновляет курсы и сохраняет их в хранилище")
+    @DisplayName("Успешно обновляет курсы и сохраняет их в реальном хранилище")
     void testUpdateRatesSuccess() {
+        CurrencyRateService service = createServiceWithResponse(200, SAMPLE_XML);
+
         var result = service.updateRates();
 
         assertTrue(result, "Обновление должно пройти успешно");
+        assertNotNull(currencyData.lastUpdated(), "Время последнего обновления должно быть установлено");
 
-        var ratesCaptor = ArgumentCaptor.forClass(Map.class);
-        var dateCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-
-        verify(currencyData).update(ratesCaptor.capture(), dateCaptor.capture());
-
-        var savedRates = ratesCaptor.getValue();
-
+        var savedRates = currencyData.rates();
         assertNotNull(savedRates);
-        assertEquals(BigDecimal.ONE, savedRates.get(CurrencyType.RUB), "Курс RUB должен быть 1");
-        assertEquals(new BigDecimal("92.5000000000"), savedRates.get(CurrencyType.USD));
-        assertEquals(new BigDecimal("100.2500000000"), savedRates.get(CurrencyType.EUR));
-        assertEquals(new BigDecimal("12.8000000000"), savedRates.get(CurrencyType.CNY));
-        assertEquals(new BigDecimal("0.1850000000"), savedRates.get(CurrencyType.KZT));
+
+        assertBigDecimalEquals("1", savedRates.get(CurrencyType.RUB));
+        assertBigDecimalEquals("92.5", savedRates.get(CurrencyType.USD));
+        assertBigDecimalEquals("100.25", savedRates.get(CurrencyType.EUR));
+        assertBigDecimalEquals("12.8", savedRates.get(CurrencyType.CNY));
+        assertBigDecimalEquals("0.185", savedRates.get(CurrencyType.KZT));
     }
 
-    /**
-     * Проверяет, что при ошибке HTTP метод возвращает false и не модифицирует хранилище.
-     */
     @Test
-    @DisplayName("Возвращает false при ошибке HTTP")
+    @DisplayName("Возвращает false при ошибке HTTP и не меняет состояние хранилища")
     void testUpdateRatesHttpError() {
-        when(mockHttpResponse.statusCode()).thenReturn(500);
+        CurrencyRateService service = createServiceWithResponse(500, "Internal Server Error");
 
         var result = service.updateRates();
 
         assertFalse(result);
-        verify(currencyData, never()).update(any(), any());
+        assertNull(currencyData.lastUpdated(), "Время обновления не должно измениться при ошибке");
     }
 
-    /**
-     * Проверяет, что при невалидном XML метод возвращает false и не модифицирует хранилище.
-     */
     @Test
-    @DisplayName("Возвращает false при ошибке парсинга XML")
+    @DisplayName("Возвращает false при ошибке парсинга XML и не меняет состояние хранилища")
     void testUpdateRatesParseError() {
-        when(mockHttpResponse.body()).thenReturn("<broken>xml");
+        CurrencyRateService service = createServiceWithResponse(200, "<broken>xml");
 
         var result = service.updateRates();
 
         assertFalse(result);
-        verify(currencyData, never()).update(any(), any());
+        assertNull(currencyData.lastUpdated(), "Время обновления не должно измениться при ошибке парсинга");
     }
 
-    /**
-     * Проверяет устойчивость к сетевым сбоям: метод не выбрасывает исключение наружу.
-     */
     @Test
     @DisplayName("Не падает с исключением при сетевой ошибке")
-    void testUpdateRatesNetworkException() throws IOException, InterruptedException {
-        when(mockHttpClient.send(any(), any())).thenThrow(new IOException("Network error"));
+    void testUpdateRatesNetworkException() {
+        CurrencyRateService service = createServiceWithException(new IOException("Network error"));
 
         assertDoesNotThrow(() -> {
             var result = service.updateRates();
             assertFalse(result);
         });
+        assertNull(currencyData.lastUpdated(), "Время обновления не должно измениться при сетевой ошибке");
     }
 
-    /**
-     * Проверяет корректность парсинга полного набора валют из XML-ответа ЦБ РФ.
-     */
     @Test
     @DisplayName("Корректно парсит полный XML ответ ЦБ")
     void testParseRatesFullXml() throws Exception {
+        CurrencyRateService service = createServiceWithResponse(200, "");
+
         var rates = service.parseRates(SAMPLE_XML);
 
         assertNotNull(rates);
         assertEquals(5, rates.size());
 
-        assertEquals(BigDecimal.ONE, rates.get(CurrencyType.RUB));
-        assertEquals(new BigDecimal("92.5000000000"), rates.get(CurrencyType.USD));
-        assertEquals(new BigDecimal("0.1850000000"), rates.get(CurrencyType.KZT));
+        assertBigDecimalEquals("1", rates.get(CurrencyType.RUB));
+        assertBigDecimalEquals("92.5", rates.get(CurrencyType.USD));
+        assertBigDecimalEquals("0.185", rates.get(CurrencyType.KZT));
     }
 
-    /**
-     * Проверяет, что отсутствие обязательной валюты в ответе приводит к IllegalStateException.
-     */
     @Test
     @DisplayName("Выбрасывает исключение, если в XML нет обязательной валюты")
     void testParseRatesMissingCurrency() {
+        CurrencyRateService service = createServiceWithResponse(200, "");
+
         var incompleteXml = """
                 <?xml version="1.0" encoding="windows-1251"?>
                 <ValCurs>
@@ -172,36 +146,49 @@ class CurrencyRateServiceTest {
         assertThrows(IllegalStateException.class, () -> service.parseRates(incompleteXml));
     }
 
-    /**
-     * Проверяет, что неизвестные коды валют в XML игнорируются без ошибок.
-     */
     @Test
     @DisplayName("Игнорирует неизвестные валюты")
     void testParseRatesIgnoresUnknown() {
+        CurrencyRateService service = createServiceWithResponse(200, "");
+
         var xmlWithBtc = SAMPLE_XML.replace("</ValCurs>",
                 "<Valute><CharCode>BTC</CharCode><Nominal>1</Nominal><Value>1000</Value></Valute></ValCurs>");
 
         assertDoesNotThrow(() -> service.parseRates(xmlWithBtc));
     }
 
-    /**
-     * Проверяет, что start() инициирует немедленное первичное обновление курсов.
-     */
     @Test
-    @DisplayName("start запускает первичное обновление")
+    @DisplayName("start запускает синхронное первичное обновление курсов")
     void testStartTriggersInitialUpdate() {
+        CurrencyRateService service = createServiceWithResponse(200, SAMPLE_XML);
+
+        assertNull(currencyData.lastUpdated(), "До вызова start() время обновления должно быть null");
+        BigDecimal initialUsdRate = currencyData.rates().get(CurrencyType.USD);
+
         service.start();
-        verify(currencyData, atLeastOnce()).update(any(), any());
+        assertNotNull(currencyData.lastUpdated(), "После start() время обновления должно быть установлено");
+
+        BigDecimal updatedUsdRate = currencyData.rates().get(CurrencyType.USD);
+        assertBigDecimalEquals("92.5", updatedUsdRate);
+        assertNotEquals(initialUsdRate, updatedUsdRate, "Курс USD должен измениться после start()");
+
         service.stop();
     }
 
-    /**
-     * Проверяет безопасность вызова stop() до инициализации планировщика.
-     */
     @Test
     @DisplayName("stop безопасно работает, если start не вызывался")
     void testStopWithoutStart() {
-        var newService = new CurrencyRateService(currencyData, mockHttpClient);
-        assertDoesNotThrow(newService::stop);
+        CurrencyRateService service = createServiceWithResponse(200, SAMPLE_XML);
+        assertDoesNotThrow(service::stop);
+    }
+
+    /**
+     * Вспомогательный метод для корректного сравнения BigDecimal.
+     * Использует compareTo, который считает равными 92.5 и 92.5000000000.
+     */
+    private void assertBigDecimalEquals(String expectedStr, BigDecimal actual) {
+        BigDecimal expected = new BigDecimal(expectedStr);
+        assertEquals(0, expected.compareTo(actual),
+                "Курс не совпадает. Ожидалось: " + expected + ", получено: " + actual);
     }
 }

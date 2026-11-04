@@ -8,6 +8,7 @@ import ru.urfu.converterbot.service.models.QuantityType;
 
 import java.time.LocalDateTime;
 
+/** Интерфейс формирования информационных сообщений */
 public interface MessageFormatter {
     /**
      * Возвращает приветствие.
@@ -72,5 +73,5 @@ public interface MessageFormatter {
      * @return текст справки
      */
     String currencyRates(QuantityType baseUnit, Map<QuantityType, BigDecimal> rates,
-            LocalDateTime lastUpdated);
+                         LocalDateTime lastUpdated);
 }

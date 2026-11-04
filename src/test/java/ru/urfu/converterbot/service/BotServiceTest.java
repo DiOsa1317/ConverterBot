@@ -40,12 +40,12 @@ public class BotServiceTest {
         var currencyConverter = new CurrencyConverter(new CurrencyData());
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
         botService = new BotService(
-                            currencyConverter,
-                            lengthConverter,
-                            weightConverter,
-                            temperatureConverter,
-                            parser,
-                            formatter);
+                currencyConverter,
+                lengthConverter,
+                weightConverter,
+                temperatureConverter,
+                parser,
+                formatter);
     }
 
     /**
@@ -64,32 +64,6 @@ public class BotServiceTest {
     @DisplayName("Форматирует результат четырьмя знаками после запятой")
     void shouldFormatResult(String request, String expected) {
         assertEquals(expected, botService.processBotResponse(request));
-    }
-
-    /**
-     * Проверяет, что на команду {@code /start} возвращается приветствие.
-     */
-    @Test
-    @DisplayName("Отвечает приветствием на /start")
-    void shouldReturnStartText() {
-        String expected = """
-            Приветствую вас! Этот бот конвертирует валюты и физические величины.
-            Чтобы узнать подробнее, введите /help
-            """;
-
-        String actual = botService.processBotResponse("/start");
-
-        assertTrue(actual.contains(expected));
-    }
-
-    /**
-     * Проверяет, что на команду {@code /help} возвращается справка.
-     */
-    @Test
-    @DisplayName("Отвечает справкой на /help")
-    void shouldReturnHelpText() {
-        assertTrue(botService.processBotResponse("/help")
-            .contains("Формат запроса"));
     }
 
     /**

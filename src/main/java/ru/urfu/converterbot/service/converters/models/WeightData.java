@@ -8,6 +8,7 @@ import ru.urfu.converterbot.service.models.WeightType;
 
 public class WeightData {
 
+    /** Курсы весов */
     private final Map<QuantityType, BigDecimal> rates = Map.of(
             WeightType.KILOGRAM, new BigDecimal("1.0"),
             WeightType.TON, new BigDecimal("1000.0"),
@@ -15,6 +16,7 @@ public class WeightData {
             WeightType.POUND, new BigDecimal("0.45359237")
     );
 
+    /** Дает доступ к курсам */
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }

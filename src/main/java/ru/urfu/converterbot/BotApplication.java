@@ -46,14 +46,15 @@ public class BotApplication {
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var botService = getBotService();
+            var botMessageFormatter = new BotMessageFormatter();
+            var botService = getBotService(botMessageFormatter);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
             var stateService = new ConversionStateService();
             var keyboardFactory = new KeyboardFactory();
             var renderer = new TelegramKeyboardRenderer();
-            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService);
+            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService, botMessageFormatter);
             var actionProcessor = new ActionProcessor(stateService, keyboardFactory, botService);
             var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, textProcessor, actionProcessor, renderer);
             telegramBot.start();
@@ -63,9 +64,13 @@ public class BotApplication {
         }
     }
 
-    private @NotNull BotService getBotService() {
+    /**
+     * Создает экземпляр BotService
+     *
+     * @param messageFormatter хранитель информационных сообщений
+     */
+    private @NotNull BotService getBotService(MessageFormatter messageFormatter) {
         var parser = new ClientInputParser();
-        var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
         var currencyData = new CurrencyData();
@@ -80,6 +85,6 @@ public class BotApplication {
                 weightConverter,
                 temperatureConverter,
                 parser,
-                formatter);
+                messageFormatter);
     }
 }
