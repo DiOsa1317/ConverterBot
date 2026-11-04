@@ -51,14 +51,17 @@ class BotMessageFormatterTest {
         var result = formatter.help();
 
         assertNotNull(result);
-        assertTrue(result.contains("Формат запроса"));
-        assertTrue(result.contains("{число} {единица1} to {единица2}"));
-        assertTrue(result.contains("100 USD to EUR"));
-        assertTrue(result.contains("10 KM to MI"));
-        assertTrue(result.contains("/currency"));
-        assertTrue(result.contains("/length"));
-        assertTrue(result.contains("/weight"));
-        assertTrue(result.contains("/temperature"));
+        assertEquals("""
+            Формат запроса: {число} {единица1} to {единица2}
+            Например: 100 USD to EUR
+            Или: 10 KM to MI
+            
+            Доступные валюты: /currency
+            Доступные величины:
+            1) /length
+            2) /weight
+            3) /temperature
+            """, result);
     }
 
     /**
@@ -69,9 +72,8 @@ class BotMessageFormatterTest {
     void testNoText() {
         var result = formatter.noText();
 
-        assertNotNull(result);
-        assertTrue(result.contains("только текстовые сообщения"));
-        assertTrue(result.contains("/help"));
+        assertEquals("Я понимаю только текстовые сообщения. Введите /help, чтобы узнать формат запроса.",
+                result);
     }
 
     /**
@@ -82,10 +84,8 @@ class BotMessageFormatterTest {
     void testInvalidInput() {
         var result = formatter.invalidInput();
 
-        assertNotNull(result);
-        assertTrue(result.contains("Не удалось разобрать запрос"));
-        assertTrue(result.contains("{число} {единица1} to {единица2}"));
-        assertTrue(result.contains("/help"));
+        assertEquals("Не удалось разобрать запрос. Формат: {число} {единица1} to {единица2}. Подробнее: /help",
+                result);
     }
 
     /**
@@ -95,10 +95,8 @@ class BotMessageFormatterTest {
     @DisplayName("Возвращает сообщение о непредвиденной ошибке")
     void testUnexpectedError() {
         var result = formatter.unexpectedError();
-
-        assertNotNull(result);
-        assertTrue(result.contains("непредвиденная ошибка"));
-        assertTrue(result.contains("Попробуйте ещё раз"));
+        assertEquals("Произошла непредвиденная ошибка. Попробуйте ещё раз.",
+                result);
     }
 
     /**
