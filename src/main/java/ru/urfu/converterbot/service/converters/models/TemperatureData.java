@@ -15,12 +15,14 @@ public class TemperatureData {
     private static final BigDecimal OFFSET_F = new BigDecimal("32");
     private static final BigDecimal OFFSET_K = new BigDecimal("273.15");
 
+    /** Курсы температуры */
     private final Map<QuantityType, BigDecimal> rates = Map.of(
             TemperatureType.CELSIUS, ONE,
             TemperatureType.FAHRENHEIT, SCALE,
             TemperatureType.KELVIN, ONE
     );
 
+    /** Дает доступ к курсам */
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }

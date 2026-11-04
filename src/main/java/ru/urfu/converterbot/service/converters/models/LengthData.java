@@ -8,6 +8,7 @@ import java.util.Map;
 
 public class LengthData {
 
+    /** Курсы весов */
     private final Map<QuantityType, BigDecimal> rates = Map.of(
             LengthType.METER, new BigDecimal("1.0"),
             LengthType.KILOMETER, new BigDecimal("1000.0"),
@@ -16,6 +17,7 @@ public class LengthData {
             LengthType.INCH, new BigDecimal("0.0254")
     );
 
+    /** Дает доступ к курсам */
     public Map<QuantityType, BigDecimal> rates() {
         return rates;
     }

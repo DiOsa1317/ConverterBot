@@ -60,6 +60,12 @@ public class CurrencyRateService {
                 .build();
     }
 
+    /**
+     * Создаёт сервис обновления курсов валют.
+     *
+     * @param currencyData хранилище курсов
+     * @param httpClient клиент, запрашивающий данные
+     */
     public CurrencyRateService(CurrencyData currencyData, HttpClient httpClient) {
         this.currencyData = currencyData;
         this.httpClient = httpClient;

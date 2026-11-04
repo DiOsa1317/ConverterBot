@@ -8,6 +8,7 @@ import ru.urfu.converterbot.service.models.QuantityType;
 
 import java.time.LocalDateTime;
 
+/** Интерфейс формирования информационных сообщений */
 public interface MessageFormatter {
     /**
      * Возвращает приветствие.

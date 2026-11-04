@@ -76,6 +76,11 @@ public class TelegramBot extends TelegramLongPollingBot {
         send(chatId, textProcessor.handle(chatId, text));
     }
 
+    /**
+     * Подтверждает обработку callback-запроса
+     *
+     * @param callbackId идентификатор запроса для подтверждения
+     */
     private void acknowledge(String callbackId) {
         var answer = new AnswerCallbackQuery();
         answer.setCallbackQueryId(callbackId);
@@ -86,6 +91,10 @@ public class TelegramBot extends TelegramLongPollingBot {
         }
     }
 
+    /** Отправляет ответ в чат
+     * @param chatId id чата
+     * @param reply ответ бота
+     * */
     private void send(long chatId, BotReply reply) {
         var message = new SendMessage();
         message.setChatId(String.valueOf(chatId));

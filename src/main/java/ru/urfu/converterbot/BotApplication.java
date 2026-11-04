@@ -64,6 +64,11 @@ public class BotApplication {
         }
     }
 
+    /**
+     * Создает экземпляр BotService
+     *
+     * @param messageFormatter хранитель информационных сообщений
+     */
     private @NotNull BotService getBotService(MessageFormatter messageFormatter) {
         var parser = new ClientInputParser();
         var lengthConverter = new LengthConverter(new LengthData());
