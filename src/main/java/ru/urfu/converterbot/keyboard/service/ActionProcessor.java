@@ -11,6 +11,7 @@ import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 
+/** Обработчик нажатий на клавиатуру пользователем*/
 public class ActionProcessor implements MessageProcessor {
 
     private static final String STALE_BUTTON_TEXT =

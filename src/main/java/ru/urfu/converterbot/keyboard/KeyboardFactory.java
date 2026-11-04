@@ -13,6 +13,7 @@ import ru.urfu.converterbot.service.models.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Класс для создания клавиатур */
 public class KeyboardFactory {
     
     /**
@@ -99,15 +100,13 @@ public class KeyboardFactory {
         };
     }
 
-    /* Создает клавиатуру только с кнопкой меню для стартового сообщения */
-    public KeyboardView toMenu() {
-        var rows = new ArrayList<KeyboardRow>();
-        rows.add(new KeyboardRow(List.of(new KeyboardButton("Меню", ButtonAction.MENU, "")
-        )));
-
-        return new KeyboardView(rows);
-    }
-
+    /**
+     * Задает клавиатурное отображение набора кнопок
+     *
+     * @param buttons - кнопки клавиатуры
+     * @param isMain - является ли клавиатура главным меню
+     * @return вид клавиатуры
+     */
     private KeyboardView toView(List<KeyboardButton> buttons, Boolean isMain) {
         var rows = new ArrayList<KeyboardRow>();
 

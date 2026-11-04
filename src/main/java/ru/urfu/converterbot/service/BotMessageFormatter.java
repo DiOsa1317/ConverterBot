@@ -19,6 +19,26 @@ public class BotMessageFormatter implements MessageFormatter {
 
     private static final String RATE_LINE_TEMPLATE = "1 %s = %.4f %s%n";
 
+    private static final String HELP_TEXT = """
+            Формат запроса: {число} {единица1} to {единица2}
+            Например: 100 USD to EUR
+            Или: 10 KM to MI
+            
+            Доступные валюты: /currency
+            Доступные величины:
+            1) /length
+            2) /weight
+            3) /temperature
+            """;
+
+    private static final String START_TEXT = """
+            Приветствую вас! Этот бот конвертирует валюты и физические величины.
+            Чтобы узнать подробнее, введите /help
+            """;
+
+    private static final String NO_TEXT_MESSAGE_TEXT =
+            "Я понимаю только текстовые сообщения. Введите /help, чтобы узнать формат запроса.";
+
     private static final String INVALID_INPUT_TEXT =
             "Не удалось разобрать запрос. Формат: {число} {единица1} to {единица2}. Подробнее: /help";
 
@@ -27,6 +47,21 @@ public class BotMessageFormatter implements MessageFormatter {
 
     private static final DateTimeFormatter DATE_FORMATTER =
             DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+
+    @Override
+    public String start() {
+        return START_TEXT;
+    }
+
+    @Override
+    public String help() {
+        return HELP_TEXT;
+    }
+
+    @Override
+    public String noText() {
+        return NO_TEXT_MESSAGE_TEXT;
+    }
 
     @Override
     public String invalidInput() {

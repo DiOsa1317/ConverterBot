@@ -11,34 +11,20 @@ import ru.urfu.converterbot.keyboard.models.BotReply;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
+import ru.urfu.converterbot.service.MessageFormatter;
 
+/** Обработчик текстовых сообщений пользователя*/
 public class TextProcessor implements MessageProcessor {
 
     private static final String MENU_COMMAND = "/menu";
     private static final String START_COMMAND = "/start";
     private static final String HELP_COMMAND = "/help";
 
-    private static final String START_TEXT = """
-        Приветствую вас! Этот бот конвертирует валюты и физические величины.
-        Чтобы узнать подробнее, введите /help.
-        """;
-
     private static final BigDecimal MAX_VALUE = new BigDecimal("1000000000");
 
     private static final String INVALID_NUMBER_TEXT = "Не удалось распознать число. ";
     private static final String NUMBER_EXAMPLE_TEXT = "Введите число. Например: 100";
     private static final String MENU_HINT_TEXT = "Используйте кнопки меню для выбора типа перевода.";
-    private static final String HELP_TEXT = """
-            Формат запроса: {число} {единица1} to {единица2}
-            Например: 100 USD to EUR
-            Или: 10 KM to MI
-            
-            Доступные валюты: /currency
-            Доступные величины:
-            1) /length
-            2) /weight
-            3) /temperature
-            """;
 
     private final ConversionStateService stateService;
 
@@ -46,19 +32,23 @@ public class TextProcessor implements MessageProcessor {
 
     private final BotResponseProcessor processor;
 
+    private final MessageFormatter formatter;
+
     /**
      * Создаёт сервис диалога.
      *
      * @param stateService хранилище состояний
      * @param keyboardFactory фабрика клавиатур
-     * @param processor обработчик текстовых запросов
+     * @param processor готовит ответ бота
      */
     public TextProcessor(@NotNull ConversionStateService stateService,
                                  @NotNull KeyboardFactory keyboardFactory,
-                                 @NotNull BotResponseProcessor processor) {
+                                 @NotNull BotResponseProcessor processor,
+                         @NotNull MessageFormatter messageFormatter) {
         this.stateService = stateService;
         this.keyboardFactory = keyboardFactory;
         this.processor = processor;
+        this.formatter = messageFormatter;
     }
 
     @Override
@@ -72,7 +62,7 @@ public class TextProcessor implements MessageProcessor {
         }
         if (text.equalsIgnoreCase(START_COMMAND)) {
             stateService.reset(chatId);
-            return new BotReply(START_TEXT + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
+            return new BotReply(formatter.start() + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
         }
 
         if (text.equalsIgnoreCase(MENU_COMMAND)) {
@@ -82,7 +72,7 @@ public class TextProcessor implements MessageProcessor {
 
         if (text.equalsIgnoreCase(HELP_COMMAND)) {
             stateService.reset(chatId);
-            return new BotReply(HELP_TEXT + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
+            return new BotReply(formatter.help() + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
         }
 
         if (context.state() == State.AWAITING_NUMBER) {
@@ -105,7 +95,13 @@ public class TextProcessor implements MessageProcessor {
                 keyboardFactory.createMainMenu()
         );
     }
-    
+
+    /** Обрабатывает сообщение-число
+     * @param chatId - id чата
+     * @param context - контекст чата
+     * @param text - сообщение пользователя
+     * @return ответ бота
+     * */
     private BotReply handleNumber(long chatId, ChatContext context, String text) {
         var number = parseNumber(text);
         if (number.isEmpty()) {
@@ -115,25 +111,42 @@ public class TextProcessor implements MessageProcessor {
                 context.conversionType(), number.get().toPlainString(), null, null));
     }
 
+    /** Превращает число-строку в число
+     * @param text - строка, приводимая к числу
+     * @return число после парсинга или Optional.empty(), если ввод не подходит под критерии
+     * */
     private Optional<BigDecimal> parseNumber(String text) {
         try {
             var value = new BigDecimal(text.trim().replace(',', '.'));
-            boolean inRange = value.signum() >= 0 && value.compareTo(MAX_VALUE) < 0;
+            var inRange = value.signum() >= 0 && value.compareTo(MAX_VALUE) < 0;
             return inRange ? Optional.of(value) : Optional.empty();
         } catch (NumberFormatException exception) {
             return Optional.empty();
         }
     }
 
+    /** Возвращает ответ для пользователя и перемещает на следующий этап
+     * @param chatId - id чата
+     * @param next - следующий контекст чата
+     * @return ответ бота
+     * */
     private BotReply moveTo(long chatId, ChatContext next) {
         stateService.updateContext(chatId, next);
         return replyFor(next);
     }
 
+    /** Подбирает ответ для пользователя в зависимости от контекста
+     * @param context - следующий контекст чата
+     * @return ответ бота
+     * */
     private BotReply replyFor(ChatContext context) {
         return new BotReply(promptFor(context), keyboardFactory.createFor(context));
     }
 
+    /** Подбирает строковую часть ответа для пользователя в зависимости от контекста
+     * @param context - следующий контекст чата
+     * @return строковая часть ответа
+     * */
     private String promptFor(ChatContext context) {
         return switch (context.state()) {
             case IDLE -> "Выберите тип перевода:";
