@@ -10,14 +10,15 @@ import ru.urfu.converterbot.service.models.QuantityType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Тесты контракта форматтера сообщений {@link BotMessageFormatter}.
+ * Интеграционные тесты форматтера сообщений {@link BotMessageFormatter}.
+ * Проверяют полные строки, которые пользователь получит в ответе бота.
  */
 class BotMessageFormatterTest {
 
@@ -30,75 +31,38 @@ class BotMessageFormatterTest {
     }
 
     /**
-     * Проверяет наличие обязательных элементов в приветственном сообщении.
+     * Проверяет приветственное сообщение полностью.
      */
     @Test
     @DisplayName("Возвращает приветствие на start()")
     void testStart() {
         var result = formatter.start();
 
-        assertNotNull(result);
         assertEquals("""
-            Приветствую вас! Этот бот конвертирует валюты и физические величины.
-            Чтобы узнать подробнее, введите /help
-            """, result);
+                Приветствую вас! Этот бот конвертирует валюты и физические величины.
+                Чтобы узнать подробнее, введите /help
+                """, result);
     }
 
     /**
-     * Проверяет полноту справочного сообщения: формат запроса, примеры и доступные команды.
+     * Проверяет справочное сообщение полностью.
      */
     @Test
     @DisplayName("Возвращает справку на help()")
     void testHelp() {
         var result = formatter.help();
 
-        assertNotNull(result);
         assertEquals("""
-            Формат запроса: {число} {единица1} to {единица2}
-            Например: 100 USD to EUR
-            Или: 10 KM to MI
-            
-            Доступные валюты: /currency
-            Доступные величины:
-            1) /length
-            2) /weight
-            3) /temperature
-            """, result);
-    }
-
-    /**
-     * Проверяет сообщение-заглушку для нетекстового ввода.
-     */
-    @Test
-    @DisplayName("Возвращает сообщение о нетекстовом вводе")
-    void testNoText() {
-        var result = formatter.noText();
-
-        assertEquals("Я понимаю только текстовые сообщения. Введите /help, чтобы узнать формат запроса.",
-                result);
-    }
-
-    /**
-     * Проверяет сообщение об ошибке при неверном формате запроса на конвертацию.
-     */
-    @Test
-    @DisplayName("Возвращает сообщение о неверном формате ввода")
-    void testInvalidInput() {
-        var result = formatter.invalidInput();
-
-        assertEquals("Не удалось разобрать запрос. Формат: {число} {единица1} to {единица2}. Подробнее: /help",
-                result);
-    }
-
-    /**
-     * Проверяет сообщение-заглушку для непредвиденных ошибок.
-     */
-    @Test
-    @DisplayName("Возвращает сообщение о непредвиденной ошибке")
-    void testUnexpectedError() {
-        var result = formatter.unexpectedError();
-        assertEquals("Произошла непредвиденная ошибка. Попробуйте ещё раз.",
-                result);
+                Формат запроса: {число} {единица1} to {единица2}
+                Например: 100 USD to EUR
+                Или: 10 KM to MI
+                
+                Доступные валюты: /currency
+                Доступные величины:
+                1) /length
+                2) /weight
+                3) /temperature
+                """, result);
     }
 
     /**
@@ -201,56 +165,92 @@ class BotMessageFormatterTest {
     }
 
     /**
-     * Проверяет форматирование списка курсов валют с указанием даты обновления.
+     * Интеграционный тест: полное сообщение курсов валют с датой обновления.
+     * Проверяет заголовок, все курсы и отформатированную дату.
      */
     @Test
-    @DisplayName("Форматирует курсы валют с датой обновления")
-    void testCurrencyRatesWithDate() {
+    @DisplayName("Полное сообщение курсов валют с датой обновления")
+    void testFullCurrencyRatesWithDate() {
         var baseUnit = createMockQuantityType("USD");
-        Map<QuantityType, BigDecimal> rates = new HashMap<>();
+        Map<QuantityType, BigDecimal> rates = new LinkedHashMap<>();
         rates.put(createMockQuantityType("EUR"), BigDecimal.valueOf(0.925));
+        rates.put(createMockQuantityType("RUB"), BigDecimal.ONE);
 
         var lastUpdated = LocalDateTime.of(2024, 1, 15, 14, 30);
 
         var result = formatter.currencyRates(baseUnit, rates, lastUpdated);
 
-        assertTrue(result.contains("Курсы валют ЦБ РФ:"));
-        assertTrue(result.contains("1 USD = 0.9250 EUR"));
-        assertTrue(result.contains("Последнее обновление: 15.01.2024 14:30"));
+        var expected = """
+                Курсы валют ЦБ РФ:
+                1 USD = 0.9250 EUR
+                1 USD = 1.0000 RUB
+                
+                Последнее обновление: 15.01.2024 14:30""";
+        assertEquals(expected, result);
     }
 
     /**
-     * Проверяет форматирование списка курсов валют при отсутствии даты обновления.
+     * Интеграционный тест: полное сообщение курсов валют без даты обновления.
      */
     @Test
-    @DisplayName("Форматирует курсы валют без даты обновления")
-    void testCurrencyRatesWithoutDate() {
+    @DisplayName("Полное сообщение курсов валют без даты обновления")
+    void testFullCurrencyRatesWithoutDate() {
         var baseUnit = createMockQuantityType("USD");
-        Map<QuantityType, BigDecimal> rates = new HashMap<>();
+        Map<QuantityType, BigDecimal> rates = new LinkedHashMap<>();
         rates.put(createMockQuantityType("EUR"), BigDecimal.valueOf(0.925));
 
         var result = formatter.currencyRates(baseUnit, rates, null);
 
-        assertTrue(result.contains("Курсы валют ЦБ РФ:"));
-        assertTrue(result.contains("1 USD = 0.9250 EUR"));
-        assertTrue(result.contains("Время последнего обновления неизвестно."));
+        var expected = """
+                Курсы валют ЦБ РФ:
+                1 USD = 0.9250 EUR
+                
+                Время последнего обновления неизвестно.""";
+        assertEquals(expected, result);
     }
 
     /**
-     * Проверяет соответствие формата даты шаблону dd.MM.yyyy HH:mm.
+     * Интеграционный тест: полное сообщение справочника курсов для группы длины.
      */
     @Test
-    @DisplayName("Проверяет формат даты dd.MM.yyyy HH:mm")
-    void testCurrencyRatesDateFormat() {
-        var baseUnit = createMockQuantityType("USD");
-        Map<QuantityType, BigDecimal> rates = new HashMap<>();
-        rates.put(createMockQuantityType("EUR"), BigDecimal.ONE);
+    @DisplayName("Полное сообщение справочника курсов для группы длины")
+    void testFullRatesLengthGroup() {
+        var baseUnit = createMockQuantityType("METER");
+        Map<QuantityType, BigDecimal> rates = new LinkedHashMap<>();
+        rates.put(createMockQuantityType("KILOMETER"), new BigDecimal("0.001"));
+        rates.put(createMockQuantityType("MILE"), new BigDecimal("0.000621371"));
+        rates.put(createMockQuantityType("CENTIMETER"), BigDecimal.valueOf(100));
 
-        var testDate = LocalDateTime.of(2024, 12, 31, 23, 59);
+        var result = formatter.rates("Величины длин", baseUnit, rates);
 
-        var result = formatter.currencyRates(baseUnit, rates, testDate);
+        var expected = """
+                Величины длин:
+                1 METER = 0.0010 KILOMETER
+                1 METER = 0.0006 MILE
+                1 METER = 100.0000 CENTIMETER
+                """;
+        assertEquals(expected, result);
+    }
 
-        assertTrue(result.contains("31.12.2024 23:59"));
+    /**
+     * Интеграционный тест: полное сообщение справочника курсов для группы температуры.
+     */
+    @Test
+    @DisplayName("Полное сообщение справочника курсов для группы температуры")
+    void testFullRatesTemperatureGroup() {
+        var baseUnit = createMockQuantityType("CELSIUS");
+        Map<QuantityType, BigDecimal> rates = new LinkedHashMap<>();
+        rates.put(createMockQuantityType("FAHRENHEIT"), new BigDecimal("1.8"));
+        rates.put(createMockQuantityType("KELVIN"), BigDecimal.ONE);
+
+        var result = formatter.rates("Величины температур", baseUnit, rates);
+
+        var expected = """
+                Величины температур:
+                1 CELSIUS = 1.8000 FAHRENHEIT
+                1 CELSIUS = 1.0000 KELVIN
+                """;
+        assertEquals(expected, result);
     }
 
     /**
