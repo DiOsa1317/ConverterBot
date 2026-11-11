@@ -13,7 +13,9 @@ import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 import ru.urfu.converterbot.service.MessageFormatter;
 
-/** Обработчик текстовых сообщений пользователя*/
+/**
+ * Обработчик текстовых сообщений пользователя
+ */
 public class TextProcessor implements MessageProcessor {
 
     private static final String MENU_COMMAND = "/menu";
@@ -37,13 +39,13 @@ public class TextProcessor implements MessageProcessor {
     /**
      * Создаёт сервис диалога.
      *
-     * @param stateService хранилище состояний
+     * @param stateService    хранилище состояний
      * @param keyboardFactory фабрика клавиатур
-     * @param processor готовит ответ бота
+     * @param processor       готовит ответ бота
      */
     public TextProcessor(@NotNull ConversionStateService stateService,
-                                 @NotNull KeyboardFactory keyboardFactory,
-                                 @NotNull BotResponseProcessor processor,
+                         @NotNull KeyboardFactory keyboardFactory,
+                         @NotNull BotResponseProcessor processor,
                          @NotNull MessageFormatter messageFormatter) {
         this.stateService = stateService;
         this.keyboardFactory = keyboardFactory;
@@ -54,7 +56,7 @@ public class TextProcessor implements MessageProcessor {
     @Override
     public BotReply handle(long chatId, @Nullable String text) {
         var context = stateService.getChatContext(chatId);
-        if (text == null) {
+        if (text == null || text.isBlank()) {
             if (context.state() == State.AWAITING_NUMBER) {
                 return new BotReply(NUMBER_EXAMPLE_TEXT);
             }
@@ -76,18 +78,7 @@ public class TextProcessor implements MessageProcessor {
         }
 
         if (context.state() == State.AWAITING_NUMBER) {
-            if (text.isBlank()) {
-                return new BotReply(NUMBER_EXAMPLE_TEXT);
-            }
-
             return handleNumber(chatId, context, text);
-        }
-
-        if (text.isBlank()) {
-            return new BotReply(
-                    MENU_HINT_TEXT,
-                    keyboardFactory.createMainMenu()
-            );
         }
 
         return new BotReply(
@@ -96,12 +87,15 @@ public class TextProcessor implements MessageProcessor {
         );
     }
 
-    /** Обрабатывает сообщение-число
-     * @param chatId - id чата
+    /**
+     * Обрабатывает сообщение-число
+     *
+     * @param chatId  - id чата
      * @param context - контекст чата
-     * @param text - сообщение пользователя
+     * @param text    - сообщение пользователя
      * @return ответ бота
-     * */
+     *
+     */
     private BotReply handleNumber(long chatId, ChatContext context, String text) {
         var number = parseNumber(text);
         if (number.isEmpty()) {
@@ -111,10 +105,13 @@ public class TextProcessor implements MessageProcessor {
                 context.conversionType(), number.get().toPlainString(), null, null));
     }
 
-    /** Превращает число-строку в число
+    /**
+     * Превращает число-строку в число
+     *
      * @param text - строка, приводимая к числу
      * @return число после парсинга или Optional.empty(), если ввод не подходит под критерии
-     * */
+     *
+     */
     private Optional<BigDecimal> parseNumber(String text) {
         try {
             var value = new BigDecimal(text.trim().replace(',', '.'));
@@ -125,28 +122,37 @@ public class TextProcessor implements MessageProcessor {
         }
     }
 
-    /** Возвращает ответ для пользователя и перемещает на следующий этап
+    /**
+     * Возвращает ответ для пользователя и перемещает на следующий этап
+     *
      * @param chatId - id чата
-     * @param next - следующий контекст чата
+     * @param next   - следующий контекст чата
      * @return ответ бота
-     * */
+     *
+     */
     private BotReply moveTo(long chatId, ChatContext next) {
         stateService.updateContext(chatId, next);
         return replyFor(next);
     }
 
-    /** Подбирает ответ для пользователя в зависимости от контекста
+    /**
+     * Подбирает ответ для пользователя в зависимости от контекста
+     *
      * @param context - следующий контекст чата
      * @return ответ бота
-     * */
+     *
+     */
     private BotReply replyFor(ChatContext context) {
         return new BotReply(promptFor(context), keyboardFactory.createFor(context));
     }
 
-    /** Подбирает строковую часть ответа для пользователя в зависимости от контекста
+    /**
+     * Подбирает строковую часть ответа для пользователя в зависимости от контекста
+     *
      * @param context - следующий контекст чата
      * @return строковая часть ответа
-     * */
+     *
+     */
     private String promptFor(ChatContext context) {
         return switch (context.state()) {
             case IDLE -> "Выберите тип перевода:";
