@@ -38,9 +38,10 @@ class BotMessageFormatterTest {
         var result = formatter.start();
 
         assertNotNull(result);
-        assertTrue(result.contains("Приветствую вас"));
-        assertTrue(result.contains("конвертирует валюты и физические величины"));
-        assertTrue(result.contains("/help"));
+        assertEquals("""
+            Приветствую вас! Этот бот конвертирует валюты и физические величины.
+            Чтобы узнать подробнее, введите /help
+            """, result);
     }
 
     /**
