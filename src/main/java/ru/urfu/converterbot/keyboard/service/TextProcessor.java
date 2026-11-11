@@ -1,7 +1,6 @@
 package ru.urfu.converterbot.keyboard.service;
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.BotReply;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
+import ru.urfu.converterbot.keyboard.models.ChatContextBuilder;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 import ru.urfu.converterbot.service.MessageFormatter;
@@ -102,7 +102,7 @@ public class TextProcessor implements MessageProcessor {
         if (number.isEmpty()) {
             return new BotReply(INVALID_NUMBER_TEXT + promptFor(context), null);
         }
-        return moveTo(chatId, ChatContext.builder().state(State.AWAITING_SOURCE)
+        return moveTo(chatId, new ChatContextBuilder().state(State.AWAITING_SOURCE)
                 .conversionType(context.conversionType())
                 .number(number.get().toPlainString())
                 .build());

@@ -4,11 +4,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
 
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
-import ru.urfu.converterbot.keyboard.models.BotReply;
-import ru.urfu.converterbot.keyboard.models.ButtonAction;
-import ru.urfu.converterbot.keyboard.models.ChatContext;
+import ru.urfu.converterbot.keyboard.models.*;
 
-import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 
 /** Обработчик нажатий на клавиатуру пользователем*/
@@ -49,12 +46,12 @@ public class ActionProcessor implements MessageProcessor {
         }
         if (data.startsWith(ButtonAction.TYPE + ":")) {
             String type = data.substring(ButtonAction.TYPE.toString().length() + 1);
-            return moveTo(chatId, ChatContext.builder().state(State.AWAITING_NUMBER).conversionType(type).build());
+            return moveTo(chatId, new ChatContextBuilder().state(State.AWAITING_NUMBER).conversionType(type).build());
         }
         if (data.startsWith(ButtonAction.FROM + ":")
                 && context.state() == State.AWAITING_SOURCE) {
             var fromUnit = data.substring(ButtonAction.FROM.toString().length() + 1);
-            return moveTo(chatId, ChatContext.builder()
+            return moveTo(chatId, new ChatContextBuilder()
                     .state(State.AWAITING_TARGET)
                     .conversionType(context.conversionType())
                     .number(context.number())

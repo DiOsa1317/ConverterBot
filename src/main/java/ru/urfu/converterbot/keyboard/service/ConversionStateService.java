@@ -1,6 +1,7 @@
 package ru.urfu.converterbot.keyboard.service;
 
 import ru.urfu.converterbot.keyboard.models.ChatContext;
+import ru.urfu.converterbot.keyboard.models.ChatContextBuilder;
 import ru.urfu.converterbot.keyboard.models.State;
 
 import java.util.Map;
@@ -19,7 +20,7 @@ public class ConversionStateService {
         ChatContext context = chatStates.get(chatId);
 
         if (context == null) {
-            return ChatContext.builder().state(State.IDLE).build();
+            return new ChatContextBuilder().state(State.IDLE).build();
         }
 
         return context;
