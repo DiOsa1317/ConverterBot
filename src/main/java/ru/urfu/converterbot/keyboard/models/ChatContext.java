@@ -14,6 +14,7 @@ public record ChatContext(
         String fromUnit,
         String toUnit
 ) {
+    /** Строитель контекста чата */
     public static ChatContextBuilder builder() {
         return new ChatContextBuilder();
     }

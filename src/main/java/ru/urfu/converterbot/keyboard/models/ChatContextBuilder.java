@@ -1,5 +1,9 @@
 package ru.urfu.converterbot.keyboard.models;
 
+/**
+ * Строитель контекста чата {@link ChatContext}.
+ * Позволяет пошагово задать поля состояния диалога без позиционных аргументов.
+ */
 public class ChatContextBuilder {
     private State state;
     private String conversionType;
