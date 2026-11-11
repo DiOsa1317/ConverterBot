@@ -19,7 +19,7 @@ public class ConversionStateService {
         ChatContext context = chatStates.get(chatId);
 
         if (context == null) {
-            return new ChatContext(State.IDLE, null, null, null, null);
+            return ChatContext.builder().state(State.IDLE).build();
         }
 
         return context;

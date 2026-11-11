@@ -49,13 +49,17 @@ public class ActionProcessor implements MessageProcessor {
         }
         if (data.startsWith(ButtonAction.TYPE + ":")) {
             String type = data.substring(ButtonAction.TYPE.toString().length() + 1);
-            return moveTo(chatId, new ChatContext(State.AWAITING_NUMBER, type, null, null, null));
+            return moveTo(chatId, ChatContext.builder().state(State.AWAITING_NUMBER).conversionType(type).build());
         }
         if (data.startsWith(ButtonAction.FROM + ":")
                 && context.state() == State.AWAITING_SOURCE) {
             var fromUnit = data.substring(ButtonAction.FROM.toString().length() + 1);
-            return moveTo(chatId, new ChatContext(State.AWAITING_TARGET,
-                    context.conversionType(), context.number(), fromUnit, null));
+            return moveTo(chatId, ChatContext.builder()
+                    .state(State.AWAITING_TARGET)
+                    .conversionType(context.conversionType())
+                    .number(context.number())
+                    .fromUnit(fromUnit)
+                    .build());
         }
         if (data.startsWith(ButtonAction.TO + ":")
                 && context.state() == State.AWAITING_TARGET) {

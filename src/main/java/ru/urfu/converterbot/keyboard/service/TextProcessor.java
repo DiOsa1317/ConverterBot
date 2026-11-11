@@ -1,6 +1,7 @@
 package ru.urfu.converterbot.keyboard.service;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
@@ -101,8 +102,10 @@ public class TextProcessor implements MessageProcessor {
         if (number.isEmpty()) {
             return new BotReply(INVALID_NUMBER_TEXT + promptFor(context), null);
         }
-        return moveTo(chatId, new ChatContext(State.AWAITING_SOURCE,
-                context.conversionType(), number.get().toPlainString(), null, null));
+        return moveTo(chatId, ChatContext.builder().state(State.AWAITING_SOURCE)
+                .conversionType(context.conversionType())
+                .number(number.get().toPlainString())
+                .build());
     }
 
     /**
