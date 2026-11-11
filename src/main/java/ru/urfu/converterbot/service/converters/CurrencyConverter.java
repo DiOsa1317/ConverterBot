@@ -29,8 +29,8 @@ public class CurrencyConverter implements QuantityConverter {
         if (from == to) {
             return value;
         }
-        return value.multiply(currencyData.rates().get(from))
-                .divide(currencyData.rates().get(to), 10, RoundingMode.HALF_UP);
+        return value.multiply(currencyData.rates().get(from).get(to))
+                .setScale(10, RoundingMode.HALF_UP);
     }
 
     @Override

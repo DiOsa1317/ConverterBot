@@ -8,6 +8,7 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -44,7 +45,7 @@ public class CurrencyDataTest {
 
         assertEquals(updatedAt, currencyData.lastUpdated());
         assertEquals(0, new BigDecimal("90.5")
-                .compareTo(currencyData.rates().get(CurrencyType.USD)));
+                .compareTo(currencyData.rates().get(CurrencyType.USD).get(CurrencyType.RUB)));
     }
 
     /**
@@ -55,8 +56,8 @@ public class CurrencyDataTest {
     @DisplayName("Не принимает неполный набор курсов")
     void shouldRejectIncompleteRates() {
         var updatedAt = LocalDateTime.of(2026, 10, 23, 14, 5);
-        Map<CurrencyType, BigDecimal> incomplete = new EnumMap<>(CurrencyType.class);
-        incomplete.put(CurrencyType.RUB, BigDecimal.ONE);
+        Map<CurrencyType, Map<CurrencyType, BigDecimal>> incomplete = new EnumMap<>(CurrencyType.class);
+        incomplete.put(CurrencyType.RUB, Map.of(CurrencyType.RUB, BigDecimal.ONE));
 
         var previousRates = currencyData.rates();
         assertThrows(IllegalArgumentException.class,
@@ -75,22 +76,35 @@ public class CurrencyDataTest {
                 LocalDateTime.of(2026, 10, 23, 14, 5));
 
         assertThrows(UnsupportedOperationException.class,
-                () -> currencyData.rates().put(CurrencyType.USD, BigDecimal.ONE));
+                () -> currencyData.rates().put(CurrencyType.USD, Map.of()));
+        assertThrows(UnsupportedOperationException.class,
+                () -> currencyData.rates().get(CurrencyType.USD).put(CurrencyType.RUB, BigDecimal.ONE));
     }
 
     /**
-     * Формирует валидный полный набор курсов для тестовых сценариев.
+     * Формирует валидную полную матрицу курсов для тестовых сценариев.
      *
      * @param usd курс доллара США к рублю
-     * @return карта со всеми валютами из {@link CurrencyType}
+     * @return матрица со всеми валютами из {@link CurrencyType}
      */
-    private static Map<CurrencyType, BigDecimal> completeRates(BigDecimal usd) {
-        var rates = new EnumMap<CurrencyType, BigDecimal>(CurrencyType.class);
-        rates.put(CurrencyType.RUB, BigDecimal.ONE);
-        rates.put(CurrencyType.USD, usd);
-        rates.put(CurrencyType.EUR, new BigDecimal("95.0"));
-        rates.put(CurrencyType.KZT, new BigDecimal("1.9"));
-        rates.put(CurrencyType.CNY, new BigDecimal("12.5"));
-        return rates;
+    private static Map<CurrencyType, Map<CurrencyType, BigDecimal>> completeRates(BigDecimal usd) {
+        var allTypes = EnumSet.allOf(CurrencyType.class);
+        var matrix = new EnumMap<CurrencyType, Map<CurrencyType, BigDecimal>>(CurrencyType.class);
+        for (var from : allTypes) {
+            var row = new EnumMap<CurrencyType, BigDecimal>(CurrencyType.class);
+            for (var to : allTypes) {
+                if (from == to) {
+                    row.put(to, BigDecimal.ONE);
+                } else if (from == CurrencyType.RUB) {
+                    row.put(to, usd.equals(BigDecimal.ONE) ? BigDecimal.ONE : BigDecimal.ZERO);
+                } else if (to == CurrencyType.RUB && from == CurrencyType.USD) {
+                    row.put(to, usd);
+                } else {
+                    row.put(to, BigDecimal.ZERO);
+                }
+            }
+            matrix.put(from, row);
+        }
+        return matrix;
     }
 }

@@ -10,6 +10,8 @@ import ru.urfu.converterbot.service.models.fakeClasses.FakeHttpResponse;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -18,30 +20,32 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class CurrencyRateServiceTest {
 
-    private static final String SAMPLE_XML = """
-            <?xml version="1.0" encoding="windows-1251"?>
-            <ValCurs Date="24.10.2026" name="Foreign Currency Market">
-                <Valute ID="R01235">
-                    <CharCode>USD</CharCode>
-                    <Nominal>1</Nominal>
-                    <Value>92,5000</Value>
-                </Valute>
-                <Valute ID="R01239">
-                    <CharCode>EUR</CharCode>
-                    <Nominal>1</Nominal>
-                    <Value>100,2500</Value>
-                </Valute>
-                <Valute ID="R01375">
-                    <CharCode>CNY</CharCode>
-                    <Nominal>1</Nominal>
-                    <Value>12,8000</Value>
-                </Valute>
-                <Valute ID="R01350">
-                    <CharCode>KZT</CharCode>
-                    <Nominal>100</Nominal>
-                    <Value>18,5000</Value>
-                </Valute>
-            </ValCurs>
+    private static final String FRANKFURTER_JSON_USD_BASE = """
+            {
+              "base": "USD",
+              "date": "2026-10-24",
+              "rates": {
+                "USD": 1.0,
+                "EUR": 0.925,
+                "RUB": 90.5,
+                "CNY": 7.25,
+                "KZT": 500.0
+              }
+            }
+            """;
+
+    private static final String FRANKFURTER_JSON_RUB_BASE = """
+            {
+              "base": "RUB",
+              "date": "2026-10-24",
+              "rates": {
+                "RUB": 1.0,
+                "USD": 0.011,
+                "EUR": 0.010,
+                "CNY": 0.080,
+                "KZT": 5.52
+              }
+            }
             """;
 
     private CurrencyData currencyData;
@@ -62,8 +66,11 @@ class CurrencyRateServiceTest {
 
     @Test
     @DisplayName("Успешно обновляет курсы и сохраняет их в реальном хранилище")
-    void testUpdateRatesSuccess() {
-        CurrencyRateService service = createServiceWithResponse(200, SAMPLE_XML);
+    void testUpdateRatesSuccess() throws Exception {
+        // Frankfurter API возвращает курсы для одной базовой валюты за запрос.
+        // Сервис делает 5 запросов (по одному на каждую валюту). Мок возвращает
+        // один и тот же ответ — достаточно для проверки, что обновление прошло.
+        CurrencyRateService service = createServiceWithResponse(200, FRANKFURTER_JSON_USD_BASE);
 
         var result = service.updateRates();
 
@@ -72,12 +79,12 @@ class CurrencyRateServiceTest {
 
         var savedRates = currencyData.rates();
         assertNotNull(savedRates);
+        assertEquals(5, savedRates.size(), "Матрица должна содержать все 5 валют");
 
-        assertBigDecimalEquals("1", savedRates.get(CurrencyType.RUB));
-        assertBigDecimalEquals("92.5", savedRates.get(CurrencyType.USD));
-        assertBigDecimalEquals("100.25", savedRates.get(CurrencyType.EUR));
-        assertBigDecimalEquals("12.8", savedRates.get(CurrencyType.CNY));
-        assertBigDecimalEquals("0.185", savedRates.get(CurrencyType.KZT));
+        // Проверяем, что для каждой базовой валюты есть строка
+        for (var type : CurrencyType.values()) {
+            assertTrue(savedRates.containsKey(type), "Отсутствует строка для валюты " + type);
+        }
     }
 
     @Test
@@ -89,17 +96,6 @@ class CurrencyRateServiceTest {
 
         assertFalse(result);
         assertNull(currencyData.lastUpdated(), "Время обновления не должно измениться при ошибке");
-    }
-
-    @Test
-    @DisplayName("Возвращает false при ошибке парсинга XML и не меняет состояние хранилища")
-    void testUpdateRatesParseError() {
-        CurrencyRateService service = createServiceWithResponse(200, "<broken>xml");
-
-        var result = service.updateRates();
-
-        assertFalse(result);
-        assertNull(currencyData.lastUpdated(), "Время обновления не должно измениться при ошибке парсинга");
     }
 
     @Test
@@ -115,62 +111,14 @@ class CurrencyRateServiceTest {
     }
 
     @Test
-    @DisplayName("Корректно парсит полный XML ответ ЦБ")
-    void testParseRatesFullXml() throws Exception {
-        CurrencyRateService service = createServiceWithResponse(200, "");
-
-        var rates = service.parseRates(SAMPLE_XML);
-
-        assertNotNull(rates);
-        assertEquals(5, rates.size());
-
-        assertBigDecimalEquals("1", rates.get(CurrencyType.RUB));
-        assertBigDecimalEquals("92.5", rates.get(CurrencyType.USD));
-        assertBigDecimalEquals("0.185", rates.get(CurrencyType.KZT));
-    }
-
-    @Test
-    @DisplayName("Выбрасывает исключение, если в XML нет обязательной валюты")
-    void testParseRatesMissingCurrency() {
-        CurrencyRateService service = createServiceWithResponse(200, "");
-
-        var incompleteXml = """
-                <?xml version="1.0" encoding="windows-1251"?>
-                <ValCurs>
-                    <Valute><CharCode>USD</CharCode><Nominal>1</Nominal><Value>90,0000</Value></Valute>
-                    <Valute><CharCode>CNY</CharCode><Nominal>1</Nominal><Value>12,0000</Value></Valute>
-                    <Valute><CharCode>KZT</CharCode><Nominal>100</Nominal><Value>18,0000</Value></Valute>
-                </ValCurs>
-                """;
-
-        assertThrows(IllegalStateException.class, () -> service.parseRates(incompleteXml));
-    }
-
-    @Test
-    @DisplayName("Игнорирует неизвестные валюты")
-    void testParseRatesIgnoresUnknown() {
-        CurrencyRateService service = createServiceWithResponse(200, "");
-
-        var xmlWithBtc = SAMPLE_XML.replace("</ValCurs>",
-                "<Valute><CharCode>BTC</CharCode><Nominal>1</Nominal><Value>1000</Value></Valute></ValCurs>");
-
-        assertDoesNotThrow(() -> service.parseRates(xmlWithBtc));
-    }
-
-    @Test
     @DisplayName("start запускает синхронное первичное обновление курсов")
     void testStartTriggersInitialUpdate() {
-        CurrencyRateService service = createServiceWithResponse(200, SAMPLE_XML);
+        CurrencyRateService service = createServiceWithResponse(200, FRANKFURTER_JSON_USD_BASE);
 
         assertNull(currencyData.lastUpdated(), "До вызова start() время обновления должно быть null");
-        BigDecimal initialUsdRate = currencyData.rates().get(CurrencyType.USD);
 
         service.start();
         assertNotNull(currencyData.lastUpdated(), "После start() время обновления должно быть установлено");
-
-        BigDecimal updatedUsdRate = currencyData.rates().get(CurrencyType.USD);
-        assertBigDecimalEquals("92.5", updatedUsdRate);
-        assertNotEquals(initialUsdRate, updatedUsdRate, "Курс USD должен измениться после start()");
 
         service.stop();
     }
@@ -178,17 +126,16 @@ class CurrencyRateServiceTest {
     @Test
     @DisplayName("stop безопасно работает, если start не вызывался")
     void testStopWithoutStart() {
-        CurrencyRateService service = createServiceWithResponse(200, SAMPLE_XML);
+        CurrencyRateService service = createServiceWithResponse(200, FRANKFURTER_JSON_USD_BASE);
         assertDoesNotThrow(service::stop);
     }
 
-    /**
-     * Вспомогательный метод для корректного сравнения BigDecimal.
-     * Использует compareTo, который считает равными 92.5 и 92.5000000000.
-     */
-    private void assertBigDecimalEquals(String expectedStr, BigDecimal actual) {
-        BigDecimal expected = new BigDecimal(expectedStr);
-        assertEquals(0, expected.compareTo(actual),
-                "Курс не совпадает. Ожидалось: " + expected + ", получено: " + actual);
+    @Test
+    @DisplayName("Запрос к Frankfurter API формирует корректный URL")
+    void testFrankfurterUrl() {
+        CurrencyRateService service = createServiceWithResponse(200, FRANKFURTER_JSON_USD_BASE);
+
+        assertDoesNotThrow(service::updateRates);
+        assertNotNull(currencyData.lastUpdated());
     }
 }

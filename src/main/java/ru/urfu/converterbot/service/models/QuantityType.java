@@ -16,7 +16,7 @@ public interface QuantityType {
      * @return основной код единицы
      */
     default String getCode() {
-        return getCodes().getFirst();
+        return getCodes().get(0);
     }
 
     /**
