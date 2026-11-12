@@ -93,7 +93,7 @@ public class BotMessageFormatter implements MessageFormatter {
                                 LocalDateTime lastUpdated
     ) {
         var builder = new StringBuilder(
-                rates("Курсы валют ЦБ РФ", baseUnit, rates)
+                rates("Актуальные курсы валют", baseUnit, rates)
         );
 
         builder.append(System.lineSeparator());
@@ -105,6 +105,6 @@ public class BotMessageFormatter implements MessageFormatter {
                     .append(lastUpdated.format(DATE_FORMATTER));
         }
 
-        return builder.toString();
+        return builder.toString() + "\n";
     }
 }

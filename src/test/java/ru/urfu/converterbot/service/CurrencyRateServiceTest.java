@@ -21,31 +21,23 @@ import static org.junit.jupiter.api.Assertions.*;
 class CurrencyRateServiceTest {
 
     private static final String FRANKFURTER_JSON_USD_BASE = """
-            {
-              "base": "USD",
-              "date": "2026-10-24",
-              "rates": {
-                "USD": 1.0,
-                "EUR": 0.925,
-                "RUB": 90.5,
-                "CNY": 7.25,
-                "KZT": 500.0
-              }
-            }
+            [
+              {"date":"2026-10-24","base":"USD","quote":"USD","rate":1.0},
+              {"date":"2026-10-24","base":"USD","quote":"EUR","rate":0.925},
+              {"date":"2026-10-24","base":"USD","quote":"RUB","rate":90.5},
+              {"date":"2026-10-24","base":"USD","quote":"CNY","rate":7.25},
+              {"date":"2026-10-24","base":"USD","quote":"KZT","rate":500.0}
+            ]
             """;
 
     private static final String FRANKFURTER_JSON_RUB_BASE = """
-            {
-              "base": "RUB",
-              "date": "2026-10-24",
-              "rates": {
-                "RUB": 1.0,
-                "USD": 0.011,
-                "EUR": 0.010,
-                "CNY": 0.080,
-                "KZT": 5.52
-              }
-            }
+            [
+              {"date":"2026-10-24","base":"RUB","quote":"RUB","rate":1.0},
+              {"date":"2026-10-24","base":"RUB","quote":"USD","rate":0.011},
+              {"date":"2026-10-24","base":"RUB","quote":"EUR","rate":0.010},
+              {"date":"2026-10-24","base":"RUB","quote":"CNY","rate":0.080},
+              {"date":"2026-10-24","base":"RUB","quote":"KZT","rate":5.52}
+            ]
             """;
 
     private CurrencyData currencyData;

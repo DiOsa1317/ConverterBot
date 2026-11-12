@@ -74,7 +74,7 @@ public class BotServiceTest {
      */
     @ParameterizedTest(name = "Команда {0}")
     @CsvSource({
-            "/currency, Курсы валют ЦБ РФ",
+            "/currency, Актуальные курсы валют",
             "/length, Величины длин",
             "/weight, Величины веса",
             "/temperature, температур"

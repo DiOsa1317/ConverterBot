@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  */
 public class CurrencyRateService {
 
-    private static final String URL = "https://api.frankfurter.app/latest";
+    private static final String URL = "https://api.frankfurter.dev/v2/rates";
 
     private static final long REFRESH_PERIOD_HOURS = 6;
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(10);
@@ -128,19 +128,19 @@ public class CurrencyRateService {
                 .filter(t -> t != base)
                 .map(Enum::name)
                 .collect(Collectors.joining(","));
-        var uri = URI.create(URL + "?from=" + base.name() + "&to=" + targets);
+        var uri = URI.create(URL + "?base=" + base.name() + "&quotes=" + targets);
         var request = HttpRequest.newBuilder().uri(uri).timeout(REQUEST_TIMEOUT).GET().build();
         var response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
             throw new IllegalStateException("Frankfurter API вернул HTTP " + response.statusCode());
         }
-        var tree = objectMapper.readTree(response.body());
-        var ratesNode = tree.get("rates");
+        var ratesArray = objectMapper.readTree(response.body());
         var row = new EnumMap<CurrencyType, BigDecimal>(CurrencyType.class);
         row.put(base, BigDecimal.ONE);
-        for (var type : CurrencyType.values()) {
-            if (type == base) continue;
-            var value = ratesNode.get(type.name()).decimalValue();
+        for (var rateNode : ratesArray) {
+            var quote = rateNode.get("quote").asText();
+            var type = CurrencyType.valueOf(quote);
+            var value = rateNode.get("rate").decimalValue();
             row.put(type, value.setScale(10, RoundingMode.HALF_UP));
         }
         return row;

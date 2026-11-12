@@ -181,7 +181,7 @@ class BotMessageFormatterTest {
         var result = formatter.currencyRates(baseUnit, rates, lastUpdated);
 
         var expected = """
-                Курсы валют ЦБ РФ:
+                Актуальные курсы валют:
                 1 USD = 0.9250 EUR
                 1 USD = 1.0000 RUB
                 
@@ -202,7 +202,7 @@ class BotMessageFormatterTest {
         var result = formatter.currencyRates(baseUnit, rates, null);
 
         var expected = """
-                Курсы валют ЦБ РФ:
+                Актуальные курсы валют:
                 1 USD = 0.9250 EUR
                 
                 Время последнего обновления неизвестно.""";
