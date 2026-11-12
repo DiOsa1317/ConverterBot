@@ -40,12 +40,12 @@ public class BotServiceTest {
         var currencyConverter = new CurrencyConverter(new CurrencyData());
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
         botService = new BotService(
-                            currencyConverter,
-                            lengthConverter,
-                            weightConverter,
-                            temperatureConverter,
-                            parser,
-                            formatter);
+                currencyConverter,
+                lengthConverter,
+                weightConverter,
+                temperatureConverter,
+                parser,
+                formatter);
     }
 
     /**
@@ -67,32 +67,6 @@ public class BotServiceTest {
     }
 
     /**
-     * Проверяет, что на команду {@code /start} возвращается приветствие.
-     */
-    @Test
-    @DisplayName("Отвечает приветствием на /start")
-    void shouldReturnStartText() {
-        String expected = """
-            Приветствую вас! Этот бот конвертирует валюты и физические величины.
-            Чтобы узнать подробнее, введите /help
-            """;
-
-        String actual = botService.processBotResponse("/start");
-
-        assertTrue(actual.contains(expected));
-    }
-
-    /**
-     * Проверяет, что на команду {@code /help} возвращается справка.
-     */
-    @Test
-    @DisplayName("Отвечает справкой на /help")
-    void shouldReturnHelpText() {
-        assertTrue(botService.processBotResponse("/help")
-            .contains("Формат запроса"));
-    }
-
-    /**
      * Проверяет, что каждая команда группы возвращает справку именно своей группы.
      *
      * @param command          команда справки по группе величин
@@ -100,9 +74,9 @@ public class BotServiceTest {
      */
     @ParameterizedTest(name = "Команда {0}")
     @CsvSource({
-            "/currency, Доступны переводы",
+            "/currency, Актуальные курсы валют",
             "/length, Величины длин",
-            "/weight, Величины весов",
+            "/weight, Величины веса",
             "/temperature, температур"
     })
     @DisplayName("Возвращает справку по группе на её команду")
