@@ -25,6 +25,10 @@ public record KeyboardButton(
             case FROM -> "FROM:" + value;
             case TO -> "TO:" + value;
             case MENU -> "MENU";
+            case CUSTOM_CONVERSIONS -> "CUSTOM_CONVERSIONS";
+            case ADD_CUSTOM_CONV -> "ADD_CUSTOM_CONV";
+            case LIST_CUSTOM_CONV -> "LIST_CUSTOM_CONV";
+            case DELETE_CUSTOM_CONV -> "DELETE_CUSTOM_CONV:" + value;
         };
     }
  }

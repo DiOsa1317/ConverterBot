@@ -15,6 +15,13 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.CustomConversionRepository;
+import ru.urfu.converterbot.service.models.CustomConversion;
+
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,11 +40,35 @@ public class BotServiceTest {
      */
     @BeforeEach
     void setUp() {
-        var parser = new ClientInputParser();
+        var repo = new CustomConversionRepository(null) {
+            @Override
+            public void save(CustomConversion conversion) {}
+            @Override
+            public Optional<CustomConversion> findByChatidFromAndAndTo(long chatId, String from, String to) {
+                return Optional.empty();
+            }
+            @Override
+            public List<CustomConversion> findAllOutgoing(long chatId) {
+                return List.of();
+            }
+            @Override
+            public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) {
+                return false;
+            }
+            @Override
+            public List<String> findAllUnitNames(long chatId) {
+                return List.of();
+            }
+            @Override
+            public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) {
+                return false;
+            }
+        };
+        var parser = new ClientInputParser(repo);
         var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
-        var currencyConverter = new CurrencyConverter(new CurrencyData());
+        var currencyConverter = new CurrencyConverter(new CurrencyData(), repo);
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
         botService = new BotService(
                 currencyConverter,

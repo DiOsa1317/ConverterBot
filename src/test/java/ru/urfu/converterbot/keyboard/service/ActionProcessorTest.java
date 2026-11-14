@@ -6,6 +6,13 @@ import org.junit.jupiter.api.Test;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
+import ru.urfu.converterbot.service.CustomConversionRepository;
+import ru.urfu.converterbot.service.models.CustomConversion;
+
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,7 +31,31 @@ class ActionProcessorTest {
     @BeforeEach
     void setUp() {
         stateService = new ConversionStateService();
-        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg);
+        var repo = new CustomConversionRepository(null) {
+            @Override
+            public void save(CustomConversion conversion) {}
+            @Override
+            public Optional<CustomConversion> findByChatidFromAndAndTo(long chatId, String from, String to) {
+                return Optional.empty();
+            }
+            @Override
+            public List<CustomConversion> findAllOutgoing(long chatId) {
+                return List.of();
+            }
+            @Override
+            public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) {
+                return false;
+            }
+            @Override
+            public List<String> findAllUnitNames(long chatId) {
+                return List.of();
+            }
+            @Override
+            public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) {
+                return false;
+            }
+        };
+        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg, repo);
     }
 
     /**

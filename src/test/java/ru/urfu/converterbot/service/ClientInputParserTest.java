@@ -2,6 +2,9 @@ package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.TemperatureType;
+import ru.urfu.converterbot.service.CustomConversionRepository;
+import ru.urfu.converterbot.service.models.CustomConversion;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,6 +12,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ru.urfu.converterbot.service.models.CurrencyType;
+
+import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,7 +32,31 @@ public class ClientInputParserTest {
      */
     @BeforeEach
     void setUp() {
-        clientInputParser = new ClientInputParser();
+        var repo = new CustomConversionRepository(null) {
+            @Override
+            public void save(CustomConversion conversion) {}
+            @Override
+            public Optional<CustomConversion> findByChatidFromAndAndTo(long chatId, String from, String to) {
+                return Optional.empty();
+            }
+            @Override
+            public List<CustomConversion> findAllOutgoing(long chatId) {
+                return List.of();
+            }
+            @Override
+            public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) {
+                return false;
+            }
+            @Override
+            public List<String> findAllUnitNames(long chatId) {
+                return List.of();
+            }
+            @Override
+            public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) {
+                return false;
+            }
+        };
+        clientInputParser = new ClientInputParser(repo);
     }
 
     /**

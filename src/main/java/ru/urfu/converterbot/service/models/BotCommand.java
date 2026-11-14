@@ -5,7 +5,8 @@ public enum BotCommand {
     CURRENCY("/currency", "Величины валют"),
     TEMPERATURE("/temperature", "Величины температур"),
     WEIGHT("/weight", "Величины веса"),
-    LENGTH("/length", "Величины длины");
+    LENGTH("/length", "Величины длины"),
+    CUSTOM("/custom", "Кастомные величины");
 
     private final String command;
 

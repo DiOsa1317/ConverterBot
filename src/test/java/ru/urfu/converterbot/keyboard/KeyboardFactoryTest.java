@@ -19,14 +19,14 @@ class KeyboardFactoryTest {
      * Проверяет состав главного меню.
      */
     @Test
-    @DisplayName("Главное меню: 4 категории в 2 строках, без кнопки 'Меню'")
+    @DisplayName("Главное меню: 4 категории + мои конверсии, без кнопки 'Меню'")
     void mainMenu() {
         var view = factory.createMainMenu();
         assertFalse(view.isEmpty());
-        assertEquals(2, view.rows().size());
+        assertEquals(3, view.rows().size());
         var labels = view.rows().stream().flatMap(r -> r.buttons().stream())
                 .map(KeyboardButton::label).toList();
-        assertTrue(labels.containsAll(List.of("Валюты", "Температура", "Вес", "Длина")));
+        assertTrue(labels.containsAll(List.of("Валюты", "Температура", "Вес", "Длина", "Мои конверсии")));
     }
 
     /**

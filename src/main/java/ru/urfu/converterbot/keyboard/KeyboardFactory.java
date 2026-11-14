@@ -27,7 +27,9 @@ public class KeyboardFactory {
                 new KeyboardButton("Валюты", ButtonAction.TYPE, "CURRENCY"),
                 new KeyboardButton("Температура", ButtonAction.TYPE, "TEMPERATURE"),
                 new KeyboardButton("Вес", ButtonAction.TYPE, "WEIGHT"),
-                new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH")), true);
+                new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH"),
+                new KeyboardButton("Мои конверсии", ButtonAction.CUSTOM_CONVERSIONS, "")
+        ), true);
     }
 
     /**
@@ -64,6 +66,26 @@ public class KeyboardFactory {
                 buttons.add(new KeyboardButton(unit.getCode(), ButtonAction.TO, unit.getCode()));
             }
         }
+        return toView(buttons, false);
+    }
+
+    @NotNull
+    public KeyboardView createCustomConversionMenu() {
+        return toView(List.of(
+                new KeyboardButton("Добавить конверсию", ButtonAction.ADD_CUSTOM_CONV, ""),
+                new KeyboardButton("Мои конверсии", ButtonAction.LIST_CUSTOM_CONV, ""),
+                new KeyboardButton("В главное меню", ButtonAction.MENU, "")
+                ), false);
+    }
+
+    @NotNull
+    public KeyboardView createCustomConversionList(List<CustomConversion> conversions) {
+        var buttons = new ArrayList<KeyboardButton>();
+        for (var conversion : conversions) {
+            buttons.add(new KeyboardButton(conversion.fromUnit() + " -> " + conversion.toUnit(),
+                    ButtonAction.DELETE_CUSTOM_CONV, conversion.fromUnit() + ":" + conversion.toUnit()));
+        }
+        buttons.add(new KeyboardButton("В главное меню", ButtonAction.MENU, ""));
         return toView(buttons, false);
     }
 

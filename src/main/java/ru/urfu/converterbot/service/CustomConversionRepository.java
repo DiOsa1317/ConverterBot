@@ -17,9 +17,9 @@ public class CustomConversionRepository {
 
     public void save(CustomConversion conversion) throws SQLException {
         var sql = """
-                INSERT INTO custom_conversions (chat_id, from_unit, to_unit, rate, created_at)
+                MERGE INTO custom_conversions (chat_id, from_unit, to_unit, rate, created_at)
+                KEY (chat_id, from_unit, to_unit)
                 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-                ON DUPLICATE KEY UPDATE rate = VALUES(rate), created_at = CURRENT_TIMESTAMP
                 """;
         try (
                 var connection = dbConfig.getConnection();
@@ -90,6 +90,26 @@ public class CustomConversionRepository {
             preparedStatement.setString(3, to);
             return preparedStatement.executeUpdate() > 0;
         }
+    }
+
+    public List<String> findAllUnitNames(long chatId) throws SQLException {
+        var sql = """
+                SELECT DISTINCT from_unit AS unit FROM custom_conversions WHERE chat_id = ?
+                UNION
+                SELECT DISTINCT to_unit FROM custom_conversions WHERE chat_id = ?
+                """;
+        List<String> names = new ArrayList<>();
+        try (var connection = dbConfig.getConnection();
+             var ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, chatId);
+            ps.setLong(2, chatId);
+            try (var rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    names.add(rs.getString("unit"));
+                }
+            }
+        }
+        return names;
     }
 
     public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) throws SQLException {
