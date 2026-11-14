@@ -5,6 +5,7 @@ import ru.urfu.converterbot.bots.TelegramBot;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
 import ru.urfu.converterbot.keyboard.service.ConversionStateService;
+import ru.urfu.converterbot.keyboard.service.DatabaseConfig;
 import ru.urfu.converterbot.keyboard.service.TextProcessor;
 import ru.urfu.converterbot.keyboard.service.ActionProcessor;
 
@@ -47,15 +48,20 @@ public class BotApplication {
             logger.info("Конфигурация успешно загружена");
 
             var botMessageFormatter = new BotMessageFormatter();
-            var botService = getBotService(botMessageFormatter);
+            var dbConfig = new DatabaseConfig();
+            dbConfig.initSchema();
+            var customConversionRepository = new CustomConversionRepository(dbConfig);
+            var botService = getBotService(botMessageFormatter, customConversionRepository);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
             var stateService = new ConversionStateService();
             var keyboardFactory = new KeyboardFactory();
             var renderer = new TelegramKeyboardRenderer();
-            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService, botMessageFormatter);
-            var actionProcessor = new ActionProcessor(stateService, keyboardFactory, botService);
+            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService,
+                    botMessageFormatter, customConversionRepository);
+            var actionProcessor = new ActionProcessor(stateService, keyboardFactory,
+                    botService, customConversionRepository);
             var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, textProcessor, actionProcessor, renderer);
             telegramBot.start();
         } catch (Exception e) {
@@ -69,12 +75,13 @@ public class BotApplication {
      *
      * @param messageFormatter хранитель информационных сообщений
      */
-    private @NotNull BotService getBotService(MessageFormatter messageFormatter) {
-        var parser = new ClientInputParser();
+    private @NotNull BotService getBotService(MessageFormatter messageFormatter,
+                                              CustomConversionRepository customConversionRepository) {
+        var parser = new ClientInputParser(customConversionRepository);
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
         var currencyData = new CurrencyData();
-        var currencyConverter = new CurrencyConverter(currencyData);
+        var currencyConverter = new CurrencyConverter(currencyData, customConversionRepository);
         CurrencyRateService currencyRateService = new CurrencyRateService(currencyData);
         currencyRateService.start();
         var temperatureConverter = new TemperatureConverter(new TemperatureData());

@@ -37,6 +37,6 @@ class TelegramKeyboardRendererTest {
     void renders() {
         var markup = renderer.render(factory.createMainMenu());
         assertNotNull(markup);
-        assertEquals(2, markup.getKeyboard().size());
+        assertEquals(3, markup.getKeyboard().size());
     }
 }

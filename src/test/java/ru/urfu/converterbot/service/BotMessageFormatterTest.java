@@ -185,7 +185,8 @@ class BotMessageFormatterTest {
                 1 USD = 0.9250 EUR
                 1 USD = 1.0000 RUB
                 
-                Последнее обновление: 15.01.2024 14:30""";
+                Последнее обновление: 15.01.2024 14:30
+                """;
         assertEquals(expected, result);
     }
 
@@ -205,7 +206,8 @@ class BotMessageFormatterTest {
                 Актуальные курсы валют:
                 1 USD = 0.9250 EUR
                 
-                Время последнего обновления неизвестно.""";
+                Время последнего обновления неизвестно.
+                """;
         assertEquals(expected, result);
     }
 
