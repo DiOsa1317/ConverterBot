@@ -1,5 +1,6 @@
 package ru.urfu.converterbot.service.models;
 
+/** Команды бота типа конвертации*/
 public enum BotCommand {
     CURRENCY("/currency", "Величины валют"),
     TEMPERATURE("/temperature", "Величины температур"),

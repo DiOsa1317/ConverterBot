@@ -1,6 +1,13 @@
 package ru.urfu.converterbot;
 
+import org.jetbrains.annotations.NotNull;
 import ru.urfu.converterbot.bots.TelegramBot;
+import ru.urfu.converterbot.keyboard.KeyboardFactory;
+import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
+import ru.urfu.converterbot.keyboard.service.ConversionStateService;
+import ru.urfu.converterbot.keyboard.service.TextProcessor;
+import ru.urfu.converterbot.keyboard.service.ActionProcessor;
+
 import ru.urfu.converterbot.service.*;
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
@@ -32,34 +39,52 @@ public class BotApplication {
      *
      * @param args аргументы командной строки (в текущей реализации не используются)
      */
-    static void main(String[] args) {
+    void main(String[] args) {
         try {
             var configuration = new BotConfiguration("config.properties",
                     "bot.token", "bot.username");
             var config = configuration.loadConfiguration();
             logger.info("Конфигурация успешно загружена");
 
-            var parser = new ClientInputParser();
-            var formatter = new BotMessageFormatter();
-            var lengthConverter = new LengthConverter(new LengthData());
-            var weightConverter = new WeightConverter(new WeightData());
-            var currencyConverter = new CurrencyConverter(new CurrencyData());
-            var temperatureConverter = new TemperatureConverter(new TemperatureData());
-            var botService = new BotService(
-                                            currencyConverter,
-                                            lengthConverter,
-                                            weightConverter,
-                                            temperatureConverter,
-                                            parser,
-                                            formatter);
+            var botMessageFormatter = new BotMessageFormatter();
+            var botService = getBotService(botMessageFormatter);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
-            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, botService);
+            var stateService = new ConversionStateService();
+            var keyboardFactory = new KeyboardFactory();
+            var renderer = new TelegramKeyboardRenderer();
+            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService, botMessageFormatter);
+            var actionProcessor = new ActionProcessor(stateService, keyboardFactory, botService);
+            var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, textProcessor, actionProcessor, renderer);
             telegramBot.start();
         } catch (Exception e) {
             logger.error("Ошибка при запуске", e);
             System.exit(1);
         }
+    }
+
+    /**
+     * Создает экземпляр BotService
+     *
+     * @param messageFormatter хранитель информационных сообщений
+     */
+    private @NotNull BotService getBotService(MessageFormatter messageFormatter) {
+        var parser = new ClientInputParser();
+        var lengthConverter = new LengthConverter(new LengthData());
+        var weightConverter = new WeightConverter(new WeightData());
+        var currencyData = new CurrencyData();
+        var currencyConverter = new CurrencyConverter(currencyData);
+        CurrencyRateService currencyRateService = new CurrencyRateService(currencyData);
+        currencyRateService.start();
+        var temperatureConverter = new TemperatureConverter(new TemperatureData());
+
+        return new BotService(
+                currencyConverter,
+                lengthConverter,
+                weightConverter,
+                temperatureConverter,
+                parser,
+                messageFormatter);
     }
 }

@@ -2,7 +2,7 @@ package ru.urfu.converterbot.service.models;
 
 import java.util.List;
 
-
+/** Тип конвертации - длина */
 public enum LengthType implements QuantityType {
     METER("m", "METER", "meter", "м", "метр"),
     KILOMETER("km", "KILOMETER", "км"),
