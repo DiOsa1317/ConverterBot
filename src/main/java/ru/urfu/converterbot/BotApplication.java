@@ -62,7 +62,7 @@ public class BotApplication {
             var keyboardFactory = new KeyboardFactory();
             var renderer = new TelegramKeyboardRenderer();
             var textProcessor = new TextProcessor(stateService, keyboardFactory, botService,
-                    botMessageFormatter, customConversionRepository);
+                    botMessageFormatter, customConversionRepository, historyRepository);
             var actionProcessor = new ActionProcessor(stateService, keyboardFactory,
                     botService, customConversionRepository, historyRepository);
             var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, textProcessor, actionProcessor, renderer);

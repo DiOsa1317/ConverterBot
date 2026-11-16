@@ -3,12 +3,16 @@ package ru.urfu.converterbot.keyboard.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotMessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -31,7 +35,8 @@ class TextProcessorTest {
     void setUp() {
         stateService = new ConversionStateService();
         processor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter(), new FakeCustomConversionRepository());
+                msg -> "converted:" + msg, new BotMessageFormatter(), 
+                new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
     }
 
     /**
@@ -104,8 +109,9 @@ class TextProcessorTest {
                 return Optional.empty();
             }
         };
+        var historyRepository = new ConversionHistoryRepository(new DatabaseConfig());
         var customProcessor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter(), repo);
+                msg -> "converted:" + msg, new BotMessageFormatter(), repo, historyRepository);
         stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
                 null, "cookie", "calorie", null));
         var reply = customProcessor.handle(1L, "10");

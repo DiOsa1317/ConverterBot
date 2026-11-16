@@ -24,7 +24,7 @@ public class ActionProcessor implements MessageProcessor {
     private static final String CUSTOM_STEP_ONE = "Шаг 1. Назовите исходную единицу (только латиница и _):";
     private static final String EMPTY_LIST_TEXT = "Конверсий пока нет.";
     private static final String LIST_TITLE_TEXT = "Ваши конверсии:";
-    private static final String ERROR_TEXT = "Произошла ошибка. Попробуйте позже";
+    private static final String ERROR_TEXT = "Произошла ошибка. Пожалуйста, попробуйте позже.";
     private static final String WRONG_PAIR_TEXT = "Некорректная пара";
     private static final DateTimeFormatter HISTORY_DATE_FORMAT =
         DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm");
