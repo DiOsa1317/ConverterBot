@@ -18,6 +18,7 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;

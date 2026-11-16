@@ -16,9 +16,9 @@ import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.ChatContextBuilder;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
-import ru.urfu.converterbot.service.CustomConversionRepository;
 import ru.urfu.converterbot.service.MessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 /**
  * Обработчик текстовых сообщений пользователя

@@ -7,7 +7,7 @@ import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.*;
 
 import ru.urfu.converterbot.service.BotResponseProcessor;
-import ru.urfu.converterbot.service.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import java.sql.SQLException;
 
