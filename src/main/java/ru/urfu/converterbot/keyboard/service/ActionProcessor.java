@@ -11,6 +11,8 @@ import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
 
+import java.time.format.DateTimeFormatter;
+
 import java.sql.SQLException;
 
 /** Обработчик нажатий на клавиатуру пользователем*/
@@ -24,6 +26,8 @@ public class ActionProcessor implements MessageProcessor {
     private static final String LIST_TITLE_TEXT = "Ваши конверсии:";
     private static final String ERROR_TEXT = "Произошла ошибка. Попробуйте позже";
     private static final String WRONG_PAIR_TEXT = "Некорректная пара";
+    private static final DateTimeFormatter HISTORY_DATE_FORMAT =
+        DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm");
 
     private final KeyboardFactory keyboardFactory;
     private final ConversionStateService stateService;
@@ -242,6 +246,8 @@ public class ActionProcessor implements MessageProcessor {
                         .append(entry.input())
                         .append(" → ")
                         .append(entry.result())
+                        .append("   ")
+                        .append("(" + entry.createdAt().format(HISTORY_DATE_FORMAT) + ")")
                         .append("\n");
             }
 
