@@ -55,10 +55,17 @@ public class BotService implements BotResponseProcessor {
         this.messageFormatter = messageFormatter;
     }
 
-    @Override
-    public String processBotResponse(String messageText) {
+    /**
+     * Обрабатывает входящее текстовое сообщение и возвращает ответ бота.
+     *
+     * @param chatId идентификатор чата пользователя
+     * @param messageText текст сообщения от пользователя; может быть {@code null}
+     * @return отформатированная строка ответа для отправки пользователю
+     * @throws InvalidUserInputException если запрос на конвертацию не удалось распознать
+     */
+    public String processBotResponse(long chatId, @Nullable String messageText) {
         try {
-            return dispatch(messageText);
+            return dispatch(chatId, messageText);
         } catch (IllegalArgumentException exception) {
             logger.error("Ошибка при обработке аргументов: ", exception);
             return messageFormatter.invalidInput();
@@ -73,24 +80,38 @@ public class BotService implements BotResponseProcessor {
      *
      * @param messageText текст сообщения от пользователя; может быть {@code null}
      * @return отформатированная строка ответа для отправки пользователю
+     * @deprecated используйте {@link #processBotResponse(long, String)}
+     */
+    @Override
+    @Deprecated
+    public String processBotResponse(String messageText) {
+        return processBotResponse(0L, messageText);
+    }
+
+    /**
+     * Обрабатывает входящее текстовое сообщение и возвращает ответ бота.
+     *
+     * @param chatId идентификатор чата пользователя
+     * @param messageText текст сообщения от пользователя; может быть {@code null}
+     * @return отформатированная строка ответа для отправки пользователю
      * @throws InvalidUserInputException если запрос на конвертацию не удалось распознать
      */
-    private String dispatch(@Nullable String messageText) throws InvalidUserInputException {
+    private String dispatch(long chatId, @Nullable String messageText) throws InvalidUserInputException {
         for (BotCommand command : BotCommand.values()) {
-        if (command.matches(messageText)) {
-            if (command == BotCommand.CURRENCY) {
-                return messageFormatter.currencyRates(
-                    currencyConverter.baseUnit(),
-                    currencyConverter.getReferenceRates(),
-                    currencyConverter.lastUpdated());
+            if (command.matches(messageText)) {
+                if (command == BotCommand.CURRENCY) {
+                    return messageFormatter.currencyRates(
+                            currencyConverter.baseUnit(),
+                            currencyConverter.getReferenceRates(),
+                            currencyConverter.lastUpdated());
+                }
+
+                var converter = converterFor(command);
+                return messageFormatter.rates(command.title(),
+                        converter.baseUnit(), converter.getReferenceRates());
             }
-            
-            var converter = converterFor(command);
-            return messageFormatter.rates(command.title(),
-                    converter.baseUnit(), converter.getReferenceRates());
         }
-    }
-        return convert(messageText);
+        return convert(chatId, messageText);
     }
 
     /**
@@ -105,21 +126,23 @@ public class BotService implements BotResponseProcessor {
             case LENGTH -> lengthConverter;
             case WEIGHT -> weightConverter;
             case TEMPERATURE -> temperatureConverter;
+            default -> throw new IllegalArgumentException("Неизвестная команда: " + command);
         };
     }
 
     /**
      * Выполняет перевод по разобранному запросу и форматирует результат.
      *
+     * @param chatId идентификатор чата пользователя
      * @param messageText входное сообщение формата "{число} {единица1} to {единица2}"
      * @return строка результата в формате "{значение} {из} = {результат} {в}"
      * @throws InvalidUserInputException если запрос не распознан, единицы неизвестны
      *                                   или принадлежат разным группам
      */
-    private String convert(String messageText) throws InvalidUserInputException {
-        var request = clientInputParser.parse(messageText);
+    private String convert(long chatId, String messageText) throws InvalidUserInputException {
+        var request = clientInputParser.parse(messageText, chatId);
         var result = converterFor(request.from().group())
-            .convert(request.value(), request.from(), request.to());
+                .convert(request.value(), request.from(), request.to());
 
         return messageFormatter.getResult(request, result);
     }

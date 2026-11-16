@@ -13,4 +13,8 @@ public interface Parser {
      * @throws InvalidUserInputException - ошибка неправильного ввода
      * */
     ConversionRequest parse(@NotNull String message) throws InvalidUserInputException;
+
+    default ConversionRequest parse(@NotNull String message, long chatId) throws InvalidUserInputException {
+        return parse(message);
+    }
 }

@@ -2,13 +2,14 @@ package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.TemperatureType;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
+import ru.urfu.converterbot.service.models.CurrencyType;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import ru.urfu.converterbot.service.models.CurrencyType;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,7 +25,7 @@ public class ClientInputParserTest {
      */
     @BeforeEach
     void setUp() {
-        clientInputParser = new ClientInputParser();
+        clientInputParser = new ClientInputParser(new FakeCustomConversionRepository());
     }
 
     /**

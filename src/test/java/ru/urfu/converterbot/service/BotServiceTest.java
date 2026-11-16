@@ -15,6 +15,7 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,11 +34,12 @@ public class BotServiceTest {
      */
     @BeforeEach
     void setUp() {
-        var parser = new ClientInputParser();
+        var repo = new FakeCustomConversionRepository();
+        var parser = new ClientInputParser(repo);
         var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
-        var currencyConverter = new CurrencyConverter(new CurrencyData());
+        var currencyConverter = new CurrencyConverter(new CurrencyData(), repo);
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
         botService = new BotService(
                 currencyConverter,

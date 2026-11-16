@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,7 +25,7 @@ class ActionProcessorTest {
     @BeforeEach
     void setUp() {
         stateService = new ConversionStateService();
-        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg);
+        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg, new FakeCustomConversionRepository());
     }
 
     /**

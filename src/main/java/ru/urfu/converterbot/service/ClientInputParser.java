@@ -4,6 +4,8 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
@@ -13,11 +15,17 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ClientInputParser implements Parser {
 
+    private final CustomConversionRepository customConversionRepository;
+
     /** Слово-разделитель между единицами измерения. */
     private static final String TO_SEPARATOR = "to";
 
-    @Override 
-    public ConversionRequest parse(@NotNull String message) throws InvalidUserInputException {
+    public ClientInputParser(CustomConversionRepository customConversionRepository) {
+        this.customConversionRepository = customConversionRepository;
+    }
+
+    @Override
+    public ConversionRequest parse(@NotNull String message, long chatId) throws InvalidUserInputException {
         Objects.requireNonNull(message, "Сообщение не может быть null");
         var parts = message.split(" ");
 
@@ -27,10 +35,15 @@ public class ClientInputParser implements Parser {
         }
 
         var value = parseValue(message, parts[0]);
-        var from = parseUnit(message, parts[1]);
-        var to = parseUnit(message, parts[3]);
+        var from = parseUnit(message, parts[1], chatId);
+        var to = parseUnit(message, parts[3], chatId);
 
         return new ConversionRequest(value, from, to);
+    }
+
+    @Override
+    public ConversionRequest parse(@NotNull String message) throws InvalidUserInputException {
+        return parse(message, 0L);
     }
 
     /**
@@ -52,21 +65,35 @@ public class ClientInputParser implements Parser {
 
     /**
      * Распознаёт строковое имя единицы измерения, перебирая все известные
-     * enum-типы величин: валюты, длину, массу и температуру.
+     * enum-типы величин: валюты, длину, массу и температуру, а также
+     * кастомные единицы пользователя из базы данных.
      *
      * @param originalMessage исходное сообщение целиком (для текста ошибки)
      * @param token строковое имя единицы измерения
+     * @param chatId идентификатор чата пользователя
      * @return распознанное значение
      * @throws InvalidUserInputException если имя не найдено ни в одном из известных enum
      */
-    private QuantityType parseUnit(String originalMessage, String token) throws InvalidUserInputException {
-        return QuantityType.fromCode(CurrencyType.class, token)
+    private QuantityType parseUnit(String originalMessage, String token, long chatId)
+            throws InvalidUserInputException {
+        var standard = QuantityType.fromCode(CurrencyType.class, token)
                 .<QuantityType>map(unit -> unit)
                 .or(() -> QuantityType.fromCode(LengthType.class, token).map(unit -> (QuantityType) unit))
                 .or(() -> QuantityType.fromCode(WeightType.class, token).map(unit -> (QuantityType) unit))
-                .or(() -> QuantityType.fromCode(TemperatureType.class, token).map(unit -> (QuantityType) unit))
-                .orElseThrow(() -> new InvalidUserInputException(
-                        originalMessage, "Неизвестная единица измерения: " + token));
+                .or(() -> QuantityType.fromCode(TemperatureType.class, token).map(unit -> (QuantityType) unit));
+        if (standard.isPresent()) {
+            return standard.get();
+        }
+
+        try {
+            var unitNames = customConversionRepository.findAllUnitNames(chatId);
+            if (unitNames.contains(token)) {
+                return new CustomQuantityType(token, chatId);
+            }
+        } catch (SQLException e) {
+            throw new InvalidUserInputException(originalMessage, "Ошибка базы данных. Попробуйте ещё раз.");
+        }
+
+        throw new InvalidUserInputException(originalMessage, "Неизвестная единица измерения: " + token);
     }
 }
-

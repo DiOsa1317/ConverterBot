@@ -27,7 +27,9 @@ public class KeyboardFactory {
                 new KeyboardButton("Валюты", ButtonAction.TYPE, "CURRENCY"),
                 new KeyboardButton("Температура", ButtonAction.TYPE, "TEMPERATURE"),
                 new KeyboardButton("Вес", ButtonAction.TYPE, "WEIGHT"),
-                new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH")), true);
+                new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH"),
+                new KeyboardButton("Мои конверсии", ButtonAction.CUSTOM_CONVERSIONS, "")
+        ), true);
     }
 
     /**
@@ -63,6 +65,35 @@ public class KeyboardFactory {
             if (!unit.getCode().equals(fromUnit)) {
                 buttons.add(new KeyboardButton(unit.getCode(), ButtonAction.TO, unit.getCode()));
             }
+        }
+        return toView(buttons, false);
+    }
+
+    @NotNull
+    public KeyboardView createCustomConversionMenu() {
+        return toView(List.of(
+                new KeyboardButton("Добавить конверсию", ButtonAction.ADD_CUSTOM_CONV, ""),
+                new KeyboardButton("Мои конверсии", ButtonAction.LIST_CUSTOM_CONV, ""),
+                new KeyboardButton("Удалить конверсию", ButtonAction.DELETE_CUSTOM, "")
+                ), false);
+    }
+
+    @NotNull
+    public KeyboardView createCustomConversionList(List<CustomConversion> conversions) {
+        var buttons = new ArrayList<KeyboardButton>();
+        for (var conversion : conversions) {
+            buttons.add(new KeyboardButton(conversion.fromUnit() + " -> " + conversion.toUnit(),
+                    ButtonAction.CONVERT_CUSTOM, conversion.fromUnit() + ":" + conversion.toUnit()));
+        }
+        return toView(buttons, false);
+    }
+
+    @NotNull
+    public KeyboardView createCustomConversionDeleteList(List<CustomConversion> conversions) {
+        var buttons = new ArrayList<KeyboardButton>();
+        for (var conversion : conversions) {
+            buttons.add(new KeyboardButton("Удалить: " + conversion.fromUnit() + " -> " + conversion.toUnit(),
+                    ButtonAction.DELETE_CUSTOM_CONV, conversion.fromUnit() + ":" + conversion.toUnit()));
         }
         return toView(buttons, false);
     }
@@ -118,7 +149,7 @@ public class KeyboardFactory {
 
         if (!isMain) {
             rows.add(new KeyboardRow(List.of(
-                    new KeyboardButton("Меню", ButtonAction.MENU, "")
+                    new KeyboardButton("В главное меню", ButtonAction.MENU, "")
             )));
         }
 
