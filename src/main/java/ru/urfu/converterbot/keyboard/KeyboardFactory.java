@@ -28,7 +28,8 @@ public class KeyboardFactory {
                 new KeyboardButton("Температура", ButtonAction.TYPE, "TEMPERATURE"),
                 new KeyboardButton("Вес", ButtonAction.TYPE, "WEIGHT"),
                 new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH"),
-                new KeyboardButton("Мои конверсии", ButtonAction.CUSTOM_CONVERSIONS, "")
+                new KeyboardButton("Мои конверсии", ButtonAction.CUSTOM_CONVERSIONS, ""),
+                new KeyboardButton("История", ButtonAction.HISTORY, "")
         ), true);
     }
 

@@ -1,6 +1,6 @@
 package ru.urfu.converterbot.service.repository;
 
-import ru.urfu.converterbot.keyboard.service.DatabaseConfig;
+import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.service.models.ConversionHistory;
 
 import java.sql.SQLException;

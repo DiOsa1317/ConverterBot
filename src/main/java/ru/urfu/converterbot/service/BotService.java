@@ -13,6 +13,9 @@ import ru.urfu.converterbot.service.converters.WeightConverter;
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import java.sql.SQLException;
+
 /**
  * Диспетчер перевода величин.
  */
@@ -32,6 +35,8 @@ public class BotService implements BotResponseProcessor {
 
     private final MessageFormatter messageFormatter;
 
+    private final ConversionHistoryRepository historyRepository;
+
     /**
      * Создаёт диспетчер с явно переданными конвертерами всех групп.
      *
@@ -46,13 +51,15 @@ public class BotService implements BotResponseProcessor {
                             @NotNull WeightConverter weightConverter,
                             @NotNull TemperatureConverter temperatureConverter,
                             @NotNull Parser parser,
-                            @NotNull MessageFormatter messageFormatter) {
+                            @NotNull MessageFormatter messageFormatter,
+                            @NotNull ConversionHistoryRepository historyRepository) {
         this.currencyConverter = currencyConverter;
         this.lengthConverter = lengthConverter;
         this.weightConverter = weightConverter;
         this.temperatureConverter = temperatureConverter;
         this.clientInputParser = parser;
         this.messageFormatter = messageFormatter;
+        this.historyRepository = historyRepository;
     }
 
     /**
@@ -144,6 +151,14 @@ public class BotService implements BotResponseProcessor {
         var result = converterFor(request.from().group())
                 .convert(request.value(), request.from(), request.to());
 
-        return messageFormatter.getResult(request, result);
+        var formattedResult = messageFormatter.getResult(request, result);
+
+        try {
+            historyRepository.save(chatId, messageText, formattedResult);
+        } catch (SQLException exception) {
+            logger.error("Не удалось сохранить конвертацию в историю", exception);
+        }
+
+        return formattedResult;
     }
 }

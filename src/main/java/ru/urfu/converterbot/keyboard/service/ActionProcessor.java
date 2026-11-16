@@ -9,6 +9,9 @@ import ru.urfu.converterbot.keyboard.models.*;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
+import ru.urfu.converterbot.service.models.ConversionHistory;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+
 import java.sql.SQLException;
 
 /** Обработчик нажатий на клавиатуру пользователем*/
@@ -27,6 +30,7 @@ public class ActionProcessor implements MessageProcessor {
     private final ConversionStateService stateService;
     private final BotResponseProcessor processor;
     private final CustomConversionRepository customConversionRepository;
+    private final ConversionHistoryRepository historyRepository;
 
     /**
      * Создаёт сервис диалога.
@@ -38,11 +42,13 @@ public class ActionProcessor implements MessageProcessor {
     public ActionProcessor(@NotNull ConversionStateService stateService,
                            @NotNull KeyboardFactory keyboardFactory,
                            @NotNull BotResponseProcessor processor,
-                           @NotNull CustomConversionRepository customConversionRepository) {
+                           @NotNull CustomConversionRepository customConversionRepository,
+                           @NotNull ConversionHistoryRepository historyRepository) {
         this.stateService = stateService;
         this.processor = processor;
         this.keyboardFactory = keyboardFactory;
         this.customConversionRepository = customConversionRepository;
+        this.historyRepository = historyRepository;
     }
 
     @Override
@@ -75,7 +81,7 @@ public class ActionProcessor implements MessageProcessor {
             var toUnit = data.substring(ButtonAction.TO.toString().length() + 1);
             stateService.reset(chatId);
             var query = context.number() + " " + context.fromUnit() + " to " + toUnit;
-            return new BotReply(processor.processBotResponse(query));
+            return new BotReply(processor.processBotResponse(chatId, query));
         }
         if (data.equals(ButtonAction.CUSTOM_CONVERSIONS.toString())) {
             stateService.reset(chatId);
@@ -131,6 +137,35 @@ public class ActionProcessor implements MessageProcessor {
                         keyboardFactory.createCustomConversionMenu());
             } catch (SQLException e) {
                 return new BotReply(ERROR_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+        }
+        if (data.equals(ButtonAction.HISTORY.toString())) {
+            stateService.reset(chatId);
+            try {
+                int total = historyRepository.count(chatId);
+                if (total == 0) {
+                    return new BotReply("История конвертаций пока пуста.", 
+                        keyboardFactory.createMainMenu());
+                }
+
+                var history = historyRepository.findPage(chatId, 5, 0);
+
+                StringBuilder message = new StringBuilder();
+                message.append("Ваша история переводов (страница 1 из ")
+                        .append((total + 4) / 5)
+                        .append("):\n\n");
+
+                for (var entry : history) {
+                    message.append(entry.input())
+                            .append(" → ")
+                            .append(entry.result())
+                            .append("\n");
+                }
+
+                return new BotReply(message.toString(), keyboardFactory.createMainMenu());
+
+            } catch (SQLException e) {
+                return new BotReply(ERROR_TEXT, keyboardFactory.createMainMenu());
             }
         }
         return new BotReply(STALE_BUTTON_TEXT);

@@ -31,6 +31,7 @@ public record KeyboardButton(
             case DELETE_CUSTOM_CONV -> "DELETE_CUSTOM_CONV:" + value;
             case CONVERT_CUSTOM -> "CONVERT_CUSTOM:" + value;
             case DELETE_CUSTOM -> "DELETE_CUSTOM";
+            case HISTORY -> "HISTORY";
         };
     }
  }

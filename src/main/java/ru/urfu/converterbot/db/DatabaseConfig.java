@@ -1,4 +1,4 @@
-package ru.urfu.converterbot.keyboard.service;
+package ru.urfu.converterbot.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
