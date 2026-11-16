@@ -9,9 +9,6 @@ import ru.urfu.converterbot.service.models.fakeClasses.FakeHttpClient;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeHttpResponse;
 
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.http.HttpRequest;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,16 +24,6 @@ class CurrencyRateServiceTest {
               {"date":"2026-10-24","base":"USD","quote":"RUB","rate":90.5},
               {"date":"2026-10-24","base":"USD","quote":"CNY","rate":7.25},
               {"date":"2026-10-24","base":"USD","quote":"KZT","rate":500.0}
-            ]
-            """;
-
-    private static final String FRANKFURTER_JSON_RUB_BASE = """
-            [
-              {"date":"2026-10-24","base":"RUB","quote":"RUB","rate":1.0},
-              {"date":"2026-10-24","base":"RUB","quote":"USD","rate":0.011},
-              {"date":"2026-10-24","base":"RUB","quote":"EUR","rate":0.010},
-              {"date":"2026-10-24","base":"RUB","quote":"CNY","rate":0.080},
-              {"date":"2026-10-24","base":"RUB","quote":"KZT","rate":5.52}
             ]
             """;
 

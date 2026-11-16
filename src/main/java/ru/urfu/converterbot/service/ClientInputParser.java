@@ -5,7 +5,6 @@ import ru.urfu.converterbot.service.models.*;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
