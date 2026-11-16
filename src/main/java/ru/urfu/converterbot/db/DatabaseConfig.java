@@ -12,11 +12,12 @@ public class DatabaseConfig {
     private static final String JDBC_USER = "converter";
     private static final String JDBC_PASSWORD = "";
 
-    /** Создает таблицы, если они ещё не существует */
+    /** Подключается к базе данных */
     public Connection getConnection() throws SQLException {
         return DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
     }
 
+    /** Создает таблицы, если они ещё не существуют */
     public void initSchema() throws  SQLException {
         try (
                 var connection = getConnection();

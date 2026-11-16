@@ -45,6 +45,8 @@ public class BotService implements BotResponseProcessor {
      * @param weightConverter конвертер массы
      * @param temperatureConverter конвертер температуры
      * @param parser парсер ввода пользователя
+     * @param messageFormatter форматтер сообщений
+     * @param historyRepository источник информации о переводах
      */
     public BotService(@NotNull CurrencyConverter currencyConverter,
                             @NotNull LengthConverter lengthConverter,

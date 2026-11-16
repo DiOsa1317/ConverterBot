@@ -70,6 +70,7 @@ public class KeyboardFactory {
         return toView(buttons, false);
     }
 
+    /** Создает меню для работы с кастомными переводами*/
     @NotNull
     public KeyboardView createCustomConversionMenu() {
         return toView(List.of(
@@ -115,6 +116,8 @@ public class KeyboardFactory {
         return new KeyboardView(rows);
     }
 
+    /** Создает клавиатуру из кастомных конверсий пользователей (
+     * @param conversions )*/
     @NotNull
     public KeyboardView createCustomConversionList(List<CustomConversion> conversions) {
         var buttons = new ArrayList<KeyboardButton>();
@@ -125,6 +128,8 @@ public class KeyboardFactory {
         return toView(buttons, false);
     }
 
+    /** Создает клавиатуру для удаления кастомных конверсий пользователей (
+     * @param conversions )*/
     @NotNull
     public KeyboardView createCustomConversionDeleteList(List<CustomConversion> conversions) {
         var buttons = new ArrayList<KeyboardButton>();
