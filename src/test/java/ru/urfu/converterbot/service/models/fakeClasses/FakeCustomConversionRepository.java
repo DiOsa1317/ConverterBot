@@ -40,9 +40,4 @@ public class FakeCustomConversionRepository extends CustomConversionRepository {
     public List<String> findAllUnitNames(long chatId) throws SQLException {
         return List.of();
     }
-
-    @Override
-    public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) throws SQLException {
-        return false;
-    }
 }
