@@ -27,7 +27,6 @@ public class DatabaseConfig {
                     CREATE TABLE IF NOT EXISTS custom_conversions (
                     id BIGINT AUTO_INCREMENT PRIMARY KEY,
                     chat_id BIGINT NOT NULL,
-                    group_code VARCHAR(64) NOT NULL,
                     from_unit VARCHAR(64) NOT NULL,
                     to_unit VARCHAR(64) NOT NULL,
                     rate DECIMAL(20, 10) NOT NULL,

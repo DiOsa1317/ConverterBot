@@ -7,12 +7,10 @@ import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotMessageFormatter;
-import ru.urfu.converterbot.service.CustomConversionRepository;
 import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,32 +30,8 @@ class TextProcessorTest {
     @BeforeEach
     void setUp() {
         stateService = new ConversionStateService();
-        var repo = new CustomConversionRepository(null) {
-            @Override
-            public void save(CustomConversion conversion) {}
-            @Override
-            public Optional<CustomConversion> findByChatidFromAndAndTo(long chatId, String from, String to) {
-                return Optional.empty();
-            }
-            @Override
-            public List<CustomConversion> findAllOutgoing(long chatId) {
-                return List.of();
-            }
-            @Override
-            public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) {
-                return false;
-            }
-            @Override
-            public List<String> findAllUnitNames(long chatId) {
-                return List.of();
-            }
-            @Override
-            public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) {
-                return false;
-            }
-        };
         processor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter(), repo);
+                msg -> "converted:" + msg, new BotMessageFormatter(), new FakeCustomConversionRepository());
     }
 
     /**
@@ -116,5 +90,26 @@ class TextProcessorTest {
         var reply = processor.handle(1L, "abc");
         assertTrue(reply.text().contains("Неверный формат числа"));
         assertNull(reply.keyboard());
+    }
+
+    @Test
+    @DisplayName("Конвертация по прямому кастомному курсу через кнопку")
+    void customConvertNumber() {
+        var repo = new FakeCustomConversionRepository() {
+            @Override
+            public Optional<CustomConversion> findByChatIdFromAndAndTo(long chatId, String from, String to) {
+                if ("cookie".equals(from) && "calorie".equals(to)) {
+                    return Optional.of(new CustomConversion("cookie", "calorie", new BigDecimal("300"), chatId));
+                }
+                return Optional.empty();
+            }
+        };
+        var customProcessor = new TextProcessor(stateService, new KeyboardFactory(),
+                msg -> "converted:" + msg, new BotMessageFormatter(), repo);
+        stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
+                null, "cookie", "calorie", null));
+        var reply = customProcessor.handle(1L, "10");
+        assertTrue(reply.text().contains("10 cookie = 3000.0000000000 calorie"));
+        assertNotNull(reply.keyboard());
     }
 }

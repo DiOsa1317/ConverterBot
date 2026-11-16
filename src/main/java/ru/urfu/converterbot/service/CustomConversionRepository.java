@@ -8,37 +8,71 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**Класс, отвечающий за доступ к данным о кастомных переводах*/
 public class CustomConversionRepository {
     private final DatabaseConfig dbConfig;
 
+    /** Конструктор
+     * @param dbConfig - связь с базой данных
+     * */
     public CustomConversionRepository(DatabaseConfig dbConfig) {
         this.dbConfig = dbConfig;
     }
 
-    public void save(CustomConversion conversion) throws SQLException {
-        var sql = """
-                MERGE INTO custom_conversions (chat_id, from_unit, to_unit, rate, created_at)
-                KEY (chat_id, from_unit, to_unit)
-                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-                """;
-        try (
-                var connection = dbConfig.getConnection();
-                var preparedStatement = connection.prepareStatement(sql)
-        ) {
-            preparedStatement.setLong(1, conversion.chatId());
-            preparedStatement.setString(2, conversion.fromUnit());
-            preparedStatement.setString(3, conversion.toUnit());
-            preparedStatement.setBigDecimal(4, conversion.rate());
-            preparedStatement.executeUpdate();
+    /** Метод сохранения данных о новом кастомном переводе или обновление данных о существующем
+     * @param conversion данные о кастомном переводе
+     * @throws SQLException ошибка при взаимодействии с базой данных
+     * */
+    public void saveOrUpdate(CustomConversion conversion) throws SQLException {
+        String checkSql = "SELECT 1 FROM custom_conversions WHERE chat_id = ? AND from_unit = ? AND to_unit = ?";
+        String insertSql = """
+            INSERT INTO custom_conversions (chat_id, from_unit, to_unit, rate, created_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+            """;
+        String updateSql = """
+            UPDATE custom_conversions SET rate = ?, created_at = CURRENT_TIMESTAMP
+            WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
+            """;
+        try (var connection = dbConfig.getConnection()) {
+            try (var ps = connection.prepareStatement(checkSql)) {
+                ps.setLong(1, conversion.chatId());
+                ps.setString(2, conversion.fromUnit());
+                ps.setString(3, conversion.toUnit());
+                try (var rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        try (var ups = connection.prepareStatement(updateSql)) {
+                            ups.setBigDecimal(1, conversion.rate());
+                            ups.setLong(2, conversion.chatId());
+                            ups.setString(3, conversion.fromUnit());
+                            ups.setString(4, conversion.toUnit());
+                            ups.executeUpdate();
+                        }
+                        return;
+                    }
+                }
+            }
+            try (var ps = connection.prepareStatement(insertSql)) {
+                ps.setLong(1, conversion.chatId());
+                ps.setString(2, conversion.fromUnit());
+                ps.setString(3, conversion.toUnit());
+                ps.setBigDecimal(4, conversion.rate());
+                ps.executeUpdate();
+            }
         }
     }
 
-    public Optional<CustomConversion> findByChatidFromAndAndTo(long chatId, String from, String to)
+    /** Метод поиска кастомного перевода пользователя
+     * @param chatId id чата с пользователем
+     * @param from название кастомной единицы (из чего переводим)
+     * @param to название кастомной единицы (куда переводим)
+     * @throws SQLException ошибка при взаимодействии с базой данных
+     * */
+    public Optional<CustomConversion> findByChatIdFromAndAndTo(long chatId, String from, String to)
     throws SQLException {
         var sql = "SELECT from_unit, to_unit, rate FROM custom_conversions WHERE chat_id = ? AND from_unit = ? AND to_unit = ?";
         try(
                 var connection = dbConfig.getConnection();
-                var preparedStatement = connection.prepareStatement(sql);
+                var preparedStatement = connection.prepareStatement(sql)
                 ) {
             preparedStatement.setLong(1, chatId);
             preparedStatement.setString(2, from);
@@ -57,6 +91,10 @@ public class CustomConversionRepository {
         }
     }
 
+    /** Метод поиска всех кастомных переводов пользователя
+     * @param chatId id чата с пользователем
+     * @throws SQLException ошибка при взаимодействии с базой данных
+     * */
     public List<CustomConversion> findAllOutgoing(long chatId) throws SQLException {
         var sql = "SELECT from_unit, to_unit, rate FROM custom_conversions WHERE chat_id = ? ORDER BY from_unit, to_unit";
         List<CustomConversion> conversionsByIdList = new ArrayList<>();
@@ -79,6 +117,12 @@ public class CustomConversionRepository {
         return conversionsByIdList;
     }
 
+    /** Метод удаления кастомного перевода пользователя
+     * @param chatId id чата с пользователем
+     * @param from название кастомной единицы (из чего переводим)
+     * @param to название кастомной единицы (куда переводим)
+     * @throws SQLException ошибка при взаимодействии с базой данных
+     * */
     public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) throws SQLException {
         var sql = "DELETE FROM custom_conversions WHERE chat_id = ? AND from_unit = ? AND to_unit = ?";
         try (
@@ -92,6 +136,10 @@ public class CustomConversionRepository {
         }
     }
 
+    /** Метод поиска всех названий кастомных переводов пользователя
+     * @param chatId id чата с пользователем
+     * @throws SQLException ошибка при взаимодействии с базой данных
+     * */
     public List<String> findAllUnitNames(long chatId) throws SQLException {
         var sql = """
                 SELECT DISTINCT from_unit AS unit FROM custom_conversions WHERE chat_id = ?
@@ -110,10 +158,6 @@ public class CustomConversionRepository {
             }
         }
         return names;
-    }
-
-    public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) throws SQLException {
-        return findByChatidFromAndAndTo(chatId, from, to).isPresent();
     }
 
 }

@@ -97,6 +97,28 @@ public class ActionProcessor implements MessageProcessor {
                 return new BotReply(ERROR_TEXT, keyboardFactory.createCustomConversionMenu());
             }
         }
+        if (data.equals(ButtonAction.DELETE_CUSTOM.toString())) {
+            try {
+                var list = customConversionRepository.findAllOutgoing(chatId);
+                if (list.isEmpty()) {
+                    return new BotReply(EMPTY_LIST_TEXT, keyboardFactory.createCustomConversionMenu());
+                }
+                return new BotReply("Выберите конверсию для удаления:",
+                        keyboardFactory.createCustomConversionDeleteList(list));
+            } catch (SQLException e) {
+                return new BotReply(ERROR_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+        }
+        if (data.startsWith(ButtonAction.CONVERT_CUSTOM + ":")) {
+            var pair = data.substring(ButtonAction.CONVERT_CUSTOM.toString().length() + 1);
+            var parts = pair.split(":");
+            if (parts.length != 2) {
+                return new BotReply(WRONG_PAIR_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+            stateService.updateContext(chatId, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
+                    null, parts[0], parts[1], null));
+            return new BotReply("Введите число для конвертации " + parts[0] + " в " + parts[1] + ":");
+        }
         if (data.startsWith(ButtonAction.DELETE_CUSTOM_CONV + ":")) {
             var pair = data.substring(ButtonAction.DELETE_CUSTOM_CONV.toString().length() + 1);
             var parts = pair.split(":");
@@ -146,6 +168,7 @@ public class ActionProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_FROM -> "Введите название исходной единицы (латиница и _):";
             case AWAITING_CUSTOM_TO -> "Введите название целевой единицы (латиница и _):";
             case AWAITING_CUSTOM_RATE -> "Введите курс конверсии (число больше 0):";
+            case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
             case CUSTOM_CONVERSIONS_MENU -> CUSTOM_CONVERSION_MENU_TEXT;
         };
     }

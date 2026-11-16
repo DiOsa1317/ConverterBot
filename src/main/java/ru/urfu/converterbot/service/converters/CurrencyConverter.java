@@ -49,14 +49,14 @@ public class CurrencyConverter implements QuantityConverter {
             var customTo = (CustomQuantityType) to;
             long chatId = customFrom.chatId();
             try {
-                var conv = conversionRepository.findByChatidFromAndAndTo(
+                var conv = conversionRepository.findByChatIdFromAndAndTo(
                         chatId, customFrom.name(), customTo.name());
                 if (conv.isPresent()) {
                     return value.multiply(conv.get().rate())
                             .setScale(10, RoundingMode.HALF_UP);
                 }
                 // Пробуем обратное ребро
-                var reverse = conversionRepository.findByChatidFromAndAndTo(
+                var reverse = conversionRepository.findByChatIdFromAndAndTo(
                         chatId, customTo.name(), customFrom.name());
                 if (reverse.isPresent()) {
                     return value.divide(reverse.get().rate(), 10, RoundingMode.HALF_UP);

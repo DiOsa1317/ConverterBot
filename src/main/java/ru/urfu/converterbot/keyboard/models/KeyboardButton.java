@@ -29,6 +29,8 @@ public record KeyboardButton(
             case ADD_CUSTOM_CONV -> "ADD_CUSTOM_CONV";
             case LIST_CUSTOM_CONV -> "LIST_CUSTOM_CONV";
             case DELETE_CUSTOM_CONV -> "DELETE_CUSTOM_CONV:" + value;
+            case CONVERT_CUSTOM -> "CONVERT_CUSTOM:" + value;
+            case DELETE_CUSTOM -> "DELETE_CUSTOM";
         };
     }
  }

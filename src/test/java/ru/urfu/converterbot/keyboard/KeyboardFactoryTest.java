@@ -38,7 +38,7 @@ class KeyboardFactoryTest {
         var view = factory.createSourceUnitKeyboard("LENGTH");
         var labels = view.rows().stream().flatMap(r -> r.buttons().stream())
                 .map(KeyboardButton::label).toList();
-        assertEquals(List.of("m", "km", "mi", "cm", "in", "Меню"), labels);
+        assertEquals(List.of("m", "km", "mi", "cm", "in", "В главное меню"), labels);
     }
 
     /**
@@ -52,7 +52,7 @@ class KeyboardFactoryTest {
                 .map(KeyboardButton::label).toList();
         assertFalse(labels.contains("km"));
         assertTrue(labels.contains("m"));
-        assertTrue(labels.contains("Меню"));
+        assertTrue(labels.contains("В главное меню"));
     }
 
     /**

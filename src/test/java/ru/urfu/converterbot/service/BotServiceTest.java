@@ -15,13 +15,7 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
-import ru.urfu.converterbot.service.CustomConversionRepository;
-import ru.urfu.converterbot.service.models.CustomConversion;
-
-import java.math.BigDecimal;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -40,30 +34,7 @@ public class BotServiceTest {
      */
     @BeforeEach
     void setUp() {
-        var repo = new CustomConversionRepository(null) {
-            @Override
-            public void save(CustomConversion conversion) {}
-            @Override
-            public Optional<CustomConversion> findByChatidFromAndAndTo(long chatId, String from, String to) {
-                return Optional.empty();
-            }
-            @Override
-            public List<CustomConversion> findAllOutgoing(long chatId) {
-                return List.of();
-            }
-            @Override
-            public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) {
-                return false;
-            }
-            @Override
-            public List<String> findAllUnitNames(long chatId) {
-                return List.of();
-            }
-            @Override
-            public boolean existsByChatIdAndFromAndTo(long chatId, String from, String to) {
-                return false;
-            }
-        };
+        var repo = new FakeCustomConversionRepository();
         var parser = new ClientInputParser(repo);
         var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());

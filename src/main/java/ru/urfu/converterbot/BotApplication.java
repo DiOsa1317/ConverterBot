@@ -74,6 +74,7 @@ public class BotApplication {
      * Создает экземпляр BotService
      *
      * @param messageFormatter хранитель информационных сообщений
+     * @param customConversionRepository отвечает за доступ к кастомным переводам
      */
     private @NotNull BotService getBotService(MessageFormatter messageFormatter,
                                               CustomConversionRepository customConversionRepository) {

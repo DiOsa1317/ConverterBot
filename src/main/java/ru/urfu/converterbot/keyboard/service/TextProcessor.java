@@ -1,9 +1,12 @@
 package ru.urfu.converterbot.keyboard.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.SQLException;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,6 +24,8 @@ import ru.urfu.converterbot.service.models.CustomConversion;
  * Обработчик текстовых сообщений пользователя
  */
 public class TextProcessor implements MessageProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(TextProcessor.class);
 
     private static final String MENU_COMMAND = "/menu";
     private static final String START_COMMAND = "/start";
@@ -107,8 +112,12 @@ public class TextProcessor implements MessageProcessor {
             return handleCustomRate(chatId, context, text);
         }
 
+        if (context.state() == State.AWAITING_CUSTOM_CONVERT_NUMBER) {
+            return handleCustomConvertNumber(chatId, context, text);
+        }
+
         return new BotReply(
-                processor.processBotResponse(chatId, text) + MENU_HINT_TEXT,
+                processor.processBotResponse(chatId, text) + System.lineSeparator() + MENU_HINT_TEXT,
                 keyboardFactory.createMainMenu()
         );
     }
@@ -169,12 +178,49 @@ public class TextProcessor implements MessageProcessor {
         var to = context.fromUnit();
         var conversion = new CustomConversion(from, to, rate, chatId);
         try {
-            customConversionRepository.save(conversion);
+            customConversionRepository.saveOrUpdate(conversion);
         } catch (SQLException e) {
+            logger.error("Не удалось сохранить кастомную конверсию: from={}, to={}, rate={}, chatId={}",
+                    from, to, rate, chatId, e);
             return new BotReply(ERROR_MESSAGE);
         }
         stateService.reset(chatId);
-        return new BotReply("Готово! 1 " + from + " = " + rate + " " + to, keyboardFactory.createMainMenu());
+        return new BotReply("Готово! 1 " + from + " = " + rate + " " + to + System.lineSeparator()
+                + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
+    }
+
+    private BotReply handleCustomConvertNumber(long chatId, ChatContext context, String text) {
+        var valueStr = text.trim().replace(',', '.');
+        BigDecimal value;
+        try {
+            value = new BigDecimal(valueStr);
+        } catch (NumberFormatException e) {
+            return new BotReply(WRONG_MESSAGE_FORMAT_TEXT);
+        }
+        var from = context.number();
+        var to = context.fromUnit();
+
+        BigDecimal result;
+        try {
+            var conv = customConversionRepository.findByChatIdFromAndAndTo(chatId, from, to);
+            if (conv.isPresent()) {
+                result = value.multiply(conv.get().rate()).setScale(10, RoundingMode.HALF_UP);
+            } else {
+                var reverse = customConversionRepository.findByChatIdFromAndAndTo(chatId, to, from);
+                if (reverse.isPresent()) {
+                    result = value.divide(reverse.get().rate(), 10, RoundingMode.HALF_UP);
+                } else {
+                    return new BotReply("Нет прямого курса между " + from + " и " + to + ".", keyboardFactory.createMainMenu());
+                }
+            }
+        } catch (SQLException e) {
+            logger.error("Ошибка при кастомной конвертации: from={}, to={}, chatId={}", from, to, chatId, e);
+            return new BotReply(ERROR_MESSAGE);
+        }
+
+        stateService.reset(chatId);
+        return new BotReply(value + " " + from + " = " + result + " " + to + System.lineSeparator()
+                + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
     }
 
     /**
@@ -235,6 +281,7 @@ public class TextProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_FROM -> "Введите название исходной единицы (латиница и _):";
             case AWAITING_CUSTOM_TO -> "Введите название целевой единицы (латиница и _):";
             case AWAITING_CUSTOM_RATE -> "Введите курс конверсии (число больше 0):";
+            case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
             case CUSTOM_CONVERSIONS_MENU -> "Меню кастомных конверсий";
         };
     }

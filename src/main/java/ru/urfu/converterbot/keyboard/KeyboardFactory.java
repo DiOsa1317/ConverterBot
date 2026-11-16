@@ -74,7 +74,7 @@ public class KeyboardFactory {
         return toView(List.of(
                 new KeyboardButton("Добавить конверсию", ButtonAction.ADD_CUSTOM_CONV, ""),
                 new KeyboardButton("Мои конверсии", ButtonAction.LIST_CUSTOM_CONV, ""),
-                new KeyboardButton("В главное меню", ButtonAction.MENU, "")
+                new KeyboardButton("Удалить конверсию", ButtonAction.DELETE_CUSTOM, "")
                 ), false);
     }
 
@@ -83,9 +83,18 @@ public class KeyboardFactory {
         var buttons = new ArrayList<KeyboardButton>();
         for (var conversion : conversions) {
             buttons.add(new KeyboardButton(conversion.fromUnit() + " -> " + conversion.toUnit(),
+                    ButtonAction.CONVERT_CUSTOM, conversion.fromUnit() + ":" + conversion.toUnit()));
+        }
+        return toView(buttons, false);
+    }
+
+    @NotNull
+    public KeyboardView createCustomConversionDeleteList(List<CustomConversion> conversions) {
+        var buttons = new ArrayList<KeyboardButton>();
+        for (var conversion : conversions) {
+            buttons.add(new KeyboardButton("Удалить: " + conversion.fromUnit() + " -> " + conversion.toUnit(),
                     ButtonAction.DELETE_CUSTOM_CONV, conversion.fromUnit() + ":" + conversion.toUnit()));
         }
-        buttons.add(new KeyboardButton("В главное меню", ButtonAction.MENU, ""));
         return toView(buttons, false);
     }
 
@@ -140,7 +149,7 @@ public class KeyboardFactory {
 
         if (!isMain) {
             rows.add(new KeyboardRow(List.of(
-                    new KeyboardButton("Меню", ButtonAction.MENU, "")
+                    new KeyboardButton("В главное меню", ButtonAction.MENU, "")
             )));
         }
 
