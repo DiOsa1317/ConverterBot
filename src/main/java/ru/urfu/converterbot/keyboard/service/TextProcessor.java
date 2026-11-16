@@ -3,6 +3,7 @@ package ru.urfu.converterbot.keyboard.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -16,9 +17,10 @@ import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.ChatContextBuilder;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
-import ru.urfu.converterbot.service.CustomConversionRepository;
 import ru.urfu.converterbot.service.MessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 /**
  * Обработчик текстовых сообщений пользователя
@@ -41,7 +43,11 @@ public class TextProcessor implements MessageProcessor {
             "Название должно содержать только латинские буквы и _. Попробуйте ещё раз.";
     private static final String WRONG_MESSAGE_FORMAT_TEXT = "Ошибка формата. Введите число, например, 250 или 50.5.";
     private static final String COURSE_SHOULD_BE_GREATER_THAN_ZERO = "Курс должен быть больше 0.";
-    private static final String ERROR_MESSAGE = "Произошла ошибка. Пожалуйста, попробуйте позже.";
+    private static final String ERROR_TEXT = "Произошла ошибка. Пожалуйста, попробуйте позже.";
+
+    private static final String HISTORY_COMMAND = "/history";
+    private static final DateTimeFormatter HISTORY_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm");
 
     private final ConversionStateService stateService;
 
@@ -52,6 +58,7 @@ public class TextProcessor implements MessageProcessor {
     private final MessageFormatter formatter;
 
     private final CustomConversionRepository customConversionRepository;
+    private final ConversionHistoryRepository historyRepository;
 
     /**
      * Создаёт сервис диалога.
@@ -64,12 +71,14 @@ public class TextProcessor implements MessageProcessor {
                          @NotNull KeyboardFactory keyboardFactory,
                          @NotNull BotResponseProcessor processor,
                          @NotNull MessageFormatter messageFormatter,
-                         @NotNull CustomConversionRepository customConversionRepository) {
+                         @NotNull CustomConversionRepository customConversionRepository,
+                         @NotNull ConversionHistoryRepository historyRepository) {
         this.stateService = stateService;
         this.keyboardFactory = keyboardFactory;
         this.processor = processor;
         this.formatter = messageFormatter;
         this.customConversionRepository = customConversionRepository;
+        this.historyRepository = historyRepository;
     }
 
     @Override
@@ -94,6 +103,11 @@ public class TextProcessor implements MessageProcessor {
         if (text.equalsIgnoreCase(HELP_COMMAND)) {
             stateService.reset(chatId);
             return new BotReply(formatter.help() + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
+        }
+
+        if (text.equalsIgnoreCase(HISTORY_COMMAND)) {
+            stateService.reset(chatId);
+            return showHistoryPage(chatId, 0);
         }
 
         if (context.state() == State.AWAITING_NUMBER) {
@@ -182,7 +196,7 @@ public class TextProcessor implements MessageProcessor {
         } catch (SQLException e) {
             logger.error("Не удалось сохранить кастомную конверсию: from={}, to={}, rate={}, chatId={}",
                     from, to, rate, chatId, e);
-            return new BotReply(ERROR_MESSAGE);
+            return new BotReply(ERROR_TEXT);
         }
         stateService.reset(chatId);
         return new BotReply("Готово! 1 " + from + " = " + rate + " " + to + System.lineSeparator()
@@ -215,7 +229,7 @@ public class TextProcessor implements MessageProcessor {
             }
         } catch (SQLException e) {
             logger.error("Ошибка при кастомной конвертации: from={}, to={}, chatId={}", from, to, chatId, e);
-            return new BotReply(ERROR_MESSAGE);
+            return new BotReply(ERROR_TEXT);
         }
 
         stateService.reset(chatId);
@@ -284,5 +298,63 @@ public class TextProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
             case CUSTOM_CONVERSIONS_MENU -> "Меню кастомных конверсий";
         };
+    }
+
+    /**
+     * Формирует страницу истории конвертаций.
+     *
+     * @param chatId идентификатор чата
+     * @param page номер страницы, начиная с нуля
+     * @return сообщение с историей и клавиатурой
+     */
+    private BotReply showHistoryPage(long chatId, int page) {
+        try {
+            int total = historyRepository.count(chatId);
+            if (total == 0) {
+                return new BotReply("История конвертаций пока пуста.",
+                        keyboardFactory.createMainMenu());
+            }
+
+            int pageSize = 5;
+            int totalPages = (total + pageSize - 1) / pageSize;
+            if (page < 0 || page >= totalPages) {
+                return new BotReply("Такой страницы истории нет.", keyboardFactory.createMainMenu());
+            }
+
+            var history = historyRepository.findPage(
+                    chatId,
+                    pageSize,
+                    page * pageSize
+            );
+            StringBuilder message = new StringBuilder();
+
+            message.append("Ваша история переводов (страница ")
+                    .append(page + 1)
+                    .append(" из ")
+                    .append(totalPages)
+                    .append("):\n\n");
+
+            int number = page * pageSize + 1;
+
+            for (var entry : history) {
+                message.append(number++)
+                        .append(". ")
+                        .append(entry.input())
+                        .append(" → ")
+                        .append(entry.result())
+                        .append("   ")
+                        .append("(" + entry.createdAt().format(HISTORY_DATE_FORMAT) + ")")
+                        .append("\n");
+            }
+
+            return new BotReply(
+                    message.toString(),
+                    keyboardFactory.createHistoryKeyboard(page, totalPages)
+            );
+
+        } catch (SQLException exception) {
+            logger.error("Не удалось получить историю конвертаций", exception);
+            return new BotReply(ERROR_TEXT, keyboardFactory.createMainMenu());
+        }
     }
 }

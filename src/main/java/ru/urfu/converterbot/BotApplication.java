@@ -2,10 +2,10 @@ package ru.urfu.converterbot;
 
 import org.jetbrains.annotations.NotNull;
 import ru.urfu.converterbot.bots.TelegramBot;
+import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
 import ru.urfu.converterbot.keyboard.service.ConversionStateService;
-import ru.urfu.converterbot.keyboard.service.DatabaseConfig;
 import ru.urfu.converterbot.keyboard.service.TextProcessor;
 import ru.urfu.converterbot.keyboard.service.ActionProcessor;
 
@@ -18,6 +18,8 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -51,7 +53,8 @@ public class BotApplication {
             var dbConfig = new DatabaseConfig();
             dbConfig.initSchema();
             var customConversionRepository = new CustomConversionRepository(dbConfig);
-            var botService = getBotService(botMessageFormatter, customConversionRepository);
+            var historyRepository = new ConversionHistoryRepository(dbConfig);
+            var botService = getBotService(botMessageFormatter, customConversionRepository, historyRepository);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
@@ -59,9 +62,9 @@ public class BotApplication {
             var keyboardFactory = new KeyboardFactory();
             var renderer = new TelegramKeyboardRenderer();
             var textProcessor = new TextProcessor(stateService, keyboardFactory, botService,
-                    botMessageFormatter, customConversionRepository);
+                    botMessageFormatter, customConversionRepository, historyRepository);
             var actionProcessor = new ActionProcessor(stateService, keyboardFactory,
-                    botService, customConversionRepository);
+                    botService, customConversionRepository, historyRepository);
             var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, textProcessor, actionProcessor, renderer);
             telegramBot.start();
         } catch (Exception e) {
@@ -77,7 +80,8 @@ public class BotApplication {
      * @param customConversionRepository отвечает за доступ к кастомным переводам
      */
     private @NotNull BotService getBotService(MessageFormatter messageFormatter,
-                                              CustomConversionRepository customConversionRepository) {
+                                              CustomConversionRepository customConversionRepository,
+                                              ConversionHistoryRepository historyRepository) {
         var parser = new ClientInputParser(customConversionRepository);
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
@@ -93,6 +97,7 @@ public class BotApplication {
                 weightConverter,
                 temperatureConverter,
                 parser,
-                messageFormatter);
+                messageFormatter,
+                historyRepository);
     }
 }

@@ -28,7 +28,8 @@ public class KeyboardFactory {
                 new KeyboardButton("Температура", ButtonAction.TYPE, "TEMPERATURE"),
                 new KeyboardButton("Вес", ButtonAction.TYPE, "WEIGHT"),
                 new KeyboardButton("Длина", ButtonAction.TYPE, "LENGTH"),
-                new KeyboardButton("Мои конверсии", ButtonAction.CUSTOM_CONVERSIONS, "")
+                new KeyboardButton("Мои конверсии", ButtonAction.CUSTOM_CONVERSIONS, ""),
+                new KeyboardButton("История", ButtonAction.HISTORY, "")
         ), true);
     }
 
@@ -69,6 +70,7 @@ public class KeyboardFactory {
         return toView(buttons, false);
     }
 
+    /** Создает меню для работы с кастомными переводами*/
     @NotNull
     public KeyboardView createCustomConversionMenu() {
         return toView(List.of(
@@ -78,6 +80,44 @@ public class KeyboardFactory {
                 ), false);
     }
 
+    /**
+     * Создаёт клавиатуру для страницы истории.
+     *
+     * @param currentPage текущая страница, начиная с 0
+     * @param totalPages общее количество страниц
+     */
+    @NotNull
+    public KeyboardView createHistoryKeyboard(int currentPage, int totalPages) {
+        var rows = new ArrayList<KeyboardRow>();
+        var navigationButtons = new ArrayList<KeyboardButton>();
+
+        if (currentPage > 0) {
+            navigationButtons.add(new KeyboardButton(
+                    "Назад", ButtonAction.HISTORY_PAGE,
+                    String.valueOf(currentPage - 1)
+            ));
+        }
+        if (currentPage < totalPages - 1) {
+            navigationButtons.add(new KeyboardButton(
+                    "Вперёд", ButtonAction.HISTORY_PAGE,
+                    String.valueOf(currentPage + 1)
+            ));
+        }
+        if (!navigationButtons.isEmpty()) {
+            rows.add(new KeyboardRow(navigationButtons));
+        }
+
+        rows.add(new KeyboardRow(List.of(
+                new KeyboardButton("Очистить историю", ButtonAction.HISTORY_CLEAR, "")
+        )));
+        rows.add(new KeyboardRow(List.of(
+                new KeyboardButton("В главное меню", ButtonAction.MENU, "")
+        )));
+        return new KeyboardView(rows);
+    }
+
+    /** Создает клавиатуру из кастомных конверсий пользователей (
+     * @param conversions )*/
     @NotNull
     public KeyboardView createCustomConversionList(List<CustomConversion> conversions) {
         var buttons = new ArrayList<KeyboardButton>();
@@ -88,6 +128,8 @@ public class KeyboardFactory {
         return toView(buttons, false);
     }
 
+    /** Создает клавиатуру для удаления кастомных конверсий пользователей (
+     * @param conversions )*/
     @NotNull
     public KeyboardView createCustomConversionDeleteList(List<CustomConversion> conversions) {
         var buttons = new ArrayList<KeyboardButton>();

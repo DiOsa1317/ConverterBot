@@ -4,7 +4,7 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.models.CurrencyType;
 import ru.urfu.converterbot.service.models.CustomQuantityType;
 import ru.urfu.converterbot.service.models.QuantityType;
-import ru.urfu.converterbot.service.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 
 import java.math.BigDecimal;

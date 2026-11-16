@@ -1,7 +1,7 @@
 package ru.urfu.converterbot.service.models.fakeClasses;
 
-import ru.urfu.converterbot.service.CustomConversionRepository;
 import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import java.sql.SQLException;
 import java.util.List;

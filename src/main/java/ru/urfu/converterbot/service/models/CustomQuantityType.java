@@ -1,6 +1,5 @@
 package ru.urfu.converterbot.service.models;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 /**

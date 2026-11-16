@@ -7,6 +7,7 @@ import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,7 +26,8 @@ class ActionProcessorTest {
     @BeforeEach
     void setUp() {
         stateService = new ConversionStateService();
-        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg, new FakeCustomConversionRepository());
+        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg, 
+            new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
     }
 
     /**
@@ -84,5 +86,18 @@ class ActionProcessorTest {
         var reply = processor.handle(1L, "MENU");
         assertTrue(reply.text().contains("Выберите тип перевода"));
         assertNotNull(reply.keyboard());
+    }
+
+    /**
+     * Проверяет пустую историю переводов
+     */
+    @Test
+    @DisplayName("HISTORY -> пустая история")
+    void history() {
+        var reply = processor.handle(1L, "HISTORY");
+
+        assertTrue(reply.text().contains("История"));
+        assertNotNull(reply.keyboard());
+        assertEquals(State.IDLE, stateService.getChatContext(1L).state());
     }
 }

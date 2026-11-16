@@ -2,10 +2,10 @@ package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.util.List;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
