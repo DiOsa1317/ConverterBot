@@ -32,6 +32,8 @@ public record KeyboardButton(
             case CONVERT_CUSTOM -> "CONVERT_CUSTOM:" + value;
             case DELETE_CUSTOM -> "DELETE_CUSTOM";
             case HISTORY -> "HISTORY";
+            case HISTORY_PAGE -> "HISTORY_PAGE:" + value;
+            case HISTORY_CLEAR -> "HISTORY_CLEAR";
         };
     }
  }

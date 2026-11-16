@@ -9,7 +9,6 @@ import ru.urfu.converterbot.keyboard.models.*;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
-import ru.urfu.converterbot.service.models.ConversionHistory;
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
 
 import java.sql.SQLException;
@@ -141,29 +140,22 @@ public class ActionProcessor implements MessageProcessor {
         }
         if (data.equals(ButtonAction.HISTORY.toString())) {
             stateService.reset(chatId);
+            return showHistoryPage(chatId, 0);
+        }
+        if (data.startsWith("HISTORY_PAGE:")) {
             try {
-                int total = historyRepository.count(chatId);
-                if (total == 0) {
-                    return new BotReply("История конвертаций пока пуста.", 
+                int page = Integer.parseInt(data.substring("HISTORY_PAGE:".length()));
+                return showHistoryPage(chatId, page);
+            } catch (NumberFormatException e) {
+                return new BotReply("Некорректный номер страницы.",
                         keyboardFactory.createMainMenu());
-                }
-
-                var history = historyRepository.findPage(chatId, 5, 0);
-
-                StringBuilder message = new StringBuilder();
-                message.append("Ваша история переводов (страница 1 из ")
-                        .append((total + 4) / 5)
-                        .append("):\n\n");
-
-                for (var entry : history) {
-                    message.append(entry.input())
-                            .append(" → ")
-                            .append(entry.result())
-                            .append("\n");
-                }
-
-                return new BotReply(message.toString(), keyboardFactory.createMainMenu());
-
+            }
+        }
+        if (data.equals("HISTORY_CLEAR")) {
+            try {
+                historyRepository.deleteAll(chatId);
+                return new BotReply("История конвертаций очищена.",
+                        keyboardFactory.createMainMenu());
             } catch (SQLException e) {
                 return new BotReply(ERROR_TEXT, keyboardFactory.createMainMenu());
             }
@@ -206,5 +198,57 @@ public class ActionProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
             case CUSTOM_CONVERSIONS_MENU -> CUSTOM_CONVERSION_MENU_TEXT;
         };
+    }
+
+    /**
+     * Формирует страницу истории конвертаций.
+     *
+     * @param chatId идентификатор чата
+     * @param page номер страницы, начиная с нуля
+     * @return сообщение с историей и клавиатурой
+     */
+    private BotReply showHistoryPage(long chatId, int page) {
+        try {
+            int total = historyRepository.count(chatId);
+            if (total == 0) {
+                return new BotReply("История конвертаций пока пуста.",
+                        keyboardFactory.createMainMenu());
+            }
+
+            int pageSize = 5;
+            int totalPages = (total + pageSize - 1) / pageSize;
+            if (page < 0 || page >= totalPages) {
+                return new BotReply("Такой страницы истории нет.", keyboardFactory.createMainMenu());
+            }
+
+            var history = historyRepository.findPage(
+                    chatId,
+                    pageSize,
+                    page * pageSize
+            );
+            StringBuilder message = new StringBuilder();
+
+            message.append("Ваша история переводов (страница ")
+                    .append(page + 1)
+                    .append(" из ")
+                    .append(totalPages)
+                    .append("):\n\n");
+
+            int number = page * pageSize + 1;
+
+            for (var entry : history) {
+                message.append(number++)
+                        .append(". ")
+                        .append(entry.input())
+                        .append(" → ")
+                        .append(entry.result())
+                        .append("\n");
+            }
+
+            return new BotReply(message.toString(), keyboardFactory.createHistoryKeyboard(page, totalPages));
+
+        } catch (SQLException e) {
+            return new BotReply(ERROR_TEXT, keyboardFactory.createMainMenu());
+        }
     }
 }

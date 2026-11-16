@@ -79,6 +79,42 @@ public class KeyboardFactory {
                 ), false);
     }
 
+    /**
+     * Создаёт клавиатуру для страницы истории.
+     *
+     * @param currentPage текущая страница, начиная с 0
+     * @param totalPages общее количество страниц
+     */
+    @NotNull
+    public KeyboardView createHistoryKeyboard(int currentPage, int totalPages) {
+        var rows = new ArrayList<KeyboardRow>();
+        var navigationButtons = new ArrayList<KeyboardButton>();
+
+        if (currentPage > 0) {
+            navigationButtons.add(new KeyboardButton(
+                    "Назад", ButtonAction.HISTORY_PAGE,
+                    String.valueOf(currentPage - 1)
+            ));
+        }
+        if (currentPage < totalPages - 1) {
+            navigationButtons.add(new KeyboardButton(
+                    "Вперёд", ButtonAction.HISTORY_PAGE,
+                    String.valueOf(currentPage + 1)
+            ));
+        }
+        if (!navigationButtons.isEmpty()) {
+            rows.add(new KeyboardRow(navigationButtons));
+        }
+
+        rows.add(new KeyboardRow(List.of(
+                new KeyboardButton("Очистить историю", ButtonAction.HISTORY_CLEAR, "")
+        )));
+        rows.add(new KeyboardRow(List.of(
+                new KeyboardButton("В главное меню", ButtonAction.MENU, "")
+        )));
+        return new KeyboardView(rows);
+    }
+
     @NotNull
     public KeyboardView createCustomConversionList(List<CustomConversion> conversions) {
         var buttons = new ArrayList<KeyboardButton>();

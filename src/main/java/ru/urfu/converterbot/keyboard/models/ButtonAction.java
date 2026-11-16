@@ -12,5 +12,7 @@ public enum ButtonAction {
     DELETE_CUSTOM_CONV,
     CONVERT_CUSTOM,
     DELETE_CUSTOM,
-    HISTORY
+    HISTORY,
+    HISTORY_PAGE,
+    HISTORY_CLEAR
 }
