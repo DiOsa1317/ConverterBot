@@ -26,7 +26,7 @@ class ActionProcessorTest {
     @BeforeEach
     void setUp() {
         stateService = new ConversionStateService();
-        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg, 
+        processor = new ActionProcessor(stateService, new KeyboardFactory(), (chatId, msg) -> "RESULT:" + msg, 
             new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
     }
 

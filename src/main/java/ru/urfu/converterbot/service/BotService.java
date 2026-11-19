@@ -72,6 +72,7 @@ public class BotService implements BotResponseProcessor {
      * @return отформатированная строка ответа для отправки пользователю
      * @throws InvalidUserInputException если запрос на конвертацию не удалось распознать
      */
+    @Override
     public String processBotResponse(long chatId, @Nullable String messageText) {
         try {
             return dispatch(chatId, messageText);
@@ -82,19 +83,6 @@ public class BotService implements BotResponseProcessor {
             logger.error("Непредвиденная ошибка при обработке сообщения: ", exception);
             return messageFormatter.unexpectedError();
         }
-    }
-
-    /**
-     * Обрабатывает входящее текстовое сообщение и возвращает ответ бота.
-     *
-     * @param messageText текст сообщения от пользователя; может быть {@code null}
-     * @return отформатированная строка ответа для отправки пользователю
-     * @deprecated используйте {@link #processBotResponse(long, String)}
-     */
-    @Override
-    @Deprecated
-    public String processBotResponse(String messageText) {
-        return processBotResponse(0L, messageText);
     }
 
     /**

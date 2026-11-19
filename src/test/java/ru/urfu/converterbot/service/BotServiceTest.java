@@ -68,7 +68,7 @@ public class BotServiceTest {
     })
     @DisplayName("Форматирует результат четырьмя знаками после запятой")
     void shouldFormatResult(String request, String expected) {
-        assertEquals(expected, botService.processBotResponse(request));
+        assertEquals(expected, botService.processBotResponse(1, request));
     }
 
     /**
@@ -86,7 +86,7 @@ public class BotServiceTest {
     })
     @DisplayName("Возвращает справку по группе на её команду")
     void shouldReturnGroupHelp(String command, String expectedFragment) {
-        assertTrue(botService.processBotResponse(command).contains(expectedFragment));
+        assertTrue(botService.processBotResponse(1, command).contains(expectedFragment));
     }
 
     /**
@@ -105,7 +105,7 @@ public class BotServiceTest {
     })
     @DisplayName("Не выбрасывает исключение на некорректный ввод")
     void shouldNotThrowOnInvalidInput(String message) {
-        assertDoesNotThrow(() -> botService.processBotResponse(message));
+        assertDoesNotThrow(() -> botService.processBotResponse(1, message));
     }
 
     /**
@@ -114,6 +114,6 @@ public class BotServiceTest {
     @Test
     @DisplayName("Не выбрасывает исключение на null")
     void shouldNotThrowOnNull() {
-        assertDoesNotThrow(() -> botService.processBotResponse(null));
+        assertDoesNotThrow(() -> botService.processBotResponse(1, null));
     }
 }
