@@ -36,7 +36,7 @@ public class ClientInputParserTest {
     @DisplayName("Правильно извлек валюты из текста пользователя")
     void shouldParseValidMessagesWithCurrency() throws InvalidUserInputException {
         var result = clientInputParser
-                .parse("567 USD to CNY");
+                .parse( "567 USD to CNY", 1);
         assertEquals(CurrencyType.USD, result.from());
         assertEquals(CurrencyType.CNY, result.to());
     }
@@ -54,7 +54,7 @@ public class ClientInputParserTest {
     })
     @DisplayName("Считывает названия величин вне зависимости от регистра")
     void shouldParseValidMessagesWithLowercase(String input) throws InvalidUserInputException {
-        var result = clientInputParser.parse(input);
+        var result = clientInputParser.parse(input, 1);
         assertEquals(CurrencyType.EUR, result.from());
         assertEquals(CurrencyType.KZT, result.to());
     }
@@ -74,7 +74,7 @@ public class ClientInputParserTest {
     })
     @DisplayName("Выбрасывает исключение при неверном количестве слов")
     void shouldThrowExceptionOnWrongLength(String input) {
-        assertThrows(InvalidUserInputException.class, () -> clientInputParser.parse(input));
+        assertThrows(InvalidUserInputException.class, () -> clientInputParser.parse(input, 1));
     }
 
     /**
@@ -85,7 +85,7 @@ public class ClientInputParserTest {
     void shouldThrowExceptionOnInvalidCurrency() {
         String input = "10 BTC to USD";
 
-        assertThrows(InvalidUserInputException.class, () -> clientInputParser.parse(input));
+        assertThrows(InvalidUserInputException.class, () -> clientInputParser.parse(input, 1));
     }
 
     /**
@@ -95,7 +95,7 @@ public class ClientInputParserTest {
     @DisplayName("Выбрасывает исключение, если разделитель не равен to")
     void shouldThrowExceptionOnWrongSeparator() {
         assertThrows(InvalidUserInputException.class,
-                () -> clientInputParser.parse("10 USD XX EUR"));
+                () -> clientInputParser.parse("10 USD XX EUR", 1));
     }
 
     /**
@@ -106,7 +106,7 @@ public class ClientInputParserTest {
     @Test
     @DisplayName("Разбирает единицы физических величин")
     void shouldParsePhysicalUnits() throws InvalidUserInputException {
-        var result = clientInputParser.parse("20 CELSIUS to FAHRENHEIT");
+        var result = clientInputParser.parse("20 CELSIUS to FAHRENHEIT", 1);
         assertEquals(TemperatureType.CELSIUS, result.from());
         assertEquals(TemperatureType.FAHRENHEIT, result.to());
     }

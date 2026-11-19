@@ -41,11 +41,6 @@ public class ClientInputParser implements Parser {
         return new ConversionRequest(value, from, to);
     }
 
-    @Override
-    public ConversionRequest parse(@NotNull String message) throws InvalidUserInputException {
-        return parse(message, 0L);
-    }
-
     /**
      * Разбирает первый токен сообщения как число.
      *
