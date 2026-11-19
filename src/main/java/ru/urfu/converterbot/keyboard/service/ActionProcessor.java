@@ -107,6 +107,14 @@ public class ActionProcessor implements MessageProcessor {
             return new BotReply("Выберите конверсию для удаления:",
                     keyboardFactory.createCustomConversionDeleteList(list));
         }
+        if (data.equals(ButtonAction.UPDATE_CUSTOM.toString())) {
+            var list = customConversionRepository.findAllOutgoing(chatId);
+            if (list.isEmpty()) {
+                return new BotReply(EMPTY_LIST_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+            return new BotReply("Выберите конверсию для обновления:",
+                    keyboardFactory.createCustomConversionUpdateList(list));
+        }
         if (data.startsWith(ButtonAction.CONVERT_CUSTOM + ":")) {
             var pair = data.substring(ButtonAction.CONVERT_CUSTOM.toString().length() + 1);
             var parts = pair.split(":");
@@ -127,6 +135,17 @@ public class ActionProcessor implements MessageProcessor {
             return new BotReply("Удалено: " + parts[0] + " -> " + parts[1],
                     keyboardFactory.createCustomConversionMenu());
         }
+        if (data.startsWith(ButtonAction.UPDATE_CUSTOM_CONV + ":")) {
+            var pair = data.substring(ButtonAction.UPDATE_CUSTOM_CONV.toString().length() + 1);
+            var parts = pair.split(":");
+            if (parts.length != 2) {
+                return new BotReply(WRONG_PAIR_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+            stateService.updateContext(chatId, new ChatContext(State.AWAITING_UPDATE_CUSTOM_CONVERT_NUMBER,
+                    null, parts[0], parts[1], null));
+            return new BotReply("Введите число для обновления курса " + parts[0] + " в " + parts[1] + ":");
+        }
+
         if (data.equals(ButtonAction.HISTORY.toString())) {
             stateService.reset(chatId);
             return showHistoryPage(chatId, 0);
@@ -181,6 +200,8 @@ public class ActionProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_TO -> "Введите название целевой единицы (латиница и _):";
             case AWAITING_CUSTOM_RATE -> "Введите курс конверсии (число больше 0):";
             case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
+            case AWAITING_UPDATE_CUSTOM_RATE -> "Введите обновленный курс конверсии (число больше 0):";
+            case AWAITING_UPDATE_CUSTOM_CONVERT_NUMBER -> "Введите число для обновления курса:";
             case CUSTOM_CONVERSIONS_MENU -> CUSTOM_CONVERSION_MENU_TEXT;
         };
     }

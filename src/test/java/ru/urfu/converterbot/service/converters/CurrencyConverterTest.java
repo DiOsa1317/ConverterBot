@@ -66,7 +66,7 @@ public class CurrencyConverterTest {
     void shouldConvertCustomUnitsDirectly() {
         var repository = new FakeCustomConversionRepository();
 
-        repository.saveOrUpdate(new CustomConversion(
+        repository.save(new CustomConversion(
                 "kk", "mm", new BigDecimal("2"), 1L
         ));
 
@@ -89,7 +89,7 @@ public class CurrencyConverterTest {
     void shouldConvertCustomUnitsInReverse() {
         var repository = new FakeCustomConversionRepository();
 
-        repository.saveOrUpdate(new CustomConversion(
+        repository.save(new CustomConversion(
                 "kk", "mm", new BigDecimal("2"), 1L
         ));
 
@@ -112,7 +112,7 @@ public class CurrencyConverterTest {
     void shouldNotUseCustomRateFromAnotherChat() {
         var repository = new FakeCustomConversionRepository();
 
-        repository.saveOrUpdate(new CustomConversion(
+        repository.save(new CustomConversion(
                 "kk", "mm", new BigDecimal("2"), 1L
         ));
 

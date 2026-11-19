@@ -76,6 +76,7 @@ public class KeyboardFactory {
         return toView(List.of(
                 new KeyboardButton("Добавить конверсию", ButtonAction.ADD_CUSTOM_CONV, ""),
                 new KeyboardButton("Мои конверсии", ButtonAction.LIST_CUSTOM_CONV, ""),
+                new KeyboardButton("Обновить конверсию", ButtonAction.UPDATE_CUSTOM, ""),
                 new KeyboardButton("Удалить конверсию", ButtonAction.DELETE_CUSTOM, "")
                 ), false);
     }
@@ -136,6 +137,18 @@ public class KeyboardFactory {
         for (var conversion : conversions) {
             buttons.add(new KeyboardButton("Удалить: " + conversion.fromUnit() + " -> " + conversion.toUnit(),
                     ButtonAction.DELETE_CUSTOM_CONV, conversion.fromUnit() + ":" + conversion.toUnit()));
+        }
+        return toView(buttons, false);
+    }
+
+    /** Создает клавиатуру для обновления кастомных конверсий пользователей (
+     * @param conversions )*/
+    @NotNull
+    public KeyboardView createCustomConversionUpdateList(List<CustomConversion> conversions) {
+        var buttons = new ArrayList<KeyboardButton>();
+        for (var conversion : conversions) {
+            buttons.add(new KeyboardButton("Обновить: " + conversion.fromUnit() + " -> " + conversion.toUnit(),
+                    ButtonAction.UPDATE_CUSTOM_CONV, conversion.fromUnit() + ":" + conversion.toUnit()));
         }
         return toView(buttons, false);
     }
