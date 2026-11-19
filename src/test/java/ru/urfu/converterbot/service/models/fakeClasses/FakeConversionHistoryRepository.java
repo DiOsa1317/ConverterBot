@@ -1,15 +1,15 @@
 package ru.urfu.converterbot.service.models.fakeClasses;
 
 import ru.urfu.converterbot.service.models.ConversionHistory;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 
 import java.util.List;
 
 /**
- * Заглушка {@link ConversionHistoryRepository} для тестов.
+ * Заглушка {@link ConversionHistoryRepositoryImp} для тестов.
  * Методы не взаимодействуют с БД и не хранят данные.
  */
-public class FakeConversionHistoryRepository extends ConversionHistoryRepository {
+public class FakeConversionHistoryRepository extends ConversionHistoryRepositoryImp {
 
     public FakeConversionHistoryRepository() {
         super(null);

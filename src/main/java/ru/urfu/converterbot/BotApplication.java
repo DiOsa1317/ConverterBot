@@ -18,8 +18,8 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
-import ru.urfu.converterbot.service.repository.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -52,8 +52,8 @@ public class BotApplication {
             var botMessageFormatter = new BotMessageFormatter();
             var dbConfig = new DatabaseConfig();
             dbConfig.initSchema();
-            var customConversionRepository = new CustomConversionRepository(dbConfig);
-            var historyRepository = new ConversionHistoryRepository(dbConfig);
+            var customConversionRepository = new CustomConversionRepositoryImp(dbConfig);
+            var historyRepository = new ConversionHistoryRepositoryImp(dbConfig);
             var botService = getBotService(botMessageFormatter, customConversionRepository, historyRepository);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
@@ -80,8 +80,8 @@ public class BotApplication {
      * @param customConversionRepository отвечает за доступ к кастомным переводам
      */
     private @NotNull BotService getBotService(MessageFormatter messageFormatter,
-                                              CustomConversionRepository customConversionRepository,
-                                              ConversionHistoryRepository historyRepository) {
+                                              CustomConversionRepositoryImp customConversionRepository,
+                                              ConversionHistoryRepositoryImp historyRepository) {
         var parser = new ClientInputParser(customConversionRepository);
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());

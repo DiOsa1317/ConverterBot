@@ -7,9 +7,9 @@ import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.*;
 
 import ru.urfu.converterbot.service.BotResponseProcessor;
-import ru.urfu.converterbot.service.repository.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 
 import java.time.format.DateTimeFormatter;
 
@@ -29,8 +29,8 @@ public class ActionProcessor implements MessageProcessor {
     private final KeyboardFactory keyboardFactory;
     private final ConversionStateService stateService;
     private final BotResponseProcessor processor;
-    private final CustomConversionRepository customConversionRepository;
-    private final ConversionHistoryRepository historyRepository;
+    private final CustomConversionRepositoryImp customConversionRepository;
+    private final ConversionHistoryRepositoryImp historyRepository;
 
     /**
      * Создаёт сервис диалога.
@@ -42,8 +42,8 @@ public class ActionProcessor implements MessageProcessor {
     public ActionProcessor(@NotNull ConversionStateService stateService,
                            @NotNull KeyboardFactory keyboardFactory,
                            @NotNull BotResponseProcessor processor,
-                           @NotNull CustomConversionRepository customConversionRepository,
-                           @NotNull ConversionHistoryRepository historyRepository) {
+                           @NotNull CustomConversionRepositoryImp customConversionRepository,
+                           @NotNull ConversionHistoryRepositoryImp historyRepository) {
         this.stateService = stateService;
         this.processor = processor;
         this.keyboardFactory = keyboardFactory;

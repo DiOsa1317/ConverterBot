@@ -2,7 +2,7 @@ package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
-import ru.urfu.converterbot.service.repository.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -14,12 +14,12 @@ import org.jetbrains.annotations.NotNull;
  */
 public class ClientInputParser implements Parser {
 
-    private final CustomConversionRepository customConversionRepository;
+    private final CustomConversionRepositoryImp customConversionRepository;
 
     /** Слово-разделитель между единицами измерения. */
     private static final String TO_SEPARATOR = "to";
 
-    public ClientInputParser(CustomConversionRepository customConversionRepository) {
+    public ClientInputParser(CustomConversionRepositoryImp customConversionRepository) {
         this.customConversionRepository = customConversionRepository;
     }
 

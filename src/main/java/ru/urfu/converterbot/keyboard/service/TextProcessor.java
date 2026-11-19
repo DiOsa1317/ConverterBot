@@ -16,8 +16,8 @@ import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 import ru.urfu.converterbot.service.MessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
-import ru.urfu.converterbot.service.repository.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 
 /**
  * Обработчик текстовых сообщений пользователя
@@ -51,8 +51,8 @@ public class TextProcessor implements MessageProcessor {
 
     private final MessageFormatter formatter;
 
-    private final CustomConversionRepository customConversionRepository;
-    private final ConversionHistoryRepository historyRepository;
+    private final CustomConversionRepositoryImp customConversionRepository;
+    private final ConversionHistoryRepositoryImp historyRepository;
 
     /**
      * Создаёт сервис диалога.
@@ -65,8 +65,8 @@ public class TextProcessor implements MessageProcessor {
                          @NotNull KeyboardFactory keyboardFactory,
                          @NotNull BotResponseProcessor processor,
                          @NotNull MessageFormatter messageFormatter,
-                         @NotNull CustomConversionRepository customConversionRepository,
-                         @NotNull ConversionHistoryRepository historyRepository) {
+                         @NotNull CustomConversionRepositoryImp customConversionRepository,
+                         @NotNull ConversionHistoryRepositoryImp historyRepository) {
         this.stateService = stateService;
         this.keyboardFactory = keyboardFactory;
         this.processor = processor;

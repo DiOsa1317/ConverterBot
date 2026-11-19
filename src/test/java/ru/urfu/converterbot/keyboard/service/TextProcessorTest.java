@@ -12,7 +12,7 @@ import ru.urfu.converterbot.service.BotMessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -109,7 +109,7 @@ class TextProcessorTest {
                 return Optional.empty();
             }
         };
-        var historyRepository = new ConversionHistoryRepository(new DatabaseConfig());
+        var historyRepository = new ConversionHistoryRepositoryImp(new DatabaseConfig());
         var customProcessor = new TextProcessor(stateService, new KeyboardFactory(),
                 (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(), repo, historyRepository);
         stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,

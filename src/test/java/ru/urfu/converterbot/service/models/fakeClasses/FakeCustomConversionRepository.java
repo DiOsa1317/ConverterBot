@@ -1,16 +1,16 @@
 package ru.urfu.converterbot.service.models.fakeClasses;
 
 import ru.urfu.converterbot.service.models.CustomConversion;
-import ru.urfu.converterbot.service.repository.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Заглушка {@link CustomConversionRepository} для тестов.
+ * Заглушка {@link CustomConversionRepositoryImp} для тестов.
  * Все методы бесполезны (no-op), не хранят ничего.
  */
-public class FakeCustomConversionRepository extends CustomConversionRepository {
+public class FakeCustomConversionRepository extends CustomConversionRepositoryImp {
 
     public FakeCustomConversionRepository() {
         super(null);

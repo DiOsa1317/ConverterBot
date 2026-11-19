@@ -4,7 +4,7 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.models.CurrencyType;
 import ru.urfu.converterbot.service.models.CustomQuantityType;
 import ru.urfu.converterbot.service.models.QuantityType;
-import ru.urfu.converterbot.service.repository.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 
 import java.math.BigDecimal;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class CurrencyConverter implements QuantityConverter {
 
     private final CurrencyData currencyData;
-    private final CustomConversionRepository conversionRepository;
+    private final CustomConversionRepositoryImp conversionRepository;
 
     /**
      * Создаёт конвертер, получая данные о соотношении валют
@@ -31,7 +31,7 @@ public class CurrencyConverter implements QuantityConverter {
     }
 
     public CurrencyConverter(CurrencyData currencyData,
-                             CustomConversionRepository conversionRepository) {
+                             CustomConversionRepositoryImp conversionRepository) {
         this.currencyData = currencyData;
         this.conversionRepository = conversionRepository;
     }
