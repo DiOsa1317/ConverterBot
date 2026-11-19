@@ -12,7 +12,7 @@ import ru.urfu.converterbot.service.BotMessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -35,7 +35,7 @@ class TextProcessorTest {
     void setUp() {
         stateService = new ConversionStateService();
         processor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter(), 
+                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(), 
                 new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
     }
 
@@ -109,13 +109,13 @@ class TextProcessorTest {
                 return Optional.empty();
             }
         };
-        var historyRepository = new ConversionHistoryRepository(new DatabaseConfig());
+        var historyRepository = new ConversionHistoryRepositoryImp(new DatabaseConfig());
         var customProcessor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter(), repo, historyRepository);
+                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(), repo, historyRepository);
         stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
                 null, "cookie", "calorie", null));
         var reply = customProcessor.handle(1L, "10");
-        assertTrue(reply.text().contains("10 cookie = 3000.0000000000 calorie"));
+        assertTrue(reply.text().contains("10 cookie = 3000.0000 calorie"));
         assertNotNull(reply.keyboard());
     }
 }

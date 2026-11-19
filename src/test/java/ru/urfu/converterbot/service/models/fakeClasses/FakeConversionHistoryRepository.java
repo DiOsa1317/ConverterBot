@@ -1,38 +1,54 @@
 package ru.urfu.converterbot.service.models.fakeClasses;
 
 import ru.urfu.converterbot.service.models.ConversionHistory;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 
-import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
-/**
- * Заглушка {@link ConversionHistoryRepository} для тестов.
- * Методы не взаимодействуют с БД и не хранят данные.
- */
-public class FakeConversionHistoryRepository extends ConversionHistoryRepository {
+public class FakeConversionHistoryRepository extends ConversionHistoryRepositoryImp {
+
+    private final List<ConversionHistory> history = new ArrayList<>();
 
     public FakeConversionHistoryRepository() {
         super(null);
     }
 
     @Override
-    public void save(long chatId, String input, String result) throws SQLException {
+    public boolean save(long chatId, String input, String result) {
+        history.add(new ConversionHistory(
+                1,
+                chatId,
+                input,
+                result,
+                LocalDateTime.now()
+        ));
+        return true;
     }
 
     @Override
-    public List<ConversionHistory> findPage(long chatId, int limit, int offset)
-            throws SQLException {
-        return List.of();
+    public List<ConversionHistory> findPage(long chatId, int limit, int offset) {
+        return history.stream()
+                .filter(item -> item.chatId() == chatId)
+                .sorted(Comparator.comparing(ConversionHistory::createdAt)
+                        .reversed()
+                        .thenComparing(ConversionHistory::id, Comparator.reverseOrder()))
+                .skip(offset)
+                .limit(limit)
+                .toList();
     }
 
     @Override
-    public int count(long chatId) throws SQLException {
-        return 0;
+    public int count(long chatId) {
+        return (int) history.stream()
+                .filter(item -> item.chatId() == chatId)
+                .count();
     }
 
     @Override
-    public boolean deleteAll(long chatId) throws SQLException {
-        return false;
+    public boolean deleteAll(long chatId) {
+        return history.removeIf(item -> item.chatId() == chatId);
     }
 }

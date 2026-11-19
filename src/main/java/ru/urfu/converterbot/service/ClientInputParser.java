@@ -2,10 +2,10 @@ package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,7 @@ public class ClientInputParser implements Parser {
     /** Слово-разделитель между единицами измерения. */
     private static final String TO_SEPARATOR = "to";
 
-    public ClientInputParser(CustomConversionRepository customConversionRepository) {
+    public ClientInputParser(CustomConversionRepositoryImp customConversionRepository) {
         this.customConversionRepository = customConversionRepository;
     }
 
@@ -39,11 +39,6 @@ public class ClientInputParser implements Parser {
         var to = parseUnit(message, parts[3], chatId);
 
         return new ConversionRequest(value, from, to);
-    }
-
-    @Override
-    public ConversionRequest parse(@NotNull String message) throws InvalidUserInputException {
-        return parse(message, 0L);
     }
 
     /**
@@ -85,13 +80,9 @@ public class ClientInputParser implements Parser {
             return standard.get();
         }
 
-        try {
-            var unitNames = customConversionRepository.findAllUnitNames(chatId);
-            if (unitNames.contains(token)) {
-                return new CustomQuantityType(token, chatId);
-            }
-        } catch (SQLException e) {
-            throw new InvalidUserInputException(originalMessage, "Ошибка базы данных. Попробуйте ещё раз.");
+        var unitNames = customConversionRepository.findAllUnitNames(chatId);
+        if (unitNames.contains(token)) {
+            return new CustomQuantityType(token, chatId);
         }
 
         throw new InvalidUserInputException(originalMessage, "Неизвестная единица измерения: " + token);

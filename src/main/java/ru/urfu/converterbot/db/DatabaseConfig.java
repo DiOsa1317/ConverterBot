@@ -1,5 +1,8 @@
 package ru.urfu.converterbot.db;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -17,33 +20,35 @@ public class DatabaseConfig {
         return DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD);
     }
 
-    /** Создает таблицы, если они ещё не существуют */
-    public void initSchema() throws  SQLException {
-        try (
-                var connection = getConnection();
-                var statement = connection.createStatement()
-        ) {
-            statement.execute("""
-                    CREATE TABLE IF NOT EXISTS custom_conversions (
-                    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                    chat_id BIGINT NOT NULL,
-                    from_unit VARCHAR(64) NOT NULL,
-                    to_unit VARCHAR(64) NOT NULL,
-                    rate DECIMAL(20, 10) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    CONSTRAINT uk_custom_conv UNIQUE (chat_id, from_unit, to_unit)
-                    )
-                    """);
-            
-            statement.execute("""
-                    CREATE TABLE IF NOT EXISTS conversion_history (
-                        id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                        chat_id BIGINT NOT NULL,
-                        input VARCHAR(255) NOT NULL,
-                        result VARCHAR(255) NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                    """);
+    /**
+     * Создает таблицы на основе SQL-схемы.
+     */
+    public void initSchema() throws SQLException {
+        String schema = loadSchema();
+
+        try (var connection = getConnection();
+             var statement = connection.createStatement()) {
+
+            for (String sql : schema.split(";")) {
+                if (!sql.isBlank()) {
+                    statement.execute(sql);
+                }
+            }
+        }
+    }
+
+    private String loadSchema() throws SQLException {
+        try (InputStream input = getClass()
+                .getClassLoader()
+                .getResourceAsStream("db/schema.sql")) {
+
+            if (input == null) {
+                throw new SQLException("Файл db/schema.sql не найден");
+            }
+
+            return new String(input.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new SQLException("Не удалось прочитать SQL-схему", e);
         }
     }
 }

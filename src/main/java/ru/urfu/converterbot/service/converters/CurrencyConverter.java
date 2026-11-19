@@ -4,12 +4,11 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.models.CurrencyType;
 import ru.urfu.converterbot.service.models.CustomQuantityType;
 import ru.urfu.converterbot.service.models.QuantityType;
-import ru.urfu.converterbot.service.repository.CustomConversionRepository;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,7 +20,7 @@ import java.util.Map;
 public class CurrencyConverter implements QuantityConverter {
 
     private final CurrencyData currencyData;
-    private final CustomConversionRepository conversionRepository;
+    private final CustomConversionRepositoryImp conversionRepository;
 
     /**
      * Создаёт конвертер, получая данные о соотношении валют
@@ -32,7 +31,7 @@ public class CurrencyConverter implements QuantityConverter {
     }
 
     public CurrencyConverter(CurrencyData currencyData,
-                             CustomConversionRepository conversionRepository) {
+                             CustomConversionRepositoryImp conversionRepository) {
         this.currencyData = currencyData;
         this.conversionRepository = conversionRepository;
     }
@@ -48,27 +47,20 @@ public class CurrencyConverter implements QuantityConverter {
             var customFrom = (CustomQuantityType) from;
             var customTo = (CustomQuantityType) to;
             long chatId = customFrom.chatId();
-            try {
-                var conv = conversionRepository.findByChatIdFromAndAndTo(
-                        chatId, customFrom.name(), customTo.name());
-                if (conv.isPresent()) {
-                    return value.multiply(conv.get().rate())
-                            .setScale(10, RoundingMode.HALF_UP);
-                }
-                // Пробуем обратное ребро
-                var reverse = conversionRepository.findByChatIdFromAndAndTo(
-                        chatId, customTo.name(), customFrom.name());
-                if (reverse.isPresent()) {
-                    return value.divide(reverse.get().rate(), 10, RoundingMode.HALF_UP);
-                }
-                throw new InvalidUserInputException(
-                        customFrom.name() + " to " + customTo.name(),
-                        "Нет прямого курса между " + customFrom.name() + " и " + customTo.name());
-            } catch (SQLException e) {
-                throw new InvalidUserInputException(
-                        customFrom.name() + " to " + customTo.name(),
-                        "Ошибка базы данных при конвертации.");
+            var conv = conversionRepository.findByChatIdFromAndAndTo(
+                    chatId, customFrom.name(), customTo.name());
+            if (conv.isPresent()) {
+                return value.multiply(conv.get().rate())
+                        .setScale(10, RoundingMode.HALF_UP);
             }
+            var reverse = conversionRepository.findByChatIdFromAndAndTo(
+                    chatId, customTo.name(), customFrom.name());
+            if (reverse.isPresent()) {
+                return value.divide(reverse.get().rate(), 10, RoundingMode.HALF_UP);
+            }
+            throw new InvalidUserInputException(
+                    customFrom.name() + " to " + customTo.name(),
+                    "Нет прямого курса между " + customFrom.name() + " и " + customTo.name());
         }
 
         // Стандартная логика через матрицу курсов CurrencyData
