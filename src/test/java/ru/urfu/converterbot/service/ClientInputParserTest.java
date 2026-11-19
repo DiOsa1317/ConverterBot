@@ -123,7 +123,7 @@ public class ClientInputParserTest {
     void shouldParseCustomUnit() {
         var repository = new FakeCustomConversionRepository();
 
-        repository.saveOrUpdate(new CustomConversion(
+        repository.save(new CustomConversion(
                 "kk",
                 "mm",
                 new BigDecimal("2"),

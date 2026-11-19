@@ -126,6 +126,12 @@ public class TextProcessor implements MessageProcessor {
             return handleCustomConvertNumber(chatId, context, text);
         }
 
+        if (context.state() == State.AWAITING_UPDATE_CUSTOM_RATE) {
+            return handleUpdateCustomRate(chatId, context, text);
+        }
+
+
+
         return new BotReply(
                 processor.processBotResponse(chatId, text) + System.lineSeparator() + MENU_HINT_TEXT,
                 keyboardFactory.createMainMenu()
@@ -187,7 +193,26 @@ public class TextProcessor implements MessageProcessor {
         var from = context.number();
         var to = context.fromUnit();
         var conversion = new CustomConversion(from, to, rate, chatId);
-        customConversionRepository.saveOrUpdate(conversion);
+        customConversionRepository.save(conversion);
+        stateService.reset(chatId);
+        return new BotReply("Готово! 1 " + from + " = " + rate + " " + to + System.lineSeparator()
+                + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
+    }
+
+    private BotReply handleUpdateCustomRate(long chatId, ChatContext context, String text) {
+        var rateStr = text.trim().replace(',', '.');
+        BigDecimal rate;
+        try {
+            rate = new BigDecimal(rateStr);
+        } catch (NumberFormatException e) {
+            return new BotReply(WRONG_MESSAGE_FORMAT_TEXT);
+        }
+        if (rate.signum() <= 0) {
+            return new BotReply(COURSE_SHOULD_BE_GREATER_THAN_ZERO);
+        }
+        var from = context.number();
+        var to = context.fromUnit();
+        customConversionRepository.updateCustomConversion(chatId, from, to, rate);
         stateService.reset(chatId);
         return new BotReply("Готово! 1 " + from + " = " + rate + " " + to + System.lineSeparator()
                 + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
@@ -217,6 +242,8 @@ public class TextProcessor implements MessageProcessor {
             }
         }
 
+        var formatted = value + " " + from + " = " + result + " " + to;
+        historyRepository.save(chatId, value + " " + from + " to " + to, formatted);
         stateService.reset(chatId);
         return new BotReply(value + " " + from + " = " + result + " " + to + System.lineSeparator()
                 + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
@@ -281,7 +308,8 @@ public class TextProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_TO -> "Введите название целевой единицы (латиница и _):";
             case AWAITING_CUSTOM_RATE -> "Введите курс конверсии (число больше 0):";
             case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
-            case CUSTOM_CONVERSIONS_MENU -> "Меню кастомных конверсий";
+            case AWAITING_UPDATE_CUSTOM_RATE -> "Введите обновленный курс конверсии (число больше 0):";
+            case CUSTOM_CONVERSIONS_MENU -> "Прямые конверсии кастомных единиц";
         };
     }
 

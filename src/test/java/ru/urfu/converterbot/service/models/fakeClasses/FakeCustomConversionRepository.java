@@ -19,7 +19,7 @@ public class FakeCustomConversionRepository extends CustomConversionRepositoryIm
     }
 
     @Override
-    public boolean saveOrUpdate(CustomConversion conversion) {
+    public boolean save(CustomConversion conversion) {
         conversions.removeIf(existing ->
                 existing.chatId() == conversion.chatId()
                         && existing.fromUnit().equals(conversion.fromUnit())

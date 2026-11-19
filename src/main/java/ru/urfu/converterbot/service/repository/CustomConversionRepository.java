@@ -2,17 +2,18 @@ package ru.urfu.converterbot.service.repository;
 
 import ru.urfu.converterbot.service.models.CustomConversion;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
 public interface CustomConversionRepository {
     /**
-     * Сохраняет новый кастомный перевод или обновляет существующий.
+     * Сохраняет новый кастомный перевод
      *
      * @param conversion данные о кастомном переводе
      * @return true, если операция успешно выполнена
      */
-    boolean saveOrUpdate(CustomConversion conversion);
+    boolean save(CustomConversion conversion);
 
     /**
      * Ищет кастомный перевод пользователя.
@@ -44,6 +45,19 @@ public interface CustomConversionRepository {
      */
     boolean deleteByChatIdAndFromAndTo(
             long chatId, String from, String to
+    );
+
+    /**
+     * Обновляет кастомный перевод пользователя.
+     *
+     * @param chatId ID чата
+     * @param from исходная единица
+     * @param to целевая единица
+     * @param rate новый курс
+     * @return true, если перевод удалён
+     */
+    boolean updateCustomConversion(
+            long chatId, String from, String to, BigDecimal rate
     );
 
     /**

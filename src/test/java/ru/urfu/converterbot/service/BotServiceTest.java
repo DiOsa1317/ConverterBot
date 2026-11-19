@@ -129,7 +129,7 @@ public class BotServiceTest {
     void shouldConvertCustomUnits() {
         var customRepo = new FakeCustomConversionRepository();
 
-        customRepo.saveOrUpdate(new CustomConversion(
+        customRepo.save(new CustomConversion(
                 "kk",
                 "mm",
                 new BigDecimal("2"),

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.service.models.CustomConversion;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,26 +27,20 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
     }
 
     @Override 
-    public boolean saveOrUpdate(CustomConversion conversion) {
-        String checkSql = """
-                SELECT 1 FROM custom_conversions
-                WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
-                """;
-
+    public boolean save(CustomConversion conversion) {
         String insertSql = """
                 INSERT INTO custom_conversions (chat_id, from_unit, to_unit, rate, created_at)
                 VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
                 """;
 
-        String updateSql = """
-                UPDATE custom_conversions
-                SET rate = ?, created_at = CURRENT_TIMESTAMP
+        String checkSql = """
+                SELECT 1 FROM custom_conversions
                 WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
                 """;
 
         try (var connection = dbConfig.getConnection()) {
             if (exists(connection, checkSql, conversion)) {
-                return update(connection, updateSql, conversion);
+                throw new SQLException("Такой перевод уже существует");
             }
 
             return insert(connection, insertSql, conversion);
@@ -71,24 +66,6 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
 
             var resultSet = statement.executeQuery();
             return resultSet.next();
-        }
-    }
-
-    /**
-     * Обновляет существующий кастомный перевод.
-     */
-    private boolean update(
-            java.sql.Connection connection,
-            String sql,
-            CustomConversion conversion
-    ) throws SQLException {
-        try (var statement = connection.prepareStatement(sql)) {
-            statement.setBigDecimal(1, conversion.rate());
-            statement.setLong(2, conversion.chatId());
-            statement.setString(3, conversion.fromUnit());
-            statement.setString(4, conversion.toUnit());
-
-            return statement.executeUpdate() > 0;
         }
     }
 
@@ -216,6 +193,34 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
         } catch (SQLException exception) {
             logger.error(
                     "Не удалось удалить кастомный перевод: chatId={}, from={}, to={}",
+                    chatId, from, to, exception
+            );
+            return false;
+        }
+    }
+
+    @Override
+    public boolean updateCustomConversion(long chatId, String from, String to, BigDecimal rate) {
+
+        String updateSql = """
+                UPDATE custom_conversions
+                SET rate = ?, created_at = CURRENT_TIMESTAMP
+                WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
+                """;
+        try (
+                var connection = dbConfig.getConnection();
+                var statement = connection.prepareStatement(updateSql)
+        ) {
+            statement.setBigDecimal(1, rate);
+            statement.setLong(2, chatId);
+            statement.setString(3, from);
+            statement.setString(4, to);
+
+            return statement.executeUpdate() > 0;
+
+        } catch (SQLException exception) {
+            logger.error(
+                    "Не удалось обновить кастомный перевод: chatId={}, from={}, to={}",
                     chatId, from, to, exception
             );
             return false;
