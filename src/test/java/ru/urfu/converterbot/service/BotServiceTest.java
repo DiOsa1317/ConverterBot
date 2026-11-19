@@ -15,8 +15,14 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.models.CustomQuantityType;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.math.BigDecimal;
 
 /**
  * Тесты для ConverterService
@@ -33,11 +39,13 @@ public class BotServiceTest {
      */
     @BeforeEach
     void setUp() {
-        var parser = new ClientInputParser();
+        var customRepo = new FakeCustomConversionRepository();
+        var historyRepo = new FakeConversionHistoryRepository();
+        var parser = new ClientInputParser(customRepo);
         var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
-        var currencyConverter = new CurrencyConverter(new CurrencyData());
+        var currencyConverter = new CurrencyConverter(new CurrencyData(), customRepo);
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
         botService = new BotService(
                 currencyConverter,
@@ -45,7 +53,8 @@ public class BotServiceTest {
                 weightConverter,
                 temperatureConverter,
                 parser,
-                formatter);
+                formatter,
+                historyRepo);
     }
 
     /**
@@ -63,7 +72,7 @@ public class BotServiceTest {
     })
     @DisplayName("Форматирует результат четырьмя знаками после запятой")
     void shouldFormatResult(String request, String expected) {
-        assertEquals(expected, botService.processBotResponse(request));
+        assertEquals(expected, botService.processBotResponse(1, request));
     }
 
     /**
@@ -81,7 +90,7 @@ public class BotServiceTest {
     })
     @DisplayName("Возвращает справку по группе на её команду")
     void shouldReturnGroupHelp(String command, String expectedFragment) {
-        assertTrue(botService.processBotResponse(command).contains(expectedFragment));
+        assertTrue(botService.processBotResponse(1, command).contains(expectedFragment));
     }
 
     /**
@@ -100,7 +109,7 @@ public class BotServiceTest {
     })
     @DisplayName("Не выбрасывает исключение на некорректный ввод")
     void shouldNotThrowOnInvalidInput(String message) {
-        assertDoesNotThrow(() -> botService.processBotResponse(message));
+        assertDoesNotThrow(() -> botService.processBotResponse(1, message));
     }
 
     /**
@@ -109,6 +118,35 @@ public class BotServiceTest {
     @Test
     @DisplayName("Не выбрасывает исключение на null")
     void shouldNotThrowOnNull() {
-        assertDoesNotThrow(() -> botService.processBotResponse(null));
+        assertDoesNotThrow(() -> botService.processBotResponse(1, null));
+    }
+
+    /**
+     * Проверяет на успешный перевод одной кастомной единицы в другую.
+     */
+    @Test
+    @DisplayName("Переводит одну кастомную единицу в другую")
+    void shouldConvertCustomUnits() {
+        var customRepo = new FakeCustomConversionRepository();
+
+        customRepo.saveOrUpdate(new CustomConversion(
+                "kk",
+                "mm",
+                new BigDecimal("2"),
+                1L
+        ));
+
+        var converter = new CurrencyConverter(new CurrencyData(), customRepo);
+
+        var from = new CustomQuantityType("kk", 1L);
+        var to = new CustomQuantityType("mm", 1L);
+
+        var result = converter.convert(
+                new BigDecimal("5"),
+                from,
+                to
+        );
+
+        assertEquals(new BigDecimal("10.0000000000"), result);
     }
 }

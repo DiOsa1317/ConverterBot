@@ -10,7 +10,8 @@ import org.jetbrains.annotations.NotNull;
 public interface Parser {
     /** Извлекает из сообщения формат запроса на конвертацию
      * @param message - сообщение пользователя
+     * @param chatId id чата с пользователем
      * @throws InvalidUserInputException - ошибка неправильного ввода
      * */
-    ConversionRequest parse(@NotNull String message) throws InvalidUserInputException;
+    ConversionRequest parse(@NotNull String message, long chatId) throws InvalidUserInputException;
 }

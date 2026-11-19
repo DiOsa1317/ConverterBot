@@ -2,6 +2,7 @@ package ru.urfu.converterbot;
 
 import org.jetbrains.annotations.NotNull;
 import ru.urfu.converterbot.bots.TelegramBot;
+import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.renderers.TelegramKeyboardRenderer;
 import ru.urfu.converterbot.keyboard.service.ConversionStateService;
@@ -17,6 +18,8 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
@@ -47,15 +50,21 @@ public class BotApplication {
             logger.info("Конфигурация успешно загружена");
 
             var botMessageFormatter = new BotMessageFormatter();
-            var botService = getBotService(botMessageFormatter);
+            var dbConfig = new DatabaseConfig();
+            dbConfig.initSchema();
+            var customConversionRepository = new CustomConversionRepositoryImp(dbConfig);
+            var historyRepository = new ConversionHistoryRepositoryImp(dbConfig);
+            var botService = getBotService(botMessageFormatter, customConversionRepository, historyRepository);
 
             var keyBotToken = config.getProperty(configuration.keyBotToken());
             var keyBotUsername = config.getProperty(configuration.keyBotUsername());
             var stateService = new ConversionStateService();
             var keyboardFactory = new KeyboardFactory();
             var renderer = new TelegramKeyboardRenderer();
-            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService, botMessageFormatter);
-            var actionProcessor = new ActionProcessor(stateService, keyboardFactory, botService);
+            var textProcessor = new TextProcessor(stateService, keyboardFactory, botService,
+                    botMessageFormatter, customConversionRepository, historyRepository);
+            var actionProcessor = new ActionProcessor(stateService, keyboardFactory,
+                    botService, customConversionRepository, historyRepository);
             var telegramBot = new TelegramBot(keyBotToken, keyBotUsername, textProcessor, actionProcessor, renderer);
             telegramBot.start();
         } catch (Exception e) {
@@ -68,13 +77,16 @@ public class BotApplication {
      * Создает экземпляр BotService
      *
      * @param messageFormatter хранитель информационных сообщений
+     * @param customConversionRepository отвечает за доступ к кастомным переводам
      */
-    private @NotNull BotService getBotService(MessageFormatter messageFormatter) {
-        var parser = new ClientInputParser();
+    private @NotNull BotService getBotService(MessageFormatter messageFormatter,
+                                              CustomConversionRepositoryImp customConversionRepository,
+                                              ConversionHistoryRepositoryImp historyRepository) {
+        var parser = new ClientInputParser(customConversionRepository);
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
         var currencyData = new CurrencyData();
-        var currencyConverter = new CurrencyConverter(currencyData);
+        var currencyConverter = new CurrencyConverter(currencyData, customConversionRepository);
         CurrencyRateService currencyRateService = new CurrencyRateService(currencyData);
         currencyRateService.start();
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
@@ -85,6 +97,7 @@ public class BotApplication {
                 weightConverter,
                 temperatureConverter,
                 parser,
-                messageFormatter);
+                messageFormatter,
+                historyRepository);
     }
 }

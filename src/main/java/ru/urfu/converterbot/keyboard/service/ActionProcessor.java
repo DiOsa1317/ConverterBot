@@ -7,16 +7,30 @@ import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.*;
 
 import ru.urfu.converterbot.service.BotResponseProcessor;
+import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
+
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
+
+import java.time.format.DateTimeFormatter;
 
 /** Обработчик нажатий на клавиатуру пользователем*/
 public class ActionProcessor implements MessageProcessor {
 
     private static final String STALE_BUTTON_TEXT =
             "Эта кнопка устарела. Введите /menu, чтобы начать заново.";
+    private static final String CUSTOM_CONVERSION_MENU_TEXT = "Прямые конверсии кастомных единиц";
+    private static final String CUSTOM_STEP_ONE = "Шаг 1. Назовите исходную единицу (только латиница и _):";
+    private static final String EMPTY_LIST_TEXT = "Конверсий пока нет.";
+    private static final String LIST_TITLE_TEXT = "Ваши конверсии:";
+    private static final String WRONG_PAIR_TEXT = "Некорректная пара";
+    private static final DateTimeFormatter HISTORY_DATE_FORMAT =
+        DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm");
 
     private final KeyboardFactory keyboardFactory;
     private final ConversionStateService stateService;
     private final BotResponseProcessor processor;
+    private final CustomConversionRepositoryImp customConversionRepository;
+    private final ConversionHistoryRepositoryImp historyRepository;
 
     /**
      * Создаёт сервис диалога.
@@ -27,10 +41,14 @@ public class ActionProcessor implements MessageProcessor {
      */
     public ActionProcessor(@NotNull ConversionStateService stateService,
                            @NotNull KeyboardFactory keyboardFactory,
-                           @NotNull BotResponseProcessor processor) {
+                           @NotNull BotResponseProcessor processor,
+                           @NotNull CustomConversionRepositoryImp customConversionRepository,
+                           @NotNull ConversionHistoryRepositoryImp historyRepository) {
         this.stateService = stateService;
         this.processor = processor;
         this.keyboardFactory = keyboardFactory;
+        this.customConversionRepository = customConversionRepository;
+        this.historyRepository = historyRepository;
     }
 
     @Override
@@ -63,7 +81,69 @@ public class ActionProcessor implements MessageProcessor {
             var toUnit = data.substring(ButtonAction.TO.toString().length() + 1);
             stateService.reset(chatId);
             var query = context.number() + " " + context.fromUnit() + " to " + toUnit;
-            return new BotReply(processor.processBotResponse(query));
+            return new BotReply(processor.processBotResponse(chatId, query));
+        }
+        if (data.equals(ButtonAction.CUSTOM_CONVERSIONS.toString())) {
+            stateService.reset(chatId);
+            return new BotReply(CUSTOM_CONVERSION_MENU_TEXT, keyboardFactory.createCustomConversionMenu());
+        }
+        if (data.equals(ButtonAction.ADD_CUSTOM_CONV.toString())) {
+            stateService.updateContext(chatId, new ChatContext(State.AWAITING_CUSTOM_FROM, null,
+                    null, null, null));
+            return new BotReply(CUSTOM_STEP_ONE);
+        }
+        if (data.equals(ButtonAction.LIST_CUSTOM_CONV.toString())) {
+            var list = customConversionRepository.findAllOutgoing(chatId);
+            if (list.isEmpty()) {
+                return new BotReply(EMPTY_LIST_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+            return new BotReply(LIST_TITLE_TEXT, keyboardFactory.createCustomConversionList(list));
+        }
+        if (data.equals(ButtonAction.DELETE_CUSTOM.toString())) {
+            var list = customConversionRepository.findAllOutgoing(chatId);
+            if (list.isEmpty()) {
+                return new BotReply(EMPTY_LIST_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+            return new BotReply("Выберите конверсию для удаления:",
+                    keyboardFactory.createCustomConversionDeleteList(list));
+        }
+        if (data.startsWith(ButtonAction.CONVERT_CUSTOM + ":")) {
+            var pair = data.substring(ButtonAction.CONVERT_CUSTOM.toString().length() + 1);
+            var parts = pair.split(":");
+            if (parts.length != 2) {
+                return new BotReply(WRONG_PAIR_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+            stateService.updateContext(chatId, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
+                    null, parts[0], parts[1], null));
+            return new BotReply("Введите число для конвертации " + parts[0] + " в " + parts[1] + ":");
+        }
+        if (data.startsWith(ButtonAction.DELETE_CUSTOM_CONV + ":")) {
+            var pair = data.substring(ButtonAction.DELETE_CUSTOM_CONV.toString().length() + 1);
+            var parts = pair.split(":");
+            if (parts.length != 2) {
+                return new BotReply(WRONG_PAIR_TEXT, keyboardFactory.createCustomConversionMenu());
+            }
+            customConversionRepository.deleteByChatIdAndFromAndTo(chatId, parts[0], parts[1]);
+            return new BotReply("Удалено: " + parts[0] + " -> " + parts[1],
+                    keyboardFactory.createCustomConversionMenu());
+        }
+        if (data.equals(ButtonAction.HISTORY.toString())) {
+            stateService.reset(chatId);
+            return showHistoryPage(chatId, 0);
+        }
+        if (data.startsWith("HISTORY_PAGE:")) {
+            try {
+                int page = Integer.parseInt(data.substring("HISTORY_PAGE:".length()));
+                return showHistoryPage(chatId, page);
+            } catch (NumberFormatException e) {
+                return new BotReply("Некорректный номер страницы.",
+                        keyboardFactory.createMainMenu());
+            }
+        }
+        if (data.equals("HISTORY_CLEAR")) {
+            historyRepository.deleteAll(chatId);
+            return new BotReply("История конвертаций очищена.",
+                    keyboardFactory.createMainMenu());
         }
         return new BotReply(STALE_BUTTON_TEXT);
     }
@@ -97,6 +177,60 @@ public class ActionProcessor implements MessageProcessor {
                     + "Дробные числа вводите через точку.";
             case AWAITING_SOURCE -> "Выберите стартовую единицу:";
             case AWAITING_TARGET -> "Выберите конечную единицу:";
+            case AWAITING_CUSTOM_FROM -> "Введите название исходной единицы (латиница и _):";
+            case AWAITING_CUSTOM_TO -> "Введите название целевой единицы (латиница и _):";
+            case AWAITING_CUSTOM_RATE -> "Введите курс конверсии (число больше 0):";
+            case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
+            case CUSTOM_CONVERSIONS_MENU -> CUSTOM_CONVERSION_MENU_TEXT;
         };
+    }
+
+    /**
+     * Формирует страницу истории конвертаций.
+     *
+     * @param chatId идентификатор чата
+     * @param page номер страницы, начиная с нуля
+     * @return сообщение с историей и клавиатурой
+     */
+    private BotReply showHistoryPage(long chatId, int page) {
+        int total = historyRepository.count(chatId);
+        if (total == 0) {
+            return new BotReply("История конвертаций пока пуста.",
+                    keyboardFactory.createMainMenu());
+        }
+
+        int pageSize = 5;
+        int totalPages = (total + pageSize - 1) / pageSize;
+        if (page < 0 || page >= totalPages) {
+            return new BotReply("Такой страницы истории нет.", keyboardFactory.createMainMenu());
+        }
+
+        var history = historyRepository.findPage(
+                chatId,
+                pageSize,
+                page * pageSize
+        );
+        StringBuilder message = new StringBuilder();
+
+        message.append("Ваша история переводов (страница ")
+                .append(page + 1)
+                .append(" из ")
+                .append(totalPages)
+                .append("):\n\n");
+
+        int number = page * pageSize + 1;
+
+        for (var entry : history) {
+            message.append(number++)
+                    .append(". ")
+                    .append(entry.input())
+                    .append(" → ")
+                    .append(entry.result())
+                    .append("   ")
+                    .append("(" + entry.createdAt().format(HISTORY_DATE_FORMAT) + ")")
+                    .append("\n");
+        }
+
+        return new BotReply(message.toString(), keyboardFactory.createHistoryKeyboard(page, totalPages));
     }
 }

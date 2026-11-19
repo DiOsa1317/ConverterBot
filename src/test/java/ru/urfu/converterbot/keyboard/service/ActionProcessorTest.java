@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,6 +19,7 @@ class ActionProcessorTest {
     private ConversionStateService stateService;
     /** Обработчик действий, создаваемый перед каждым тестом. */
     private ActionProcessor processor;
+    private FakeConversionHistoryRepository historyRepository;
 
     /**
      * Создаёт сервисы перед каждым тестом.
@@ -24,7 +27,9 @@ class ActionProcessorTest {
     @BeforeEach
     void setUp() {
         stateService = new ConversionStateService();
-        processor = new ActionProcessor(stateService, new KeyboardFactory(), msg -> "RESULT:" + msg);
+        historyRepository = new FakeConversionHistoryRepository();
+        processor = new ActionProcessor(stateService, new KeyboardFactory(), (chatId, msg) -> "RESULT:" + msg, 
+            new FakeCustomConversionRepository(), historyRepository);
     }
 
     /**
@@ -83,5 +88,37 @@ class ActionProcessorTest {
         var reply = processor.handle(1L, "MENU");
         assertTrue(reply.text().contains("Выберите тип перевода"));
         assertNotNull(reply.keyboard());
+    }
+
+    /**
+     * Проверяет отображение истории переводов
+     */
+    @Test
+    @DisplayName("HISTORY -> отображение сохранённых конвертаций")
+    void historyWithRecords() {
+        historyRepository.save(1L, "100 USD to RUB", "100 USD = 8434.1400 RUB");
+        historyRepository.save(1L, "50 EUR to RUB", "50 EUR = 4675.0000 RUB");
+
+        var reply = processor.handle(1L, "HISTORY");
+
+        assertTrue(reply.text().contains("история"));
+        assertTrue(reply.text().contains("100 USD to RUB"));
+        assertTrue(reply.text().contains("8434.1400 RUB"));
+        assertTrue(reply.text().contains("50 EUR to RUB"));
+        assertTrue(reply.text().contains("4675.0000 RUB"));
+
+        assertNotNull(reply.keyboard());
+        assertEquals(State.IDLE, stateService.getChatContext(1L).state());
+    }
+
+    @Test
+    @DisplayName("HISTORY -> не отображает историю другого чата")
+    void historyDoesNotShowOtherChatRecords() {
+        historyRepository.save(2L, "100 USD to RUB", "8434.1400 RUB");
+
+        var reply = processor.handle(1L, "HISTORY");
+
+        assertTrue(reply.text().contains("История"));
+        assertFalse(reply.text().contains("100 USD to RUB"));
     }
 }
