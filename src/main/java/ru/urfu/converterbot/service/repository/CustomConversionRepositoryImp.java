@@ -211,9 +211,10 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
                 var connection = dbConfig.getConnection();
                 var statement = connection.prepareStatement(updateSql)
         ) {
-            statement.setLong(1, chatId);
-            statement.setString(2, from);
-            statement.setString(3, to);
+            statement.setBigDecimal(1, rate);
+            statement.setLong(2, chatId);
+            statement.setString(3, from);
+            statement.setString(4, to);
 
             return statement.executeUpdate() > 0;
 

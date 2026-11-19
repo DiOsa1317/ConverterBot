@@ -141,7 +141,7 @@ public class ActionProcessor implements MessageProcessor {
             if (parts.length != 2) {
                 return new BotReply(WRONG_PAIR_TEXT, keyboardFactory.createCustomConversionMenu());
             }
-            stateService.updateContext(chatId, new ChatContext(State.AWAITING_UPDATE_CUSTOM_CONVERT_NUMBER,
+            stateService.updateContext(chatId, new ChatContext(State.AWAITING_UPDATE_CUSTOM_RATE,
                     null, parts[0], parts[1], null));
             return new BotReply("Введите число для обновления курса " + parts[0] + " в " + parts[1] + ":");
         }
@@ -201,7 +201,6 @@ public class ActionProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_RATE -> "Введите курс конверсии (число больше 0):";
             case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
             case AWAITING_UPDATE_CUSTOM_RATE -> "Введите обновленный курс конверсии (число больше 0):";
-            case AWAITING_UPDATE_CUSTOM_CONVERT_NUMBER -> "Введите число для обновления курса:";
             case CUSTOM_CONVERSIONS_MENU -> CUSTOM_CONVERSION_MENU_TEXT;
         };
     }

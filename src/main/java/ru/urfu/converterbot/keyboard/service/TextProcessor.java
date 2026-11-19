@@ -122,8 +122,7 @@ public class TextProcessor implements MessageProcessor {
             return handleCustomRate(chatId, context, text);
         }
 
-        if (context.state() == State.AWAITING_CUSTOM_CONVERT_NUMBER ||
-                context.state() == State.AWAITING_UPDATE_CUSTOM_CONVERT_NUMBER) {
+        if (context.state() == State.AWAITING_CUSTOM_CONVERT_NUMBER) {
             return handleCustomConvertNumber(chatId, context, text);
         }
 
@@ -308,7 +307,6 @@ public class TextProcessor implements MessageProcessor {
             case AWAITING_CUSTOM_RATE -> "Введите курс конверсии (число больше 0):";
             case AWAITING_CUSTOM_CONVERT_NUMBER -> "Введите число для конвертации:";
             case AWAITING_UPDATE_CUSTOM_RATE -> "Введите обновленный курс конверсии (число больше 0):";
-            case AWAITING_UPDATE_CUSTOM_CONVERT_NUMBER -> "Введите число для обновления курса:";
             case CUSTOM_CONVERSIONS_MENU -> "Прямые конверсии кастомных единиц";
         };
     }
