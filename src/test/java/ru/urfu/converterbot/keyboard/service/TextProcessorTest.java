@@ -35,7 +35,7 @@ class TextProcessorTest {
     void setUp() {
         stateService = new ConversionStateService();
         processor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter(), 
+                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(), 
                 new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
     }
 
@@ -111,7 +111,7 @@ class TextProcessorTest {
         };
         var historyRepository = new ConversionHistoryRepository(new DatabaseConfig());
         var customProcessor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter(), repo, historyRepository);
+                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(), repo, historyRepository);
         stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
                 null, "cookie", "calorie", null));
         var reply = customProcessor.handle(1L, "10");

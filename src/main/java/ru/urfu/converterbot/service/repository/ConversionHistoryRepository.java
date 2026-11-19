@@ -1,9 +1,10 @@
 package ru.urfu.converterbot.service.repository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.service.models.ConversionHistory;
 
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +13,9 @@ import java.util.List;
  * Класс, отвечающий за доступ к истории конвертаций.
  */
 public class ConversionHistoryRepository {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(ConversionHistoryRepository.class);
 
     private final DatabaseConfig dbConfig;
 
@@ -25,9 +29,9 @@ public class ConversionHistoryRepository {
      * @param chatId ID чата с пользователем
      * @param input исходный запрос пользователя
      * @param result результат конвертации
-     * @throws SQLException ошибка при взаимодействии с БД
+     * @return true, если запись успешно сохранена
      */
-    public void save(long chatId, String input, String result) throws SQLException {
+    public boolean save(long chatId, String input, String result) {
         var sql = """
                 INSERT INTO conversion_history (chat_id, input, result, created_at)
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
@@ -41,7 +45,12 @@ public class ConversionHistoryRepository {
             preparedStatement.setString(2, input);
             preparedStatement.setString(3, result);
 
-            preparedStatement.executeUpdate();
+            return preparedStatement.executeUpdate() > 0;
+
+        } catch (Exception exception) {
+            logger.error("Не удалось сохранить историю конвертаций для chatId={}",
+                    chatId, exception);
+            return false;
         }
     }
 
@@ -51,15 +60,9 @@ public class ConversionHistoryRepository {
      * @param chatId ID чата с пользователем
      * @param limit количество записей на странице
      * @param offset количество записей, которые нужно пропустить
-     * @return список записей истории
-     * @throws SQLException ошибка при взаимодействии с БД
+     * @return список записей истории или пустой список при ошибке
      */
-    public List<ConversionHistory> findPage(
-            long chatId,
-            int limit,
-            int offset
-    ) throws SQLException {
-
+    public List<ConversionHistory> findPage(long chatId, int limit, int offset) {
         var sql = """
                 SELECT id, chat_id, input, result, created_at
                 FROM conversion_history
@@ -78,19 +81,24 @@ public class ConversionHistoryRepository {
             preparedStatement.setInt(2, limit);
             preparedStatement.setInt(3, offset);
 
-            try (var resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    Timestamp timestamp = resultSet.getTimestamp("created_at");
+            var resultSet = preparedStatement.executeQuery();
 
-                    history.add(new ConversionHistory(
-                            resultSet.getLong("id"),
-                            resultSet.getLong("chat_id"),
-                            resultSet.getString("input"),
-                            resultSet.getString("result"),
-                            timestamp.toLocalDateTime()
-                    ));
-                }
+            while (resultSet.next()) {
+                Timestamp timestamp = resultSet.getTimestamp("created_at");
+
+                history.add(new ConversionHistory(
+                        resultSet.getLong("id"),
+                        resultSet.getLong("chat_id"),
+                        resultSet.getString("input"),
+                        resultSet.getString("result"),
+                        timestamp.toLocalDateTime()
+                ));
             }
+
+        } catch (Exception exception) {
+            logger.error("Не удалось получить историю конвертаций для chatId={}",
+                    chatId, exception);
+            return new ArrayList<>();
         }
 
         return history;
@@ -100,10 +108,9 @@ public class ConversionHistoryRepository {
      * Возвращает количество записей истории пользователя.
      *
      * @param chatId ID чата с пользователем
-     * @return количество записей
-     * @throws SQLException ошибка при взаимодействии с БД
+     * @return количество записей или 0 при ошибке
      */
-    public int count(long chatId) throws SQLException {
+    public int count(long chatId) {
         var sql = """
                 SELECT COUNT(*)
                 FROM conversion_history
@@ -116,10 +123,16 @@ public class ConversionHistoryRepository {
         ) {
             preparedStatement.setLong(1, chatId);
 
-            try (var resultSet = preparedStatement.executeQuery()) {
-                resultSet.next();
+            var resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
                 return resultSet.getInt(1);
             }
+            return 0;
+
+        } catch (Exception exception) {
+            logger.error("Не удалось посчитать записи истории для chatId={}",
+                    chatId, exception);
+            return 0;
         }
     }
 
@@ -128,9 +141,8 @@ public class ConversionHistoryRepository {
      *
      * @param chatId ID чата с пользователем
      * @return true, если была удалена хотя бы одна запись
-     * @throws SQLException ошибка при взаимодействии с БД
      */
-    public boolean deleteAll(long chatId) throws SQLException {
+    public boolean deleteAll(long chatId) {
         var sql = """
                 DELETE FROM conversion_history
                 WHERE chat_id = ?
@@ -142,6 +154,11 @@ public class ConversionHistoryRepository {
         ) {
             preparedStatement.setLong(1, chatId);
             return preparedStatement.executeUpdate() > 0;
+
+        } catch (Exception exception) {
+            logger.error("Не удалось удалить историю конвертаций для chatId={}",
+                    chatId, exception);
+            return false;
         }
     }
 }

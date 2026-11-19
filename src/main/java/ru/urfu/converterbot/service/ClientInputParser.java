@@ -5,7 +5,6 @@ import ru.urfu.converterbot.service.models.*;
 import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import java.math.BigDecimal;
-import java.sql.SQLException;
 import java.util.Objects;
 
 import org.jetbrains.annotations.NotNull;
@@ -80,13 +79,9 @@ public class ClientInputParser implements Parser {
             return standard.get();
         }
 
-        try {
-            var unitNames = customConversionRepository.findAllUnitNames(chatId);
-            if (unitNames.contains(token)) {
-                return new CustomQuantityType(token, chatId);
-            }
-        } catch (SQLException e) {
-            throw new InvalidUserInputException(originalMessage, "Ошибка базы данных. Попробуйте ещё раз.");
+        var unitNames = customConversionRepository.findAllUnitNames(chatId);
+        if (unitNames.contains(token)) {
+            return new CustomQuantityType(token, chatId);
         }
 
         throw new InvalidUserInputException(originalMessage, "Неизвестная единица измерения: " + token);

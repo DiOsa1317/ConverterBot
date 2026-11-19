@@ -3,7 +3,6 @@ package ru.urfu.converterbot.service.models.fakeClasses;
 import ru.urfu.converterbot.service.models.ConversionHistory;
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -17,22 +16,22 @@ public class FakeConversionHistoryRepository extends ConversionHistoryRepository
     }
 
     @Override
-    public void save(long chatId, String input, String result) throws SQLException {
+    public boolean save(long chatId, String input, String result) {
+        return true;
     }
 
     @Override
-    public List<ConversionHistory> findPage(long chatId, int limit, int offset)
-            throws SQLException {
+    public List<ConversionHistory> findPage(long chatId, int limit, int offset) {
         return List.of();
     }
 
     @Override
-    public int count(long chatId) throws SQLException {
+    public int count(long chatId) {
         return 0;
     }
 
     @Override
-    public boolean deleteAll(long chatId) throws SQLException {
+    public boolean deleteAll(long chatId) {
         return false;
     }
 }

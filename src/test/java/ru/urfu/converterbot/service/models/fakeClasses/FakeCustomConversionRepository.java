@@ -3,7 +3,6 @@ package ru.urfu.converterbot.service.models.fakeClasses;
 import ru.urfu.converterbot.service.models.CustomConversion;
 import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,26 +17,27 @@ public class FakeCustomConversionRepository extends CustomConversionRepository {
     }
 
     @Override
-    public void saveOrUpdate(CustomConversion conversion) throws SQLException {}
+    public boolean saveOrUpdate(CustomConversion conversion) {
+        return true;
+    }
 
     @Override
-    public Optional<CustomConversion> findByChatIdFromAndAndTo(long chatId, String from, String to)
-            throws SQLException {
+    public Optional<CustomConversion> findByChatIdFromAndAndTo(long chatId, String from, String to) {
         return Optional.empty();
     }
 
     @Override
-    public List<CustomConversion> findAllOutgoing(long chatId) throws SQLException {
+    public List<CustomConversion> findAllOutgoing(long chatId) {
         return List.of();
     }
 
     @Override
-    public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) throws SQLException {
+    public boolean deleteByChatIdAndFromAndTo(long chatId, String from, String to) {
         return false;
     }
 
     @Override
-    public List<String> findAllUnitNames(long chatId) throws SQLException {
+    public List<String> findAllUnitNames(long chatId) {
         return List.of();
     }
 }

@@ -2,12 +2,9 @@ package ru.urfu.converterbot.keyboard.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,8 +24,6 @@ import ru.urfu.converterbot.service.repository.CustomConversionRepository;
  */
 public class TextProcessor implements MessageProcessor {
 
-    private static final Logger logger = LoggerFactory.getLogger(TextProcessor.class);
-
     private static final String MENU_COMMAND = "/menu";
     private static final String START_COMMAND = "/start";
     private static final String HELP_COMMAND = "/help";
@@ -43,7 +38,6 @@ public class TextProcessor implements MessageProcessor {
             "Название должно содержать только латинские буквы и _. Попробуйте ещё раз.";
     private static final String WRONG_MESSAGE_FORMAT_TEXT = "Ошибка формата. Введите число, например, 250 или 50.5.";
     private static final String COURSE_SHOULD_BE_GREATER_THAN_ZERO = "Курс должен быть больше 0.";
-    private static final String ERROR_TEXT = "Произошла ошибка. Пожалуйста, попробуйте позже.";
 
     private static final String HISTORY_COMMAND = "/history";
     private static final DateTimeFormatter HISTORY_DATE_FORMAT =
@@ -191,13 +185,7 @@ public class TextProcessor implements MessageProcessor {
         var from = context.number();
         var to = context.fromUnit();
         var conversion = new CustomConversion(from, to, rate, chatId);
-        try {
-            customConversionRepository.saveOrUpdate(conversion);
-        } catch (SQLException e) {
-            logger.error("Не удалось сохранить кастомную конверсию: from={}, to={}, rate={}, chatId={}",
-                    from, to, rate, chatId, e);
-            return new BotReply(ERROR_TEXT);
-        }
+        customConversionRepository.saveOrUpdate(conversion);
         stateService.reset(chatId);
         return new BotReply("Готово! 1 " + from + " = " + rate + " " + to + System.lineSeparator()
                 + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
@@ -215,21 +203,16 @@ public class TextProcessor implements MessageProcessor {
         var to = context.fromUnit();
 
         BigDecimal result;
-        try {
-            var conv = customConversionRepository.findByChatIdFromAndAndTo(chatId, from, to);
-            if (conv.isPresent()) {
-                result = value.multiply(conv.get().rate()).setScale(10, RoundingMode.HALF_UP);
+        var conv = customConversionRepository.findByChatIdFromAndAndTo(chatId, from, to);
+        if (conv.isPresent()) {
+            result = value.multiply(conv.get().rate()).setScale(10, RoundingMode.HALF_UP);
+        } else {
+            var reverse = customConversionRepository.findByChatIdFromAndAndTo(chatId, to, from);
+            if (reverse.isPresent()) {
+                result = value.divide(reverse.get().rate(), 10, RoundingMode.HALF_UP);
             } else {
-                var reverse = customConversionRepository.findByChatIdFromAndAndTo(chatId, to, from);
-                if (reverse.isPresent()) {
-                    result = value.divide(reverse.get().rate(), 10, RoundingMode.HALF_UP);
-                } else {
-                    return new BotReply("Нет прямого курса между " + from + " и " + to + ".", keyboardFactory.createMainMenu());
-                }
+                return new BotReply("Нет прямого курса между " + from + " и " + to + ".", keyboardFactory.createMainMenu());
             }
-        } catch (SQLException e) {
-            logger.error("Ошибка при кастомной конвертации: from={}, to={}, chatId={}", from, to, chatId, e);
-            return new BotReply(ERROR_TEXT);
         }
 
         stateService.reset(chatId);
@@ -308,53 +291,47 @@ public class TextProcessor implements MessageProcessor {
      * @return сообщение с историей и клавиатурой
      */
     private BotReply showHistoryPage(long chatId, int page) {
-        try {
-            int total = historyRepository.count(chatId);
-            if (total == 0) {
-                return new BotReply("История конвертаций пока пуста.",
-                        keyboardFactory.createMainMenu());
-            }
-
-            int pageSize = 5;
-            int totalPages = (total + pageSize - 1) / pageSize;
-            if (page < 0 || page >= totalPages) {
-                return new BotReply("Такой страницы истории нет.", keyboardFactory.createMainMenu());
-            }
-
-            var history = historyRepository.findPage(
-                    chatId,
-                    pageSize,
-                    page * pageSize
-            );
-            StringBuilder message = new StringBuilder();
-
-            message.append("Ваша история переводов (страница ")
-                    .append(page + 1)
-                    .append(" из ")
-                    .append(totalPages)
-                    .append("):\n\n");
-
-            int number = page * pageSize + 1;
-
-            for (var entry : history) {
-                message.append(number++)
-                        .append(". ")
-                        .append(entry.input())
-                        .append(" → ")
-                        .append(entry.result())
-                        .append("   ")
-                        .append("(" + entry.createdAt().format(HISTORY_DATE_FORMAT) + ")")
-                        .append("\n");
-            }
-
-            return new BotReply(
-                    message.toString(),
-                    keyboardFactory.createHistoryKeyboard(page, totalPages)
-            );
-
-        } catch (SQLException exception) {
-            logger.error("Не удалось получить историю конвертаций", exception);
-            return new BotReply(ERROR_TEXT, keyboardFactory.createMainMenu());
+        int total = historyRepository.count(chatId);
+        if (total == 0) {
+            return new BotReply("История конвертаций пока пуста.",
+                    keyboardFactory.createMainMenu());
         }
+
+        int pageSize = 5;
+        int totalPages = (total + pageSize - 1) / pageSize;
+        if (page < 0 || page >= totalPages) {
+            return new BotReply("Такой страницы истории нет.", keyboardFactory.createMainMenu());
+        }
+
+        var history = historyRepository.findPage(
+                chatId,
+                pageSize,
+                page * pageSize
+        );
+        StringBuilder message = new StringBuilder();
+
+        message.append("Ваша история переводов (страница ")
+                .append(page + 1)
+                .append(" из ")
+                .append(totalPages)
+                .append("):\n\n");
+
+        int number = page * pageSize + 1;
+
+        for (var entry : history) {
+            message.append(number++)
+                    .append(". ")
+                    .append(entry.input())
+                    .append(" → ")
+                    .append(entry.result())
+                    .append("   ")
+                    .append("(" + entry.createdAt().format(HISTORY_DATE_FORMAT) + ")")
+                    .append("\n");
+        }
+
+        return new BotReply(
+                message.toString(),
+                keyboardFactory.createHistoryKeyboard(page, totalPages)
+        );
     }
 }

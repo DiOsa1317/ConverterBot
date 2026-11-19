@@ -14,7 +14,6 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
-import java.sql.SQLException;
 
 /**
  * Диспетчер перевода величин.
@@ -143,11 +142,7 @@ public class BotService implements BotResponseProcessor {
 
         var formattedResult = messageFormatter.getResult(request, result);
 
-        try {
-            historyRepository.save(chatId, messageText, formattedResult);
-        } catch (SQLException exception) {
-            logger.error("Не удалось сохранить конвертацию в историю", exception);
-        }
+        historyRepository.save(chatId, messageText, formattedResult);
 
         return formattedResult;
     }
