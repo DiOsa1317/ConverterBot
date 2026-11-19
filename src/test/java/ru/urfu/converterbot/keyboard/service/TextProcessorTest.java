@@ -115,7 +115,7 @@ class TextProcessorTest {
         stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
                 null, "cookie", "calorie", null));
         var reply = customProcessor.handle(1L, "10");
-        assertTrue(reply.text().contains("10 cookie = 3000.0000000000 calorie"));
+        assertTrue(reply.text().contains("10 cookie = 3000.0000 calorie"));
         assertNotNull(reply.keyboard());
     }
 }

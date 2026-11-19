@@ -17,7 +17,9 @@ import ru.urfu.converterbot.service.BotResponseProcessor;
 import ru.urfu.converterbot.service.MessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
 import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
+import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 /**
  * Обработчик текстовых сообщений пользователя
@@ -51,8 +53,8 @@ public class TextProcessor implements MessageProcessor {
 
     private final MessageFormatter formatter;
 
-    private final CustomConversionRepositoryImp customConversionRepository;
-    private final ConversionHistoryRepositoryImp historyRepository;
+    private final CustomConversionRepository customConversionRepository;
+    private final ConversionHistoryRepository historyRepository;
 
     /**
      * Создаёт сервис диалога.
@@ -205,11 +207,11 @@ public class TextProcessor implements MessageProcessor {
         BigDecimal result;
         var conv = customConversionRepository.findByChatIdFromAndAndTo(chatId, from, to);
         if (conv.isPresent()) {
-            result = value.multiply(conv.get().rate()).setScale(10, RoundingMode.HALF_UP);
+            result = value.multiply(conv.get().rate()).setScale(4, RoundingMode.HALF_UP);
         } else {
             var reverse = customConversionRepository.findByChatIdFromAndAndTo(chatId, to, from);
             if (reverse.isPresent()) {
-                result = value.divide(reverse.get().rate(), 10, RoundingMode.HALF_UP);
+                result = value.divide(reverse.get().rate(), 4, RoundingMode.HALF_UP);
             } else {
                 return new BotReply("Нет прямого курса между " + from + " и " + to + ".", keyboardFactory.createMainMenu());
             }

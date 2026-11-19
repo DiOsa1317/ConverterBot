@@ -27,9 +27,11 @@ public class ConversionRequest {
      */
     public ConversionRequest(BigDecimal value, QuantityType from, QuantityType to)
             throws InvalidUserInputException {
-        if (from.getClass() != to.getClass()) {
-            throw new InvalidUserInputException(from + " to " + to,
-                    "Нельзя перевести " + from + " в " + to + ": это разные группы величин.");
+        if (!(from instanceof CustomQuantityType && to instanceof CustomQuantityType)) {
+            if (from.getClass() != to.getClass()) {
+                throw new InvalidUserInputException(from + " to " + to,
+                        "Нельзя перевести " + from + " в " + to + ": это разные группы величин.");
+            }
         }
         this.value = value;
         this.from = from;

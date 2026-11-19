@@ -15,10 +15,14 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.models.CustomQuantityType;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.math.BigDecimal;
 
 /**
  * Тесты для ConverterService
@@ -115,5 +119,34 @@ public class BotServiceTest {
     @DisplayName("Не выбрасывает исключение на null")
     void shouldNotThrowOnNull() {
         assertDoesNotThrow(() -> botService.processBotResponse(1, null));
+    }
+
+    /**
+     * Проверяет на успешный перевод одной кастомной единицы в другую.
+     */
+    @Test
+    @DisplayName("Переводит одну кастомную единицу в другую")
+    void shouldConvertCustomUnits() {
+        var customRepo = new FakeCustomConversionRepository();
+
+        customRepo.saveOrUpdate(new CustomConversion(
+                "kk",
+                "mm",
+                new BigDecimal("2"),
+                1L
+        ));
+
+        var converter = new CurrencyConverter(new CurrencyData(), customRepo);
+
+        var from = new CustomQuantityType("kk", 1L);
+        var to = new CustomQuantityType("mm", 1L);
+
+        var result = converter.convert(
+                new BigDecimal("5"),
+                from,
+                to
+        );
+
+        assertEquals(new BigDecimal("10.0000000000"), result);
     }
 }

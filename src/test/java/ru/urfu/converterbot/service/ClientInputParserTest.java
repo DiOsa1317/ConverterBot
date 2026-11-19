@@ -4,6 +4,8 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.TemperatureType;
 import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 import ru.urfu.converterbot.service.models.CurrencyType;
+import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.models.CustomQuantityType;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +14,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.math.BigDecimal;
 
 /**
  * Тесты для ClientInputParser.
@@ -109,5 +113,29 @@ public class ClientInputParserTest {
         var result = clientInputParser.parse("20 CELSIUS to FAHRENHEIT", 1);
         assertEquals(TemperatureType.CELSIUS, result.from());
         assertEquals(TemperatureType.FAHRENHEIT, result.to());
+    }
+
+    /**
+     * Проверяет, что парсер распознает пользовательскую единицу измерения.
+     */
+    @Test
+    @DisplayName("Распознаёт пользовательскую единицу измерения")
+    void shouldParseCustomUnit() {
+        var repository = new FakeCustomConversionRepository();
+
+        repository.saveOrUpdate(new CustomConversion(
+                "kk",
+                "mm",
+                new BigDecimal("2"),
+                1L
+        ));
+
+        var parser = new ClientInputParser(repository);
+
+        var result = parser.parse("5 kk to mm", 1L);
+
+        assertEquals(new BigDecimal("5"), result.value());
+        assertInstanceOf(CustomQuantityType.class, result.from());
+        assertInstanceOf(CustomQuantityType.class, result.to());
     }
 }

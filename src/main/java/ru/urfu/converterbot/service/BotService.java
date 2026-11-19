@@ -13,6 +13,7 @@ import ru.urfu.converterbot.service.converters.WeightConverter;
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 
 /**
@@ -34,7 +35,7 @@ public class BotService implements BotResponseProcessor {
 
     private final MessageFormatter messageFormatter;
 
-    private final ConversionHistoryRepositoryImp historyRepository;
+    private final ConversionHistoryRepository historyRepository;
 
     /**
      * Создаёт диспетчер с явно переданными конвертерами всех групп.

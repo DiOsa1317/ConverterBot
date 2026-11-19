@@ -19,6 +19,7 @@ class ActionProcessorTest {
     private ConversionStateService stateService;
     /** Обработчик действий, создаваемый перед каждым тестом. */
     private ActionProcessor processor;
+    private FakeConversionHistoryRepository historyRepository;
 
     /**
      * Создаёт сервисы перед каждым тестом.
@@ -26,8 +27,9 @@ class ActionProcessorTest {
     @BeforeEach
     void setUp() {
         stateService = new ConversionStateService();
+        historyRepository = new FakeConversionHistoryRepository();
         processor = new ActionProcessor(stateService, new KeyboardFactory(), (chatId, msg) -> "RESULT:" + msg, 
-            new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
+            new FakeCustomConversionRepository(), historyRepository);
     }
 
     /**
@@ -89,15 +91,34 @@ class ActionProcessorTest {
     }
 
     /**
-     * Проверяет пустую историю переводов
+     * Проверяет отображение истории переводов
      */
     @Test
-    @DisplayName("HISTORY -> пустая история")
-    void history() {
+    @DisplayName("HISTORY -> отображение сохранённых конвертаций")
+    void historyWithRecords() {
+        historyRepository.save(1L, "100 USD to RUB", "100 USD = 8434.1400 RUB");
+        historyRepository.save(1L, "50 EUR to RUB", "50 EUR = 4675.0000 RUB");
+
+        var reply = processor.handle(1L, "HISTORY");
+
+        assertTrue(reply.text().contains("история"));
+        assertTrue(reply.text().contains("100 USD to RUB"));
+        assertTrue(reply.text().contains("8434.1400 RUB"));
+        assertTrue(reply.text().contains("50 EUR to RUB"));
+        assertTrue(reply.text().contains("4675.0000 RUB"));
+
+        assertNotNull(reply.keyboard());
+        assertEquals(State.IDLE, stateService.getChatContext(1L).state());
+    }
+
+    @Test
+    @DisplayName("HISTORY -> не отображает историю другого чата")
+    void historyDoesNotShowOtherChatRecords() {
+        historyRepository.save(2L, "100 USD to RUB", "8434.1400 RUB");
+
         var reply = processor.handle(1L, "HISTORY");
 
         assertTrue(reply.text().contains("История"));
-        assertNotNull(reply.keyboard());
-        assertEquals(State.IDLE, stateService.getChatContext(1L).state());
+        assertFalse(reply.text().contains("100 USD to RUB"));
     }
 }
