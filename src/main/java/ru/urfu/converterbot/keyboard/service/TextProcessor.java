@@ -242,6 +242,8 @@ public class TextProcessor implements MessageProcessor {
             }
         }
 
+        var formatted = value + " " + from + " = " + result + " " + to;
+        historyRepository.save(chatId, value + " " + from + " to " + to, formatted);
         stateService.reset(chatId);
         return new BotReply(value + " " + from + " = " + result + " " + to + System.lineSeparator()
                 + MENU_HINT_TEXT, keyboardFactory.createMainMenu());
