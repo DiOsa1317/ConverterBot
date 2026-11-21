@@ -16,9 +16,7 @@ import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotResponseProcessor;
 import ru.urfu.converterbot.service.MessageFormatter;
 import ru.urfu.converterbot.service.models.CustomConversion;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
-import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 /**
@@ -45,6 +43,8 @@ public class TextProcessor implements MessageProcessor {
     private static final DateTimeFormatter HISTORY_DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm");
 
+    private static final int PAGE_SIZE = 5;
+
     private final ConversionStateService stateService;
 
     private final KeyboardFactory keyboardFactory;
@@ -67,8 +67,8 @@ public class TextProcessor implements MessageProcessor {
                          @NotNull KeyboardFactory keyboardFactory,
                          @NotNull BotResponseProcessor processor,
                          @NotNull MessageFormatter messageFormatter,
-                         @NotNull CustomConversionRepositoryImp customConversionRepository,
-                         @NotNull ConversionHistoryRepositoryImp historyRepository) {
+                         @NotNull CustomConversionRepository customConversionRepository,
+                         @NotNull ConversionHistoryRepository historyRepository) {
         this.stateService = stateService;
         this.keyboardFactory = keyboardFactory;
         this.processor = processor;
@@ -327,16 +327,15 @@ public class TextProcessor implements MessageProcessor {
                     keyboardFactory.createMainMenu());
         }
 
-        int pageSize = 5;
-        int totalPages = (total + pageSize - 1) / pageSize;
+        int totalPages = (total + PAGE_SIZE - 1) / PAGE_SIZE;
         if (page < 0 || page >= totalPages) {
             return new BotReply("Такой страницы истории нет.", keyboardFactory.createMainMenu());
         }
 
         var history = historyRepository.findPage(
                 chatId,
-                pageSize,
-                page * pageSize
+                PAGE_SIZE,
+                page * PAGE_SIZE
         );
         StringBuilder message = new StringBuilder();
 
@@ -346,7 +345,7 @@ public class TextProcessor implements MessageProcessor {
                 .append(totalPages)
                 .append("):\n\n");
 
-        int number = page * pageSize + 1;
+        int number = page * PAGE_SIZE + 1;
 
         for (var entry : history) {
             message.append(number++)
