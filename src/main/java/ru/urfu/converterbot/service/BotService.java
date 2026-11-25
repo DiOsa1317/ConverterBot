@@ -14,7 +14,6 @@ import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
 
 import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
-import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
 
 /**
  * Диспетчер перевода величин.
@@ -54,7 +53,7 @@ public class BotService implements BotResponseProcessor {
                             @NotNull TemperatureConverter temperatureConverter,
                             @NotNull Parser parser,
                             @NotNull MessageFormatter messageFormatter,
-                            @NotNull ConversionHistoryRepositoryImp historyRepository) {
+                            @NotNull ConversionHistoryRepository historyRepository) {
         this.currencyConverter = currencyConverter;
         this.lengthConverter = lengthConverter;
         this.weightConverter = weightConverter;

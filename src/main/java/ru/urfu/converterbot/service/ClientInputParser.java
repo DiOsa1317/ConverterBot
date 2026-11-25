@@ -2,7 +2,6 @@ package ru.urfu.converterbot.service;
 
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
-import ru.urfu.converterbot.service.repository.CustomConversionRepositoryImp;
 import ru.urfu.converterbot.service.repository.CustomConversionRepository;
 
 import java.math.BigDecimal;
@@ -20,7 +19,7 @@ public class ClientInputParser implements Parser {
     /** Слово-разделитель между единицами измерения. */
     private static final String TO_SEPARATOR = "to";
 
-    public ClientInputParser(CustomConversionRepositoryImp customConversionRepository) {
+    public ClientInputParser(CustomConversionRepository customConversionRepository) {
         this.customConversionRepository = customConversionRepository;
     }
 
