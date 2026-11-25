@@ -6,6 +6,8 @@ import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.service.models.CustomConversion;
 
 import java.math.BigDecimal;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,52 +40,24 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
                 WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
                 """;
 
-        try (var connection = dbConfig.getConnection()) {
-            if (exists(connection, checkSql, conversion)) {
+        try {
+            boolean exists = SqlExecutor.execute(dbConfig, checkSql, statement -> {
+                bindCheck(statement, conversion);
+                return statement.executeQuery().next();
+            });
+
+            if (exists) {
                 throw new SQLException("Такой перевод уже существует");
             }
 
-            return insert(connection, insertSql, conversion);
+            return SqlExecutor.execute(dbConfig, insertSql, statement -> {
+                bindSave(statement, conversion);
+                return statement.executeUpdate() > 0;
+            });
 
         } catch (SQLException exception) {
             logger.error("Не удалось сохранить кастомный перевод: {}", conversion, exception);
             return false;
-        }
-    }
-
-    /**
-     * Проверяет существование кастомного перевода.
-     */
-    private boolean exists(
-            java.sql.Connection connection,
-            String sql,
-            CustomConversion conversion
-    ) throws SQLException {
-        try (var statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, conversion.chatId());
-            statement.setString(2, conversion.fromUnit());
-            statement.setString(3, conversion.toUnit());
-
-            var resultSet = statement.executeQuery();
-            return resultSet.next();
-        }
-    }
-
-    /**
-     * Добавляет новый кастомный перевод.
-     */
-    private boolean insert(
-            java.sql.Connection connection,
-            String sql,
-            CustomConversion conversion
-    ) throws SQLException {
-        try (var statement = connection.prepareStatement(sql)) {
-            statement.setLong(1, conversion.chatId());
-            statement.setString(2, conversion.fromUnit());
-            statement.setString(3, conversion.toUnit());
-            statement.setBigDecimal(4, conversion.rate());
-
-            return statement.executeUpdate() > 0;
         }
     }
 
@@ -99,25 +73,17 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
                 WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
                 """;
 
-        try (
-                var connection = dbConfig.getConnection();
-                var statement = connection.prepareStatement(sql)
-        ) {
-            statement.setLong(1, chatId);
-            statement.setString(2, from);
-            statement.setString(3, to);
+        try {
+            return SqlExecutor.execute(dbConfig, sql, statement -> {
+                bindFind(statement, chatId, from, to);
 
-            var resultSet = statement.executeQuery();
-            if (!resultSet.next()) {
-                return Optional.empty();
-            }
+                var resultSet = statement.executeQuery();
+                if (!resultSet.next()) {
+                    return Optional.empty();
+                }
 
-            return Optional.of(new CustomConversion(
-                    resultSet.getString("from_unit"),
-                    resultSet.getString("to_unit"),
-                    resultSet.getBigDecimal("rate"),
-                    chatId
-            ));
+                return Optional.of(mapConversion(resultSet, chatId));
+            });
 
         } catch (SQLException exception) {
             logger.error(
@@ -137,40 +103,23 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
                 ORDER BY from_unit, to_unit
                 """;
 
-        List<CustomConversion> conversions = new ArrayList<>();
+        try {
+            return SqlExecutor.execute(dbConfig, sql, statement -> {
+                statement.setLong(1, chatId);
 
-        try (
-                var connection = dbConfig.getConnection();
-                var statement = connection.prepareStatement(sql);
-                var resultSet = getResultSet(statement, chatId)
-        ) {
-            while (resultSet.next()) {
-                conversions.add(new CustomConversion(
-                        resultSet.getString("from_unit"),
-                        resultSet.getString("to_unit"),
-                        resultSet.getBigDecimal("rate"),
-                        chatId
-                ));
-            }
+                var resultSet = statement.executeQuery();
+                List<CustomConversion> conversions = new ArrayList<>();
+                while (resultSet.next()) {
+                    conversions.add(mapConversion(resultSet, chatId));
+                }
+                return conversions;
+            });
 
         } catch (SQLException exception) {
             logger.error("Не удалось получить кастомные переводы для chatId={}",
                     chatId, exception);
             return new ArrayList<>();
         }
-
-        return conversions;
-    }
-
-    /**
-     * Выполняет запрос и возвращает ResultSet.
-     */
-    private java.sql.ResultSet getResultSet(
-            java.sql.PreparedStatement statement,
-            long chatId
-    ) throws SQLException {
-        statement.setLong(1, chatId);
-        return statement.executeQuery();
     }
 
     @Override
@@ -180,15 +129,11 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
                 WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
                 """;
 
-        try (
-                var connection = dbConfig.getConnection();
-                var statement = connection.prepareStatement(sql)
-        ) {
-            statement.setLong(1, chatId);
-            statement.setString(2, from);
-            statement.setString(3, to);
-
-            return statement.executeUpdate() > 0;
+        try {
+            return SqlExecutor.execute(dbConfig, sql, statement -> {
+                bindDelete(statement, chatId, from, to);
+                return statement.executeUpdate() > 0;
+            });
 
         } catch (SQLException exception) {
             logger.error(
@@ -201,22 +146,17 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
 
     @Override
     public boolean updateCustomConversion(long chatId, String from, String to, BigDecimal rate) {
-
         String updateSql = """
                 UPDATE custom_conversions
                 SET rate = ?, created_at = CURRENT_TIMESTAMP
                 WHERE chat_id = ? AND from_unit = ? AND to_unit = ?
                 """;
-        try (
-                var connection = dbConfig.getConnection();
-                var statement = connection.prepareStatement(updateSql)
-        ) {
-            statement.setBigDecimal(1, rate);
-            statement.setLong(2, chatId);
-            statement.setString(3, from);
-            statement.setString(4, to);
 
-            return statement.executeUpdate() > 0;
+        try {
+            return SqlExecutor.execute(dbConfig, updateSql, statement -> {
+                bindUpdate(statement, chatId, from, to, rate);
+                return statement.executeUpdate() > 0;
+            });
 
         } catch (SQLException exception) {
             logger.error(
@@ -239,26 +179,90 @@ public class CustomConversionRepositoryImp implements CustomConversionRepository
                 WHERE chat_id = ?
                 """;
 
-        List<String> names = new ArrayList<>();
+        try {
+            return SqlExecutor.execute(dbConfig, sql, statement -> {
+                statement.setLong(1, chatId);
+                statement.setLong(2, chatId);
 
-        try (
-                var connection = dbConfig.getConnection();
-                var statement = connection.prepareStatement(sql)
-        ) {
-            statement.setLong(1, chatId);
-            statement.setLong(2, chatId);
-
-            var resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-                names.add(resultSet.getString("unit"));
-            }
+                var resultSet = statement.executeQuery();
+                return readUnitNames(resultSet);
+            });
 
         } catch (SQLException exception) {
             logger.error("Не удалось получить названия кастомных единиц для chatId={}",
                     chatId, exception);
             return new ArrayList<>();
         }
+    }
 
+    /**
+     * Заполняет параметры проверки существования конверсии.
+     */
+    private void bindCheck(PreparedStatement statement, CustomConversion conversion) throws SQLException {
+        statement.setLong(1, conversion.chatId());
+        statement.setString(2, conversion.fromUnit());
+        statement.setString(3, conversion.toUnit());
+    }
+
+    /**
+     * Заполняет параметры вставки конверсии.
+     */
+    private void bindSave(PreparedStatement statement, CustomConversion conversion) throws SQLException {
+        statement.setLong(1, conversion.chatId());
+        statement.setString(2, conversion.fromUnit());
+        statement.setString(3, conversion.toUnit());
+        statement.setBigDecimal(4, conversion.rate());
+    }
+
+    /**
+     * Заполняет параметры поиска конверсии.
+     */
+    private void bindFind(PreparedStatement statement, long chatId, String from, String to) throws SQLException {
+        statement.setLong(1, chatId);
+        statement.setString(2, from);
+        statement.setString(3, to);
+    }
+
+    /**
+     * Заполняет параметры удаления конверсии.
+     */
+    private void bindDelete(PreparedStatement statement, long chatId, String from, String to) throws SQLException {
+        statement.setLong(1, chatId);
+        statement.setString(2, from);
+        statement.setString(3, to);
+    }
+
+    /**
+     * Заполняет параметры обновления курса конверсии.
+     */
+    private void bindUpdate(PreparedStatement statement, long chatId, String from, String to, BigDecimal rate)
+            throws SQLException {
+        statement.setBigDecimal(1, rate);
+        statement.setLong(2, chatId);
+        statement.setString(3, from);
+        statement.setString(4, to);
+    }
+
+    /**
+     * Преобразует строку результата в {@link CustomConversion}.
+     */
+    private CustomConversion mapConversion(ResultSet resultSet, long chatId) throws SQLException {
+        return new CustomConversion(
+                resultSet.getString("from_unit"),
+                resultSet.getString("to_unit"),
+                resultSet.getBigDecimal("rate"),
+                chatId
+        );
+    }
+
+    /**
+     * Читает названия единиц из результата запроса.
+     */
+    private List<String> readUnitNames(ResultSet resultSet) throws SQLException {
+        List<String> names = new ArrayList<>();
+        while (resultSet.next()) {
+            names.add(resultSet.getString("unit"));
+        }
         return names;
     }
 }

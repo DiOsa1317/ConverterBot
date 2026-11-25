@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory;
 import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.service.models.ConversionHistory;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,15 +33,11 @@ public class ConversionHistoryRepositoryImp implements ConversionHistoryReposito
                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)
                 """;
 
-        try (
-                var connection = dbConfig.getConnection();
-                var preparedStatement = connection.prepareStatement(sql)
-        ) {
-            preparedStatement.setLong(1, chatId);
-            preparedStatement.setString(2, input);
-            preparedStatement.setString(3, result);
-
-            return preparedStatement.executeUpdate() > 0;
+        try {
+            return SqlExecutor.execute(dbConfig, sql, preparedStatement -> {
+                bindSave(preparedStatement, chatId, input, result);
+                return preparedStatement.executeUpdate() > 0;
+            });
 
         } catch (Exception exception) {
             logger.error("Не удалось сохранить историю конвертаций для chatId={}",
@@ -57,37 +56,24 @@ public class ConversionHistoryRepositoryImp implements ConversionHistoryReposito
                 LIMIT ? OFFSET ?
                 """;
 
-        List<ConversionHistory> history = new ArrayList<>();
+        try {
+            return SqlExecutor.execute(dbConfig, sql, preparedStatement -> {
+                bindFindPage(preparedStatement, chatId, limit, offset);
 
-        try (
-                var connection = dbConfig.getConnection();
-                var preparedStatement = connection.prepareStatement(sql)
-        ) {
-            preparedStatement.setLong(1, chatId);
-            preparedStatement.setInt(2, limit);
-            preparedStatement.setInt(3, offset);
+                var resultSet = preparedStatement.executeQuery();
 
-            var resultSet = preparedStatement.executeQuery();
-
-            while (resultSet.next()) {
-                Timestamp timestamp = resultSet.getTimestamp("created_at");
-
-                history.add(new ConversionHistory(
-                        resultSet.getLong("id"),
-                        resultSet.getLong("chat_id"),
-                        resultSet.getString("input"),
-                        resultSet.getString("result"),
-                        timestamp.toLocalDateTime()
-                ));
-            }
+                List<ConversionHistory> history = new ArrayList<>();
+                while (resultSet.next()) {
+                    history.add(mapConversionHistory(resultSet));
+                }
+                return history;
+            });
 
         } catch (Exception exception) {
             logger.error("Не удалось получить историю конвертаций для chatId={}",
                     chatId, exception);
             return new ArrayList<>();
         }
-
-        return history;
     }
 
     @Override
@@ -98,17 +84,16 @@ public class ConversionHistoryRepositoryImp implements ConversionHistoryReposito
                 WHERE chat_id = ?
                 """;
 
-        try (
-                var connection = dbConfig.getConnection();
-                var preparedStatement = connection.prepareStatement(sql)
-        ) {
-            preparedStatement.setLong(1, chatId);
+        try {
+            return SqlExecutor.execute(dbConfig, sql, preparedStatement -> {
+                preparedStatement.setLong(1, chatId);
 
-            var resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                return resultSet.getInt(1);
-            }
-            return 0;
+                var resultSet = preparedStatement.executeQuery();
+                if (resultSet.next()) {
+                    return resultSet.getInt(1);
+                }
+                return 0;
+            });
 
         } catch (Exception exception) {
             logger.error("Не удалось посчитать записи истории для chatId={}",
@@ -124,17 +109,51 @@ public class ConversionHistoryRepositoryImp implements ConversionHistoryReposito
                 WHERE chat_id = ?
                 """;
 
-        try (
-                var connection = dbConfig.getConnection();
-                var preparedStatement = connection.prepareStatement(sql)
-        ) {
-            preparedStatement.setLong(1, chatId);
-            return preparedStatement.executeUpdate() > 0;
+        try {
+            return SqlExecutor.execute(dbConfig, sql, preparedStatement -> {
+                preparedStatement.setLong(1, chatId);
+                return preparedStatement.executeUpdate() > 0;
+            });
 
         } catch (Exception exception) {
             logger.error("Не удалось удалить историю конвертаций для chatId={}",
                     chatId, exception);
             return false;
         }
+    }
+
+    /**
+     * Заполняет параметры сохранения записи истории.
+     */
+    private void bindSave(PreparedStatement preparedStatement, long chatId, String input, String result)
+            throws SQLException {
+        preparedStatement.setLong(1, chatId);
+        preparedStatement.setString(2, input);
+        preparedStatement.setString(3, result);
+    }
+
+    /**
+     * Заполняет параметры выборки страницы истории.
+     */
+    private void bindFindPage(PreparedStatement preparedStatement, long chatId, int limit, int offset)
+            throws SQLException {
+        preparedStatement.setLong(1, chatId);
+        preparedStatement.setInt(2, limit);
+        preparedStatement.setInt(3, offset);
+    }
+
+    /**
+     * Преобразует строку результата в {@link ConversionHistory}.
+     */
+    private ConversionHistory mapConversionHistory(ResultSet resultSet) throws SQLException {
+        Timestamp timestamp = resultSet.getTimestamp("created_at");
+
+        return new ConversionHistory(
+                resultSet.getLong("id"),
+                resultSet.getLong("chat_id"),
+                resultSet.getString("input"),
+                resultSet.getString("result"),
+                timestamp.toLocalDateTime()
+        );
     }
 }
