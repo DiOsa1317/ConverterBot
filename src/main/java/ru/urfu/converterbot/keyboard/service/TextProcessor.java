@@ -235,11 +235,10 @@ public class TextProcessor implements MessageProcessor {
             result = value.multiply(conv.get().rate()).setScale(4, RoundingMode.HALF_UP);
         } else {
             var reverse = customConversionRepository.findByChatIdFromAndAndTo(chatId, to, from);
-            if (reverse.isPresent()) {
-                result = value.divide(reverse.get().rate(), 4, RoundingMode.HALF_UP);
-            } else {
+            if (!reverse.isPresent()) {
                 return new BotReply("Нет прямого курса между " + from + " и " + to + ".", keyboardFactory.createMainMenu());
             }
+            result = value.divide(reverse.get().rate(), 4, RoundingMode.HALF_UP);
         }
 
         var formatted = value + " " + from + " = " + result + " " + to;

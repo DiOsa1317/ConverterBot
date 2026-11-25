@@ -23,9 +23,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Тесты обработчика текстовых сообщений {@link TextProcessor}.
  */
 class TextProcessorTest {
-    /** Сервис состояний диалога. */
+    /**
+     * Сервис состояний диалога.
+     */
     private ConversionStateService stateService;
-    /** Обработчик текста, создаваемый перед каждым тестом. */
+    /**
+     * Обработчик текста, создаваемый перед каждым тестом.
+     */
     private TextProcessor processor;
 
     /**
@@ -35,7 +39,7 @@ class TextProcessorTest {
     void setUp() {
         stateService = new ConversionStateService();
         processor = new TextProcessor(stateService, new KeyboardFactory(),
-                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(), 
+                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(),
                 new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
     }
 
@@ -46,7 +50,7 @@ class TextProcessorTest {
     @DisplayName("/start возвращает приветствие и главное меню")
     void start() {
         var reply = processor.handle(1L, "/start");
-        assertTrue(reply.text().contains("Приветствую"));
+        assertEquals("Приветствую вас! Этот бот конвертирует валюты и физические величины.\nЧтобы узнать подробнее, введите /help\nИспользуйте кнопки меню для выбора типа перевода.", reply.text());
         assertNotNull(reply.keyboard());
     }
 
@@ -57,7 +61,7 @@ class TextProcessorTest {
     @DisplayName("/help возвращает справку")
     void help() {
         var reply = processor.handle(1L, "/help");
-        assertTrue(reply.text().contains("Формат запроса"));
+        assertEquals("Формат запроса: {число} {единица1} to {единица2}\nНапример: 100 USD to EUR\nИли: 10 KM to MI\n\nДоступные валюты: /currency\nДоступные величины:\n1) /length\n2) /weight\n3) /temperature\nИспользуйте кнопки меню для выбора типа перевода.", reply.text());
     }
 
     /**
@@ -67,7 +71,7 @@ class TextProcessorTest {
     @DisplayName("null в IDLE -> подсказка меню")
     void nullIdle() {
         var reply = processor.handle(1L, null);
-        assertTrue(reply.text().contains("Используйте кнопки меню"));
+        assertEquals("Используйте кнопки меню для выбора типа перевода.", reply.text());
         assertNotNull(reply.keyboard());
     }
 
@@ -80,7 +84,7 @@ class TextProcessorTest {
         stateService.updateContext(1L, new ChatContext(State.AWAITING_NUMBER,
                 "CURRENCY", null, null, null));
         var reply = processor.handle(1L, "100");
-        assertTrue(reply.text().contains("стартовую"));
+        assertEquals("Выберите стартовую единицу:", reply.text());
         assertNotNull(reply.keyboard());
     }
 
@@ -93,7 +97,7 @@ class TextProcessorTest {
         stateService.updateContext(1L, new ChatContext(State.AWAITING_NUMBER,
                 "CURRENCY", null, null, null));
         var reply = processor.handle(1L, "abc");
-        assertTrue(reply.text().contains("Неверный формат числа"));
+        assertEquals("Неверный формат числа. Введите число x, где 0 <= x < 10^9. Дробные числа вводите через точку.", reply.text());
         assertNull(reply.keyboard());
     }
 
@@ -115,7 +119,7 @@ class TextProcessorTest {
         stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
                 null, "cookie", "calorie", null));
         var reply = customProcessor.handle(1L, "10");
-        assertTrue(reply.text().contains("10 cookie = 3000.0000 calorie"));
+        assertEquals("10 cookie = 3000.0000 calorie\nИспользуйте кнопки меню для выбора типа перевода.", reply.text());
         assertNotNull(reply.keyboard());
     }
 }

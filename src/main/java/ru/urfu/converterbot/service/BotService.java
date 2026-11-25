@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.CustomConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
 import ru.urfu.converterbot.service.converters.QuantityConverter;
 import ru.urfu.converterbot.service.converters.TemperatureConverter;
@@ -30,6 +31,8 @@ public class BotService implements BotResponseProcessor {
 
     private final TemperatureConverter temperatureConverter;
 
+    private final CustomConverter customConverter;
+
     private final Parser clientInputParser;
 
     private final MessageFormatter messageFormatter;
@@ -43,6 +46,7 @@ public class BotService implements BotResponseProcessor {
      * @param lengthConverter конвертер длины
      * @param weightConverter конвертер массы
      * @param temperatureConverter конвертер температуры
+     * @param customConverter конвертер кастомных единиц
      * @param parser парсер ввода пользователя
      * @param messageFormatter форматтер сообщений
      * @param historyRepository источник информации о переводах
@@ -51,6 +55,7 @@ public class BotService implements BotResponseProcessor {
                             @NotNull LengthConverter lengthConverter,
                             @NotNull WeightConverter weightConverter,
                             @NotNull TemperatureConverter temperatureConverter,
+                            @NotNull CustomConverter customConverter,
                             @NotNull Parser parser,
                             @NotNull MessageFormatter messageFormatter,
                             @NotNull ConversionHistoryRepository historyRepository) {
@@ -58,6 +63,7 @@ public class BotService implements BotResponseProcessor {
         this.lengthConverter = lengthConverter;
         this.weightConverter = weightConverter;
         this.temperatureConverter = temperatureConverter;
+        this.customConverter = customConverter;
         this.clientInputParser = parser;
         this.messageFormatter = messageFormatter;
         this.historyRepository = historyRepository;
@@ -102,6 +108,9 @@ public class BotService implements BotResponseProcessor {
                             currencyConverter.lastUpdated());
                 }
 
+                if (command == BotCommand.CUSTOM) {
+                    return messageFormatter.invalidInput();
+                }
                 var converter = converterFor(command);
                 return messageFormatter.rates(command.title(),
                         converter.baseUnit(), converter.getReferenceRates());
@@ -122,6 +131,7 @@ public class BotService implements BotResponseProcessor {
             case LENGTH -> lengthConverter;
             case WEIGHT -> weightConverter;
             case TEMPERATURE -> temperatureConverter;
+            case CUSTOM -> customConverter;
             default -> throw new IllegalArgumentException("Неизвестная команда: " + command);
         };
     }

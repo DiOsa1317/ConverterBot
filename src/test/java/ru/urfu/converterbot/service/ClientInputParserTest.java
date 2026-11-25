@@ -29,7 +29,15 @@ public class ClientInputParserTest {
      */
     @BeforeEach
     void setUp() {
-        clientInputParser = new ClientInputParser(new FakeCustomConversionRepository());
+        var repository = new FakeCustomConversionRepository();
+
+        repository.save(new CustomConversion(
+                "kk",
+                "mm",
+                new BigDecimal("2"),
+                1L
+        ));
+        clientInputParser = new ClientInputParser(repository);
     }
 
     /**
@@ -130,9 +138,7 @@ public class ClientInputParserTest {
                 1L
         ));
 
-        var parser = new ClientInputParser(repository);
-
-        var result = parser.parse("5 kk to mm", 1L);
+        var result = clientInputParser.parse("5 kk to mm", 1L);
 
         assertEquals(new BigDecimal("5"), result.value());
         assertInstanceOf(CustomQuantityType.class, result.from());
