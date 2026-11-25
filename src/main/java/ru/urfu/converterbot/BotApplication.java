@@ -11,6 +11,7 @@ import ru.urfu.converterbot.keyboard.service.ActionProcessor;
 
 import ru.urfu.converterbot.service.*;
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.CustomConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
 import ru.urfu.converterbot.service.converters.TemperatureConverter;
 import ru.urfu.converterbot.service.converters.WeightConverter;
@@ -78,6 +79,7 @@ public class BotApplication {
      *
      * @param messageFormatter хранитель информационных сообщений
      * @param customConversionRepository отвечает за доступ к кастомным переводам
+     * @param historyRepository источник информации о переводах
      */
     private @NotNull BotService getBotService(MessageFormatter messageFormatter,
                                               CustomConversionRepositoryImp customConversionRepository,
@@ -86,7 +88,8 @@ public class BotApplication {
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
         var currencyData = new CurrencyData();
-        var currencyConverter = new CurrencyConverter(currencyData, customConversionRepository);
+        var currencyConverter = new CurrencyConverter(currencyData);
+        var customConverter = new CustomConverter(customConversionRepository);
         CurrencyRateService currencyRateService = new CurrencyRateService(currencyData);
         currencyRateService.start();
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
@@ -96,6 +99,7 @@ public class BotApplication {
                 lengthConverter,
                 weightConverter,
                 temperatureConverter,
+                customConverter,
                 parser,
                 messageFormatter,
                 historyRepository);

@@ -18,7 +18,7 @@ public record CustomQuantityType(
 
     @Override
     public BotCommand group() {
-        return BotCommand.CURRENCY;
+        return BotCommand.CUSTOM;
     }
 
     @Override
