@@ -15,9 +15,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Тесты обработчика нажатий на клавиатуру {@link ActionProcessor}.
  */
 class ActionProcessorTest {
-    /** Сервис состояний диалога. */
+    /**
+     * Сервис состояний диалога.
+     */
     private ConversionStateService stateService;
-    /** Обработчик действий, создаваемый перед каждым тестом. */
+    /**
+     * Обработчик действий, создаваемый перед каждым тестом.
+     */
     private ActionProcessor processor;
     private FakeConversionHistoryRepository historyRepository;
 
@@ -28,8 +32,9 @@ class ActionProcessorTest {
     void setUp() {
         stateService = new ConversionStateService();
         historyRepository = new FakeConversionHistoryRepository();
-        processor = new ActionProcessor(stateService, new KeyboardFactory(), (chatId, msg) -> "RESULT:" + msg, 
-            new FakeCustomConversionRepository(), historyRepository);
+        processor = new ActionProcessor(stateService,
+                new KeyboardFactory(), (chatId, msg) -> "RESULT:" + msg,
+                new FakeCustomConversionRepository(), historyRepository);
     }
 
     /**
@@ -40,7 +45,7 @@ class ActionProcessorTest {
     void typeSelection() {
         var reply = processor.handle(1L, "TYPE:CURRENCY");
         assertEquals(State.AWAITING_NUMBER, stateService.getChatContext(1L).state());
-        assertTrue(reply.text().contains("Введите число"));
+        assertEquals("Введите число x, где 0 <= x < 10^9. Дробные числа вводите через точку.", reply.text());
     }
 
     /**
@@ -49,10 +54,12 @@ class ActionProcessorTest {
     @Test
     @DisplayName("FROM -> AWAITING_TARGET")
     void fromSelection() {
-        stateService.updateContext(1L, new ChatContext(State.AWAITING_SOURCE, "CURRENCY", "100", null, null));
+        stateService.updateContext(1L, new ChatContext(State.AWAITING_SOURCE,
+                "CURRENCY", "100", null, null));
         var reply = processor.handle(1L, "FROM:USD");
         assertEquals(State.AWAITING_TARGET, stateService.getChatContext(1L).state());
-        assertTrue(reply.text().contains("конечную"));
+        assertEquals("Выберите конечную единицу:", reply.text());
+        assertNotNull(reply.keyboard());
     }
 
     /**
@@ -61,9 +68,10 @@ class ActionProcessorTest {
     @Test
     @DisplayName("TO -> конвертация и сброс состояния")
     void toSelection() {
-        stateService.updateContext(1L, new ChatContext(State.AWAITING_TARGET, "CURRENCY", "100", "USD", null));
+        stateService.updateContext(1L, new ChatContext(State.AWAITING_TARGET,
+                "CURRENCY", "100", "USD", null));
         var reply = processor.handle(1L, "TO:EUR");
-        assertTrue(reply.text().contains("RESULT:"));
+        assertEquals("RESULT:100 USD to EUR", reply.text());
         assertNull(reply.keyboard());
         assertEquals(State.IDLE, stateService.getChatContext(1L).state());
     }
@@ -76,7 +84,8 @@ class ActionProcessorTest {
     void stale() {
         stateService.reset(1L);
         var reply = processor.handle(1L, "FROM:USD");
-        assertTrue(reply.text().contains("устарела"));
+        assertEquals("Эта кнопка устарела. Введите /menu, чтобы начать заново.", reply.text());
+        assertNull(reply.keyboard());
     }
 
     /**
@@ -86,7 +95,7 @@ class ActionProcessorTest {
     @DisplayName("MENU -> главное меню")
     void menu() {
         var reply = processor.handle(1L, "MENU");
-        assertTrue(reply.text().contains("Выберите тип перевода"));
+        assertEquals("Выберите тип перевода:", reply.text());
         assertNotNull(reply.keyboard());
     }
 
@@ -101,12 +110,7 @@ class ActionProcessorTest {
 
         var reply = processor.handle(1L, "HISTORY");
 
-        assertTrue(reply.text().contains("история"));
-        assertTrue(reply.text().contains("100 USD to RUB"));
-        assertTrue(reply.text().contains("8434.1400 RUB"));
-        assertTrue(reply.text().contains("50 EUR to RUB"));
-        assertTrue(reply.text().contains("4675.0000 RUB"));
-
+        assertEquals("Ваша история переводов (страница 1 из 1):\n\n1. 100 USD to RUB → 100 USD = 8434.1400 RUB   (25.11.2026, 12:13)\n2. 50 EUR to RUB → 50 EUR = 4675.0000 RUB   (25.11.2026, 12:13)\n", reply.text());
         assertNotNull(reply.keyboard());
         assertEquals(State.IDLE, stateService.getChatContext(1L).state());
     }
@@ -114,11 +118,14 @@ class ActionProcessorTest {
     @Test
     @DisplayName("HISTORY -> не отображает историю другого чата")
     void historyDoesNotShowOtherChatRecords() {
-        historyRepository.save(2L, "100 USD to RUB", "8434.1400 RUB");
+        var otherHistoryRepository = new FakeConversionHistoryRepository();
+        var otherProcessor = new ActionProcessor(new ConversionStateService(), new KeyboardFactory(),
+                (chatId, msg) -> "RESULT:" + msg, new FakeCustomConversionRepository(), otherHistoryRepository);
+        otherHistoryRepository.save(2L, "100 USD to RUB", "8434.1400 RUB");
 
-        var reply = processor.handle(1L, "HISTORY");
+        var reply = otherProcessor.handle(1L, "HISTORY");
 
-        assertTrue(reply.text().contains("История"));
-        assertFalse(reply.text().contains("100 USD to RUB"));
+        assertEquals("История конвертаций пока пуста.", reply.text());
+        assertNotNull(reply.keyboard());
     }
 }

@@ -23,7 +23,7 @@ public class FakeConversionHistoryRepository extends ConversionHistoryRepository
                 chatId,
                 input,
                 result,
-                LocalDateTime.now()
+                LocalDateTime.of(2026, 11, 25, 12, 13)
         ));
         return true;
     }
