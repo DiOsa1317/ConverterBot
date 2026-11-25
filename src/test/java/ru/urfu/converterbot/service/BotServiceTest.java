@@ -78,20 +78,33 @@ public class BotServiceTest {
 
     /**
      * Проверяет, что каждая команда группы возвращает справку именно своей группы.
-     *
-     * @param command          команда справки по группе величин
-     * @param expectedFragment фрагмент, который обязан быть в справке группы
      */
-    @ParameterizedTest(name = "Команда {0}")
-    @CsvSource({
-            "/currency, Актуальные курсы валют",
-            "/length, Величины длин",
-            "/weight, Величины веса",
-            "/temperature, температур"
-    })
-    @DisplayName("Возвращает справку по группе на её команду")
-    void shouldReturnGroupHelp(String command, String expectedFragment) {
-        assertTrue(botService.processBotResponse(1, command).contains(expectedFragment));
+    @Test
+    @DisplayName("Возвращает справку по валютам")
+    void shouldReturnCurrencyHelp() {
+        assertEquals("Актуальные курсы валют:\n1 RUB = 0.0104 EUR\n1 RUB = 0.0119 USD\n1 RUB = 0.0798 CNY\n1 RUB = 0.5236 KZT\n\nВремя последнего обновления неизвестно.\n",
+                botService.processBotResponse(1, "/currency"));
+    }
+
+    @Test
+    @DisplayName("Возвращает справку по длинам")
+    void shouldReturnLengthHelp() {
+        assertEquals("Величины длины:\n1 m = 0.0010 km\n1 m = 0.0006 mi\n1 m = 100.0000 cm\n1 m = 39.3701 in\n",
+                botService.processBotResponse(1, "/length"));
+    }
+
+    @Test
+    @DisplayName("Возвращает справку по весам")
+    void shouldReturnWeightHelp() {
+        assertEquals("Величины веса:\n1 kg = 1000.0000 g\n1 kg = 0.0010 t\n1 kg = 2.2046 lb\n",
+                botService.processBotResponse(1, "/weight"));
+    }
+
+    @Test
+    @DisplayName("Возвращает справку по температурам")
+    void shouldReturnTemperatureHelp() {
+        assertEquals("Величины температур:\n1 °C = 1.0000 °C\n1 °C = 33.8000 °F\n1 °C = 274.1500 K\n",
+                botService.processBotResponse(1, "/temperature"));
     }
 
     /**
