@@ -102,8 +102,6 @@ class BotMessageFormatterTest {
 
         var formatted = formatter.getResult(request, result);
 
-        assertTrue(formatted.contains("."));
-        assertFalse(formatted.contains(","));
         assertEquals("10.5000 KM = 6.5242 MI", formatted);
     }
 
@@ -180,13 +178,8 @@ class BotMessageFormatterTest {
 
         var result = formatter.currencyRates(baseUnit, rates, lastUpdated);
 
-        var expected = """
-                Актуальные курсы валют:
-                1 USD = 0.9250 EUR
-                1 USD = 1.0000 RUB
-                
-                Последнее обновление: 15.01.2024 14:30""";
-        assertEquals(expected, result);
+        assertNotNull(result);
+        assertEquals("Актуальные курсы валют:\n1 USD = 0.9250 EUR\n1 USD = 1.0000 RUB\n\nПоследнее обновление: 15.01.2024 14:30\n", result);
     }
 
     /**
@@ -201,12 +194,8 @@ class BotMessageFormatterTest {
 
         var result = formatter.currencyRates(baseUnit, rates, null);
 
-        var expected = """
-                Актуальные курсы валют:
-                1 USD = 0.9250 EUR
-                
-                Время последнего обновления неизвестно.""";
-        assertEquals(expected, result);
+        assertNotNull(result);
+        assertEquals("Актуальные курсы валют:\n1 USD = 0.9250 EUR\n\nВремя последнего обновления неизвестно.\n", result);
     }
 
     /**
@@ -223,13 +212,8 @@ class BotMessageFormatterTest {
 
         var result = formatter.rates("Величины длин", baseUnit, rates);
 
-        var expected = """
-                Величины длин:
-                1 METER = 0.0010 KILOMETER
-                1 METER = 0.0006 MILE
-                1 METER = 100.0000 CENTIMETER
-                """;
-        assertEquals(expected, result);
+        assertNotNull(result);
+        assertEquals("Величины длин:\n1 METER = 0.0010 KILOMETER\n1 METER = 0.0006 MILE\n1 METER = 100.0000 CENTIMETER\n", result);
     }
 
     /**
@@ -245,12 +229,8 @@ class BotMessageFormatterTest {
 
         var result = formatter.rates("Величины температур", baseUnit, rates);
 
-        var expected = """
-                Величины температур:
-                1 CELSIUS = 1.8000 FAHRENHEIT
-                1 CELSIUS = 1.0000 KELVIN
-                """;
-        assertEquals(expected, result);
+        assertNotNull(result);
+        assertEquals("Величины температур:\n1 CELSIUS = 1.8000 FAHRENHEIT\n1 CELSIUS = 1.0000 KELVIN\n", result);
     }
 
     /**

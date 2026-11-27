@@ -14,6 +14,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 
 
 /**
@@ -64,7 +65,15 @@ public class TelegramBot extends TelegramLongPollingBot {
             var callback = update.getCallbackQuery();
             acknowledge(callback.getId());
             long chatId = callback.getMessage().getChatId();
-            send(chatId, actionProcessor.handle(chatId, callback.getData()));
+            int messageId = callback.getMessage().getMessageId();
+
+            var reply = actionProcessor.handle(chatId, callback.getData());
+
+            if (callback.getData().startsWith("HISTORY_PAGE:")) {
+                edit(chatId, messageId, reply);
+            } else {
+                send(chatId, reply);
+            }
             return;
         }
         if (!update.hasMessage()) {
@@ -106,6 +115,31 @@ public class TelegramBot extends TelegramLongPollingBot {
             execute(message);
         } catch (TelegramApiException exception) {
             logger.error("Ошибка при отправке сообщения: ", exception);
+        }
+    }
+
+    /**
+     * Редактирует существующее сообщение в чате.
+     *
+     * @param chatId идентификатор чата
+     * @param messageId идентификатор сообщения
+     * @param reply новый текст и клавиатура
+     */
+    private void edit(long chatId, int messageId, BotReply reply) {
+        var message = new EditMessageText();
+
+        message.setChatId(String.valueOf(chatId));
+        message.setMessageId(messageId);
+        message.setText(reply.text());
+
+        if (reply.keyboard() != null) {
+            message.setReplyMarkup(keyboardRenderer.render(reply.keyboard()));
+        }
+
+        try {
+            execute(message);
+        } catch (TelegramApiException exception) {
+            logger.error("Ошибка при редактировании сообщения: ", exception);
         }
     }
 

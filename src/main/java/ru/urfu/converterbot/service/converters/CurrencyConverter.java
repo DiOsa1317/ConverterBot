@@ -1,14 +1,14 @@
 package ru.urfu.converterbot.service.converters;
 
+import ru.urfu.converterbot.service.converters.models.CurrencyData;
+import ru.urfu.converterbot.service.models.CurrencyType;
+import ru.urfu.converterbot.service.models.QuantityType;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import ru.urfu.converterbot.service.converters.models.CurrencyData;
-import ru.urfu.converterbot.service.models.CurrencyType;
-import ru.urfu.converterbot.service.models.QuantityType;
 
 /**
  * Конвертер валют для обработки запросов на конвертацию.
@@ -29,6 +29,7 @@ public class CurrencyConverter implements QuantityConverter {
         if (from == to) {
             return value;
         }
+
         return value.multiply(currencyData.rates().get(from).get(to))
                 .setScale(10, RoundingMode.HALF_UP);
     }

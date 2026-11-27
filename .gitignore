@@ -45,4 +45,10 @@ opencode.json
 dependency-reduced-pom.xml
 bin/
 
+converterbot.mv.db
+converterbot.trace.db
+converterbot.trace
+*.mv.db
+*.trace
+
 

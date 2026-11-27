@@ -6,12 +6,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.CustomConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
 import ru.urfu.converterbot.service.converters.QuantityConverter;
 import ru.urfu.converterbot.service.converters.TemperatureConverter;
 import ru.urfu.converterbot.service.converters.WeightConverter;
 import ru.urfu.converterbot.service.exceptions.InvalidUserInputException;
 import ru.urfu.converterbot.service.models.*;
+
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepository;
 
 /**
  * Диспетчер перевода величин.
@@ -28,9 +31,13 @@ public class BotService implements BotResponseProcessor {
 
     private final TemperatureConverter temperatureConverter;
 
+    private final CustomConverter customConverter;
+
     private final Parser clientInputParser;
 
     private final MessageFormatter messageFormatter;
+
+    private final ConversionHistoryRepository historyRepository;
 
     /**
      * Создаёт диспетчер с явно переданными конвертерами всех групп.
@@ -39,26 +46,41 @@ public class BotService implements BotResponseProcessor {
      * @param lengthConverter конвертер длины
      * @param weightConverter конвертер массы
      * @param temperatureConverter конвертер температуры
+     * @param customConverter конвертер кастомных единиц
      * @param parser парсер ввода пользователя
+     * @param messageFormatter форматтер сообщений
+     * @param historyRepository источник информации о переводах
      */
     public BotService(@NotNull CurrencyConverter currencyConverter,
                             @NotNull LengthConverter lengthConverter,
                             @NotNull WeightConverter weightConverter,
                             @NotNull TemperatureConverter temperatureConverter,
+                            @NotNull CustomConverter customConverter,
                             @NotNull Parser parser,
-                            @NotNull MessageFormatter messageFormatter) {
+                            @NotNull MessageFormatter messageFormatter,
+                            @NotNull ConversionHistoryRepository historyRepository) {
         this.currencyConverter = currencyConverter;
         this.lengthConverter = lengthConverter;
         this.weightConverter = weightConverter;
         this.temperatureConverter = temperatureConverter;
+        this.customConverter = customConverter;
         this.clientInputParser = parser;
         this.messageFormatter = messageFormatter;
+        this.historyRepository = historyRepository;
     }
 
+    /**
+     * Обрабатывает входящее текстовое сообщение и возвращает ответ бота.
+     *
+     * @param chatId идентификатор чата пользователя
+     * @param messageText текст сообщения от пользователя; может быть {@code null}
+     * @return отформатированная строка ответа для отправки пользователю
+     * @throws InvalidUserInputException если запрос на конвертацию не удалось распознать
+     */
     @Override
-    public String processBotResponse(String messageText) {
+    public String processBotResponse(long chatId, @Nullable String messageText) {
         try {
-            return dispatch(messageText);
+            return dispatch(chatId, messageText);
         } catch (IllegalArgumentException exception) {
             logger.error("Ошибка при обработке аргументов: ", exception);
             return messageFormatter.invalidInput();
@@ -71,26 +93,30 @@ public class BotService implements BotResponseProcessor {
     /**
      * Обрабатывает входящее текстовое сообщение и возвращает ответ бота.
      *
+     * @param chatId идентификатор чата пользователя
      * @param messageText текст сообщения от пользователя; может быть {@code null}
      * @return отформатированная строка ответа для отправки пользователю
      * @throws InvalidUserInputException если запрос на конвертацию не удалось распознать
      */
-    private String dispatch(@Nullable String messageText) throws InvalidUserInputException {
+    private String dispatch(long chatId, @Nullable String messageText) throws InvalidUserInputException {
         for (BotCommand command : BotCommand.values()) {
-        if (command.matches(messageText)) {
-            if (command == BotCommand.CURRENCY) {
-                return messageFormatter.currencyRates(
-                    currencyConverter.baseUnit(),
-                    currencyConverter.getReferenceRates(),
-                    currencyConverter.lastUpdated());
+            if (command.matches(messageText)) {
+                if (command == BotCommand.CURRENCY) {
+                    return messageFormatter.currencyRates(
+                            currencyConverter.baseUnit(),
+                            currencyConverter.getReferenceRates(),
+                            currencyConverter.lastUpdated());
+                }
+
+                if (command == BotCommand.CUSTOM) {
+                    return messageFormatter.invalidInput();
+                }
+                var converter = converterFor(command);
+                return messageFormatter.rates(command.title(),
+                        converter.baseUnit(), converter.getReferenceRates());
             }
-            
-            var converter = converterFor(command);
-            return messageFormatter.rates(command.title(),
-                    converter.baseUnit(), converter.getReferenceRates());
         }
-    }
-        return convert(messageText);
+        return convert(chatId, messageText);
     }
 
     /**
@@ -105,22 +131,29 @@ public class BotService implements BotResponseProcessor {
             case LENGTH -> lengthConverter;
             case WEIGHT -> weightConverter;
             case TEMPERATURE -> temperatureConverter;
+            case CUSTOM -> customConverter;
+            default -> throw new IllegalArgumentException("Неизвестная команда: " + command);
         };
     }
 
     /**
      * Выполняет перевод по разобранному запросу и форматирует результат.
      *
+     * @param chatId идентификатор чата пользователя
      * @param messageText входное сообщение формата "{число} {единица1} to {единица2}"
      * @return строка результата в формате "{значение} {из} = {результат} {в}"
      * @throws InvalidUserInputException если запрос не распознан, единицы неизвестны
      *                                   или принадлежат разным группам
      */
-    private String convert(String messageText) throws InvalidUserInputException {
-        var request = clientInputParser.parse(messageText);
+    private String convert(long chatId, String messageText) throws InvalidUserInputException {
+        var request = clientInputParser.parse(messageText, chatId);
         var result = converterFor(request.from().group())
-            .convert(request.value(), request.from(), request.to());
+                .convert(request.value(), request.from(), request.to());
 
-        return messageFormatter.getResult(request, result);
+        var formattedResult = messageFormatter.getResult(request, result);
+
+        historyRepository.save(chatId, messageText, formattedResult);
+
+        return formattedResult;
     }
 }

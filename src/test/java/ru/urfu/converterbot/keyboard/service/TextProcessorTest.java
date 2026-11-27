@@ -3,10 +3,19 @@ package ru.urfu.converterbot.keyboard.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import ru.urfu.converterbot.db.DatabaseConfig;
 import ru.urfu.converterbot.keyboard.KeyboardFactory;
 import ru.urfu.converterbot.keyboard.models.ChatContext;
 import ru.urfu.converterbot.keyboard.models.State;
 import ru.urfu.converterbot.service.BotMessageFormatter;
+import ru.urfu.converterbot.service.models.CustomConversion;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
+import ru.urfu.converterbot.service.repository.ConversionHistoryRepositoryImp;
+
+import java.math.BigDecimal;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,9 +23,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Тесты обработчика текстовых сообщений {@link TextProcessor}.
  */
 class TextProcessorTest {
-    /** Сервис состояний диалога. */
+    /**
+     * Сервис состояний диалога.
+     */
     private ConversionStateService stateService;
-    /** Обработчик текста, создаваемый перед каждым тестом. */
+    /**
+     * Обработчик текста, создаваемый перед каждым тестом.
+     */
     private TextProcessor processor;
 
     /**
@@ -26,7 +39,8 @@ class TextProcessorTest {
     void setUp() {
         stateService = new ConversionStateService();
         processor = new TextProcessor(stateService, new KeyboardFactory(),
-                msg -> "converted:" + msg, new BotMessageFormatter());
+                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(),
+                new FakeCustomConversionRepository(), new FakeConversionHistoryRepository());
     }
 
     /**
@@ -36,7 +50,7 @@ class TextProcessorTest {
     @DisplayName("/start возвращает приветствие и главное меню")
     void start() {
         var reply = processor.handle(1L, "/start");
-        assertTrue(reply.text().contains("Приветствую"));
+        assertEquals("Приветствую вас! Этот бот конвертирует валюты и физические величины.\nЧтобы узнать подробнее, введите /help\nИспользуйте кнопки меню для выбора типа перевода.", reply.text());
         assertNotNull(reply.keyboard());
     }
 
@@ -47,7 +61,7 @@ class TextProcessorTest {
     @DisplayName("/help возвращает справку")
     void help() {
         var reply = processor.handle(1L, "/help");
-        assertTrue(reply.text().contains("Формат запроса"));
+        assertEquals("Формат запроса: {число} {единица1} to {единица2}\nНапример: 100 USD to EUR\nИли: 10 KM to MI\n\nДоступные валюты: /currency\nДоступные величины:\n1) /length\n2) /weight\n3) /temperature\nИспользуйте кнопки меню для выбора типа перевода.", reply.text());
     }
 
     /**
@@ -57,7 +71,7 @@ class TextProcessorTest {
     @DisplayName("null в IDLE -> подсказка меню")
     void nullIdle() {
         var reply = processor.handle(1L, null);
-        assertTrue(reply.text().contains("Используйте кнопки меню"));
+        assertEquals("Используйте кнопки меню для выбора типа перевода.", reply.text());
         assertNotNull(reply.keyboard());
     }
 
@@ -70,7 +84,7 @@ class TextProcessorTest {
         stateService.updateContext(1L, new ChatContext(State.AWAITING_NUMBER,
                 "CURRENCY", null, null, null));
         var reply = processor.handle(1L, "100");
-        assertTrue(reply.text().contains("стартовую"));
+        assertEquals("Выберите стартовую единицу:", reply.text());
         assertNotNull(reply.keyboard());
     }
 
@@ -83,7 +97,29 @@ class TextProcessorTest {
         stateService.updateContext(1L, new ChatContext(State.AWAITING_NUMBER,
                 "CURRENCY", null, null, null));
         var reply = processor.handle(1L, "abc");
-        assertTrue(reply.text().contains("Не удалось распознать число"));
+        assertEquals("Неверный формат числа. Введите число x, где 0 <= x < 10^9. Дробные числа вводите через точку.", reply.text());
         assertNull(reply.keyboard());
+    }
+
+    @Test
+    @DisplayName("Конвертация по прямому кастомному курсу через кнопку")
+    void customConvertNumber() {
+        var repo = new FakeCustomConversionRepository() {
+            @Override
+            public Optional<CustomConversion> findByChatIdFromAndAndTo(long chatId, String from, String to) {
+                if ("cookie".equals(from) && "calorie".equals(to)) {
+                    return Optional.of(new CustomConversion("cookie", "calorie", new BigDecimal("300"), chatId));
+                }
+                return Optional.empty();
+            }
+        };
+        var historyRepository = new ConversionHistoryRepositoryImp(new DatabaseConfig());
+        var customProcessor = new TextProcessor(stateService, new KeyboardFactory(),
+                (chatId, msg) -> "converted:" + msg, new BotMessageFormatter(), repo, historyRepository);
+        stateService.updateContext(1L, new ChatContext(State.AWAITING_CUSTOM_CONVERT_NUMBER,
+                null, "cookie", "calorie", null));
+        var reply = customProcessor.handle(1L, "10");
+        assertEquals("10 cookie = 3000.0000 calorie\nИспользуйте кнопки меню для выбора типа перевода.", reply.text());
+        assertNotNull(reply.keyboard());
     }
 }

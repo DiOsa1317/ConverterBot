@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import ru.urfu.converterbot.service.converters.CurrencyConverter;
+import ru.urfu.converterbot.service.converters.CustomConverter;
 import ru.urfu.converterbot.service.converters.LengthConverter;
 import ru.urfu.converterbot.service.converters.TemperatureConverter;
 import ru.urfu.converterbot.service.converters.WeightConverter;
@@ -15,8 +16,12 @@ import ru.urfu.converterbot.service.converters.models.CurrencyData;
 import ru.urfu.converterbot.service.converters.models.LengthData;
 import ru.urfu.converterbot.service.converters.models.TemperatureData;
 import ru.urfu.converterbot.service.converters.models.WeightData;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeConversionHistoryRepository;
+import ru.urfu.converterbot.service.models.fakeClasses.FakeCustomConversionRepository;
 
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.math.BigDecimal;
 
 /**
  * Тесты для ConverterService
@@ -33,19 +38,24 @@ public class BotServiceTest {
      */
     @BeforeEach
     void setUp() {
-        var parser = new ClientInputParser();
+        var customRepo = new FakeCustomConversionRepository();
+        var historyRepo = new FakeConversionHistoryRepository();
+        var parser = new ClientInputParser(customRepo);
         var formatter = new BotMessageFormatter();
         var lengthConverter = new LengthConverter(new LengthData());
         var weightConverter = new WeightConverter(new WeightData());
         var currencyConverter = new CurrencyConverter(new CurrencyData());
+        var customConverter = new CustomConverter(customRepo);
         var temperatureConverter = new TemperatureConverter(new TemperatureData());
         botService = new BotService(
                 currencyConverter,
                 lengthConverter,
                 weightConverter,
                 temperatureConverter,
+                customConverter,
                 parser,
-                formatter);
+                formatter,
+                historyRepo);
     }
 
     /**
@@ -63,25 +73,38 @@ public class BotServiceTest {
     })
     @DisplayName("Форматирует результат четырьмя знаками после запятой")
     void shouldFormatResult(String request, String expected) {
-        assertEquals(expected, botService.processBotResponse(request));
+        assertEquals(expected, botService.processBotResponse(1, request));
     }
 
     /**
      * Проверяет, что каждая команда группы возвращает справку именно своей группы.
-     *
-     * @param command          команда справки по группе величин
-     * @param expectedFragment фрагмент, который обязан быть в справке группы
      */
-    @ParameterizedTest(name = "Команда {0}")
-    @CsvSource({
-            "/currency, Актуальные курсы валют",
-            "/length, Величины длин",
-            "/weight, Величины веса",
-            "/temperature, температур"
-    })
-    @DisplayName("Возвращает справку по группе на её команду")
-    void shouldReturnGroupHelp(String command, String expectedFragment) {
-        assertTrue(botService.processBotResponse(command).contains(expectedFragment));
+    @Test
+    @DisplayName("Возвращает справку по валютам")
+    void shouldReturnCurrencyHelp() {
+        assertEquals("Актуальные курсы валют:\n1 RUB = 0.0104 EUR\n1 RUB = 0.0119 USD\n1 RUB = 0.0798 CNY\n1 RUB = 0.5236 KZT\n\nВремя последнего обновления неизвестно.\n",
+                botService.processBotResponse(1, "/currency"));
+    }
+
+    @Test
+    @DisplayName("Возвращает справку по длинам")
+    void shouldReturnLengthHelp() {
+        assertEquals("Величины длины:\n1 m = 0.0010 km\n1 m = 0.0006 mi\n1 m = 100.0000 cm\n1 m = 39.3701 in\n",
+                botService.processBotResponse(1, "/length"));
+    }
+
+    @Test
+    @DisplayName("Возвращает справку по весам")
+    void shouldReturnWeightHelp() {
+        assertEquals("Величины веса:\n1 kg = 1000.0000 g\n1 kg = 0.0010 t\n1 kg = 2.2046 lb\n",
+                botService.processBotResponse(1, "/weight"));
+    }
+
+    @Test
+    @DisplayName("Возвращает справку по температурам")
+    void shouldReturnTemperatureHelp() {
+        assertEquals("Величины температур:\n1 °C = 1.0000 °C\n1 °C = 33.8000 °F\n1 °C = 274.1500 K\n",
+                botService.processBotResponse(1, "/temperature"));
     }
 
     /**
@@ -100,7 +123,7 @@ public class BotServiceTest {
     })
     @DisplayName("Не выбрасывает исключение на некорректный ввод")
     void shouldNotThrowOnInvalidInput(String message) {
-        assertDoesNotThrow(() -> botService.processBotResponse(message));
+        assertDoesNotThrow(() -> botService.processBotResponse(1, message));
     }
 
     /**
@@ -109,6 +132,7 @@ public class BotServiceTest {
     @Test
     @DisplayName("Не выбрасывает исключение на null")
     void shouldNotThrowOnNull() {
-        assertDoesNotThrow(() -> botService.processBotResponse(null));
+        assertDoesNotThrow(() -> botService.processBotResponse(1, null));
     }
+
 }
